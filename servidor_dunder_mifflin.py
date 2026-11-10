@@ -21,6 +21,7 @@ from agentes.sistema_wuphf import (
     localizar_repositorios,
 )
 from agentes.operador_mose import executar_operador_mose
+from agentes.estudio_scarn_youtube import executar_estudio_youtube
 
 DIRETORIO_BASE = Path(__file__).resolve().parent
 ARQUIVO_FRONTEND = DIRETORIO_BASE / "frontend" / "index.html"
@@ -192,6 +193,20 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
                         saida=resumo_txt,
                         status="CONCLUIDO",
                         metadados={"resultados": resultados_mose},
+                    )
+                    self._enviar_json({"ok": True, "evento": evento})
+                    return
+
+                elif agente == "ESTUDIO_YOUTUBE":
+                    pacote_video = executar_estudio_youtube(entrada_principal, contexto_extra)
+                    evento = registrar_evento_auditoria(
+                        agente="ESTUDIO_YOUTUBE",
+                        acao="ROTEIRO_EDICAO_POSTAGEM_YOUTUBE",
+                        entrada=entrada_principal or "Produção de Vídeo Técnico & Corte Shorts",
+                        saida=pacote_video,
+                        status="AGUARDANDO_AUTORIZACAO",
+                        requer_autorizacao=True,
+                        metadados={"formato": contexto_extra},
                     )
                     self._enviar_json({"ok": True, "evento": evento})
                     return

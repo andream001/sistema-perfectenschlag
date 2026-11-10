@@ -6,6 +6,7 @@ from agentes.neutralizador_toby import executar_neutralizador_toby
 from agentes.protocolo_recyclops import executar_protocolo_recyclops
 from agentes.sistema_wuphf import executar_sistema_wuphf, solicitar_autorizacao_gerente
 from agentes.operador_mose import executar_operador_mose
+from agentes.estudio_scarn_youtube import executar_estudio_youtube
 from servidor_dunder_mifflin import iniciar_servidor_agentcraft
 
 SYSTEM_PROMPT_ORQUESTRADOR = """Você é o Orquestrador Regional do Sistema Perfectenschlag.
@@ -32,8 +33,9 @@ def exibir_banner() -> None:
     print(" [2] PROTOCOLO RECYCLOPS  -> Dossiê de Ataque OSINT + 3 Perguntas Impiedosas")
     print(" [3] SISTEMA WUPHF.COM    -> Gerar Post LinkedIn (EXIGE SUA AUTORIZAÇÃO)")
     print(" [4] OPERADOR MOSE (GIT)  -> Auto-Commit & Push Autônomo no GitHub (Sem Pausa)")
-    print(" [5] BRIEFING DO GERENTE  -> Despacho Direto do Orquestrador Regional")
-    print(" [6] FRONT-END AGENTCRAFT -> Abrir Escritório Dunder Mifflin RTS + Auditoria Fácil")
+    print(" [5] ESTÚDIO YOUTUBE      -> Edição de Vídeo, Roteiro, Shorts & Postagem (EXIGE AVAL)")
+    print(" [6] BRIEFING DO GERENTE  -> Despacho Direto do Orquestrador Regional")
+    print(" [7] FRONT-END AGENTCRAFT -> Abrir Escritório Dunder Mifflin + Redes & Auditoria")
     print(" [0] ENCERRAR EXPEDIENTE  -> Fechar a filial com eficiência máxima")
     print("=" * 76)
 
@@ -52,7 +54,7 @@ def menu_principal() -> None:
 
     while True:
         exibir_banner()
-        escolha = input("\nORDEM DO GERENTE REGIONAL [0-6]: ").strip()
+        escolha = input("\nORDEM DO GERENTE REGIONAL [0-7]: ").strip()
 
         if escolha == "1":
             print("\n--- [ACIONANDO AGENTE: NEUTRALIZADOR TOBY] ---")
@@ -125,6 +127,17 @@ def menu_principal() -> None:
                     )
 
         elif escolha == "5":
+            print("\n--- [ACIONANDO AGENTE: DIRETOR SCARN (SETOR DE EDIÇÃO DE VÍDEO & YOUTUBE)] ---")
+            tema = input("Qual o tema ou projeto do vídeo para o YouTube hoje? ").strip()
+            formato = input("Formato desejado (Enter para Vídeo Completo + Corte Shorts/Reels): ").strip()
+            print("\nGerando roteiro com marcações de edição, B-Roll, FFmpeg e metadados de SEO...")
+            pacote = executar_estudio_youtube(tema, formato)
+            solicitar_autorizacao_gerente(
+                rascunho_post=pacote,
+                commit_manual=tema,
+            )
+
+        elif escolha == "6":
             print("\n--- [GABINETE DO ORQUESTRADOR REGIONAL] ---")
             ordem = input("Qual a diretriz estratégica para a filial hoje, Chefe? ").strip()
             if not ordem:
@@ -134,7 +147,7 @@ def menu_principal() -> None:
             print(resposta)
             print("-" * 72)
 
-        elif escolha == "6":
+        elif escolha == "7":
             print("\n--- [INICIANDO INTERFACE RTS AGENTCRAFT: DUNDER MIFFLIN SCRANTON] ---")
             iniciar_servidor_agentcraft(porta=8080, abrir_navegador=True)
 

@@ -142,6 +142,24 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
 .modal-paper{background:var(--paper);border:3px solid var(--ink);max-width:680px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:6px 6px 0 rgba(0,0,0,.35)}
 .modal-top{padding:10px 14px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:1px}
 .modal-content{padding:14px;overflow-y:auto;font-family:var(--f-memo);font-size:12.5px;white-space:pre-wrap;line-height:1.5}
+/* Barra de Integração de Redes Sociais & Estúdio de Vídeo */
+.net-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--paper);border:1.5px solid var(--ink);padding:8px 12px;box-shadow:0 2px 0 #d6d1c2}
+.net-bar-title{font-family:var(--f-display);font-size:12.5px;letter-spacing:1.1px;text-transform:uppercase;font-weight:700;margin-right:4px;color:var(--ink)}
+.net-btn{font-family:var(--f-display);font-size:12px;letter-spacing:.7px;text-transform:uppercase;font-weight:700;padding:5px 10px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.net-btn:hover{background:var(--ink);color:#fff}
+.net-btn.yt{border-color:#c4302b;color:#c4302b}
+.net-btn.yt:hover{background:#c4302b;color:#fff}
+.net-btn.in{border-color:#0a66c2;color:#0a66c2}
+.net-btn.in:hover{background:#0a66c2;color:#fff}
+.net-btn.gh{border-color:#24292e;color:#24292e}
+.net-btn.wa{border-color:#128c7e;color:#128c7e}
+.net-btn.wa:hover{background:#128c7e;color:#fff}
+.net-btn.sh{border-color:#7c3aed;color:#7c3aed}
+.net-btn.sh:hover{background:#7c3aed;color:#fff}
+.net-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+.net-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.net-card{background:#fff;border:1.5px solid var(--ink);padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:2px 2px 0 #e2ddd0}
+.net-card h3{margin:0;font-family:var(--f-display);font-size:15px;letter-spacing:.8px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
 @media (prefers-reduced-motion:reduce){.hud .rec i,.lower,.cut.go{animation:none}}
 </style>
 </head>
@@ -158,10 +176,33 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
     </div>
     <div class="top-badges">
       <button class="stamp brand" type="button" onclick="abrirAbaPasta('CV')">📂 Currículo & Dossiê (andream001)</button>
-      <button class="stamp warn" type="button" id="btnWuphfTop" onclick="filtrarWuphfPendentes()">📯 WUPHF Pendentes: <span id="cntWuphf">0</span></button>
+      <button class="stamp warn" type="button" id="btnWuphfTop" onclick="filtrarWuphfPendentes()">📯 Aguardando Aval: <span id="cntWuphf">0</span></button>
       <button class="stamp" type="button" onclick="abrirModalApi()">🔑 API Key: <b id="lblApiStatus">Verificar</b></button>
     </div>
   </header>
+
+  <!-- BARRA RÁPIDA DE INTEGRAÇÃO COM AS REDES E ESTÚDIO YOUTUBE -->
+  <nav class="net-bar" aria-label="Integrações de Redes e Setor de Vídeo">
+    <span class="net-bar-title">📡 Central Omnichannel:</span>
+    <button class="net-btn yt" type="button" onclick="acionarSetorVideoYoutube()">
+      <span class="net-dot" style="background:#c4302b"></span> ▶️ YouTube & Setor de Edição de Vídeo
+    </button>
+    <button class="net-btn sh" type="button" onclick="acionarSetorShortsReels()">
+      🎬 Gerar Corte Shorts / Reels / TikTok
+    </button>
+    <button class="net-btn in" type="button" onclick="acionarRedeLinkedin()">
+      <span class="net-dot"></span> 💼 LinkedIn (WUPHF)
+    </button>
+    <a class="net-btn gh" href="https://github.com/andream001" target="_blank" rel="noopener">
+      <span class="net-dot"></span> 🐙 GitHub (andream001)
+    </a>
+    <button class="net-btn wa" type="button" onclick="abrirAbaPasta('NET')">
+      <span class="net-dot"></span> 💬 WhatsApp Cloud API (Unimed)
+    </button>
+    <button class="net-btn" type="button" onclick="abrirAbaPasta('NET')" style="margin-left:auto">
+      ⚙️ Configurar Redes & Webhooks (n8n / YouTube / LinkedIn)
+    </button>
+  </nav>
 
   <div class="stage">
     <div class="viewer" id="viewer">
@@ -210,10 +251,13 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
   <section class="desk-folders">
     <div class="folder-tabs">
       <button class="ftab active" id="ftabAudit" type="button" onclick="abrirAbaPasta('AUDIT')">
-        📋 Memorando de Auditoria & Aprovação WUPHF (<span id="cntAudit">0</span>)
+        📋 Memorando de Auditoria & Aprovação (<span id="cntAudit">0</span>)
+      </button>
+      <button class="ftab" id="ftabNet" type="button" onclick="abrirAbaPasta('NET')">
+        🎬 Estúdio de Vídeo YouTube & Integrações de Redes
       </button>
       <button class="ftab" id="ftabCv" type="button" onclick="abrirAbaPasta('CV')">
-        📂 Dossiê Curricular & Informações Complementares (andream001)
+        📂 Dossiê Curricular & Dados (andream001)
       </button>
     </div>
 
@@ -224,10 +268,11 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
           <strong style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:1px">Filtrar Memorandos:</strong>
           <select class="memo-input" style="width:auto" id="fAgente" onchange="renderAudit()">
             <option value="TODOS">Todos os Agentes</option>
-            <option value="NEUTRALIZADOR_TOBY">Neutralizador Toby (Anti-ATS)</option>
-            <option value="PROTOCOLO_RECYCLOPS">Protocolo Recyclops (Dwight OSINT)</option>
-            <option value="SISTEMA_WUPHF">Sistema WUPHF (LinkedIn c/ Aval)</option>
-            <option value="OPERADOR_MOSE">Operador Mose (Auto-Commit Git)</option>
+            <option value="ESTUDIO_YOUTUBE">▶️ Diretor Scarn (Edição de Vídeo & YouTube)</option>
+            <option value="SISTEMA_WUPHF">📯 Sistema WUPHF (LinkedIn c/ Aval)</option>
+            <option value="NEUTRALIZADOR_TOBY">🎯 Neutralizador Toby (Anti-ATS)</option>
+            <option value="PROTOCOLO_RECYCLOPS">🤖 Protocolo Recyclops (Dwight OSINT)</option>
+            <option value="OPERADOR_MOSE">🚜 Operador Mose (Auto-Commit Git)</option>
           </select>
           <select class="memo-input" style="width:auto" id="fStatus" onchange="renderAudit()">
             <option value="TODOS">Todos os Status</option>
@@ -243,6 +288,75 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
         </div>
       </div>
       <div class="audit-grid" id="auditGrid"></div>
+    </div>
+
+    <!-- ABA 2: ESTÚDIO DE EDIÇÃO DE VÍDEO YOUTUBE & HUB DE REDES -->
+    <div class="folder-body" id="bodyNet" hidden>
+      <div style="margin-bottom:14px;padding:12px;background:#f7f4ea;border:1.5px solid var(--ink);display:grid;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <strong style="font-family:var(--f-display);font-size:15px;letter-spacing:1px;text-transform:uppercase;color:#c4302b">
+            🎬 Mesa de Corte & Pós-Produção YouTube (Diretor Scarn)
+          </strong>
+          <span style="font-family:var(--f-memo);font-size:11.5px;color:var(--muted)">Gera roteiro c/ timecodes, cortes B-Roll, comando FFmpeg, Shorts e SEO (Sujeito à sua autorização)</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1.5fr 1fr auto;gap:8px">
+          <input class="memo-input" id="ytTemaInput" placeholder="Tema do vídeo (ex: Como automatizei WhatsApp e economizei R$ 20 mil/ano com Python e Docker)..." />
+          <select class="memo-input" id="ytFormatoSelect">
+            <option value="Vídeo Completo YouTube (8-12 min) + 1 Corte Shorts/Reels">Vídeo Longo YouTube + 1 Corte Shorts</option>
+            <option value="YouTube Shorts / Reels / TikTok (60s vertical de alto impacto)">Apenas Corte Vertical (Shorts / Reels / TikTok)</option>
+            <option value="Tutorial Técnico Hands-On (Código + Terminal Docker + Arquitetura)">Tutorial Técnico Hands-On (Screen-record)</option>
+          </select>
+          <button class="btn action" type="button" onclick="gerarPacoteVideoPainel()">▶️ Gerar Edição & Roteiro</button>
+        </div>
+      </div>
+
+      <div class="net-grid">
+        <!-- CARD YOUTUBE -->
+        <div class="net-card">
+          <h3><span>▶️ YouTube & YouTube Studio</span> <span class="memo-tag" style="color:#c4302b;border-color:#c4302b">Setor Vídeo</span></h3>
+          <p style="font-size:12px;color:var(--muted);margin:0">Canal de vídeos técnicos, bastidores do Sistema Perfectenschlag, AWAProject, Bet-Trader e tutoriais de automação.</p>
+          <input class="memo-input" id="cfgYoutubeUrl" placeholder="URL do seu Canal YouTube (ex: youtube.com/@...)" />
+          <input class="memo-input" id="cfgYoutubeWebhook" placeholder="Webhook n8n/API p/ Upload de Vídeo (opcional)" />
+          <div style="display:flex;gap:6px;margin-top:auto">
+            <a class="net-btn yt" href="https://studio.youtube.com" target="_blank" rel="noopener" style="flex:1;justify-content:center">Abrir YouTube Studio</a>
+            <button class="net-btn" type="button" onclick="acionarSetorVideoYoutube()">Entrevistar Diretor</button>
+          </div>
+        </div>
+
+        <!-- CARD LINKEDIN -->
+        <div class="net-card">
+          <h3><span>💼 LinkedIn (Sistema WUPHF)</span> <span class="memo-tag" style="color:#0a66c2;border-color:#0a66c2">Com Seu Aval</span></h3>
+          <p style="font-size:12px;color:var(--muted);margin:0">Publicação de vitórias técnicas e ROI de R$ 20 mil/ano. Nunca posta sem antes receber seu carimbo de Autorizado.</p>
+          <input class="memo-input" id="cfgLinkedinUrl" placeholder="URL do seu Perfil LinkedIn (ex: linkedin.com/in/...)" />
+          <input class="memo-input" id="cfgLinkedinWebhook" placeholder="Webhook n8n/Make p/ Auto-Post após aprovação" />
+          <div style="display:flex;gap:6px;margin-top:auto">
+            <a class="net-btn in" href="https://www.linkedin.com/feed/" target="_blank" rel="noopener" style="flex:1;justify-content:center">Abrir Feed LinkedIn</a>
+            <button class="net-btn" type="button" onclick="acionarRedeLinkedin()">Gerar Post WUPHF</button>
+          </div>
+        </div>
+
+        <!-- CARD GITHUB -->
+        <div class="net-card">
+          <h3><span>🐙 GitHub (Operador Mose)</span> <span class="memo-tag" style="color:var(--ok);border-color:var(--ok)">Online ✔</span></h3>
+          <p style="font-size:12px;color:var(--muted);margin:0">Sincronização autônoma dos repositórios <code>sistema-perfectenschlag</code>, <code>assistant-to-the-lead-manager</code>, <code>AWAProject</code> e <code>bet-trader-dunder</code>.</p>
+          <input class="memo-input" id="cfgGithubUser" value="https://github.com/andream001" readonly />
+          <div style="display:flex;gap:6px;margin-top:auto">
+            <a class="net-btn gh" href="https://github.com/andream001?tab=repositories" target="_blank" rel="noopener" style="flex:1;justify-content:center">Ver Repositórios</a>
+            <button class="net-btn" type="button" onclick="acionarMoseGit()">Acionar Mose</button>
+          </div>
+        </div>
+
+        <!-- CARD WHATSAPP & SHORTS/REELS -->
+        <div class="net-card">
+          <h3><span>💬 WhatsApp API & Shorts/Reels</span> <span class="memo-tag">Omnichannel</span></h3>
+          <p style="font-size:12px;color:var(--muted);margin:0">Integração com o disparador Unimed (4.523 leads DDD 27) e distribuição de cortes verticais para Instagram Reels / TikTok.</p>
+          <input class="memo-input" id="cfgWhatsappWebhook" placeholder="URL do Webhook WhatsApp / n8n (ex: http://localhost:5000/webhook)" value="http://localhost:5000/webhook" />
+          <div style="display:flex;gap:6px;margin-top:auto">
+            <button class="net-btn sh" type="button" onclick="acionarSetorShortsReels()" style="flex:1;justify-content:center">🎬 Criar Corte Shorts</button>
+            <button class="net-btn action" type="button" onclick="salvarConfigRedes()">💾 Salvar Redes</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ABA 2: CURRÍCULO & DADOS COMPLEMENTARES -->
@@ -389,12 +503,13 @@ const A=[
       about:'Eu pego qualquer vaga, extraio a matriz exata do algoritmo ATS e cruzo com nosso dossiê de R$ 20 mil/ano e Docker/Snipe-IT.',
       boss:'Se o Toby tentar barrar nosso currículo na Gupy, eu recalculo as palavras-chave até atingir 100% de match.',
       secret:'Por que o Toby é do jeito que ele é?Toda vez que o RH cria um filtro novo, eu crio um prompt melhor.'}},
- {id:'rv',nm:'Revisor',art:'o',role:'Vendas · Revisão de Código',ws:'desk',seat:{tx:28,ty:12,face:'down'},work:'revisando PRs da filial',prop:'redpen',
-  look:{skin:'#e8b996',hair:'#1d1a22',style:'long',glasses:1,shirt:'#6b3fa0',tie:'#d29a2a'},
-  iv:{intro:'Pode gravar. Mas eu vou revisar a edição.',
-      about:'Eu reviso código. E apresentações. E o cardápio da copa. Tinha um erro de concordância.',
-      boss:'Ele manda PRs com o título "coisas". Eu reprovo por princípio.',
-      secret:'Uma vez aprovei um PR sem ler. Ainda sonho com isso.'}},
+ {id:'rv',nm:'Diretor Scarn (YouTube)',art:'o',role:'Estúdio · Edição de Vídeo & YouTube',ws:'desk',seat:{tx:28,ty:12,face:'down'},work:'editando vídeo e cortes p/ YouTube',prop:'redpen',
+  agentKey:'ESTUDIO_YOUTUBE',p1:'Tema ou projeto do vídeo para o YouTube / Shorts...',p2:'Formato (ex: Vídeo Longo + Corte Shorts, Tutorial Código, etc.)...',
+  look:{skin:'#e8b996',hair:'#1d1a22',style:'long',glasses:1,shirt:'#c4302b',tie:'#151617'},
+  iv:{intro:'Silêncio no set! Eu sou o Diretor Scarn, chefe do novo Setor de Edição de Vídeo e YouTube da filial.',
+      about:'Eu pego seus projetos reais — o Sistema Perfectenschlag, o robô da Unimed e os R$ 20 mil/ano em automação — e gero o roteiro com timecodes, cortes B-Roll, comando FFmpeg, Shorts e SEO pro YouTube Studio.',
+      boss:'Assim como no WUPHF, nenhum frame sobe pro YouTube sem a autorização expressa do Gerente Regional.',
+      secret:'Estou preparando um documentário premiado chamado Threat Level Scranton sobre como destruímos o filtro do Toby.'}},
  {id:'ts',nm:'Testador',art:'o',role:'Vendas · Qualidade & Anti-Ban',ws:'desk',seat:{tx:16,ty:17,face:'down'},work:'validando warm-up do WhatsApp',prop:'bugs',
   look:{skin:'#d9a07a',hair:'#4a3020',style:'bald',beard:1,shirt:'#b03a2e',tie:'#1f4e8c'},
   iv:{intro:'Desculpa, eu estou meio vermelho hoje. Os testes, digo.',
@@ -1010,9 +1125,10 @@ async function executarMissaoAgente(agentObj,entrada,extra){
         return;
       }
       const resp=await chamarGeminiBrowser(key,agKey,entrada,extra,dossie);
-      const st=agKey==='SISTEMA_WUPHF'?'AGUARDANDO_AUTORIZACAO':'CONCLUIDO';
-      registrarMemoLocal(agKey,agKey==='SISTEMA_WUPHF'?'RASCUNHO_LINKEDIN':'MISSAO_EXECUTADA',entrada||'Monitoramento de Projetos',resp,st);
-      speak(agKey==='SISTEMA_WUPHF'?'Rascunho gerado! Aguardo sua autorização obrigatória no Memorando abaixo.':'Alvo neutralizado! Confira o resultado completo no Memorando de Auditoria.');
+      const exigeAval=(agKey==='SISTEMA_WUPHF'||agKey==='ESTUDIO_YOUTUBE');
+      const st=exigeAval?'AGUARDANDO_AUTORIZACAO':'CONCLUIDO';
+      registrarMemoLocal(agKey,agKey==='ESTUDIO_YOUTUBE'?'PACOTE_EDICAO_YOUTUBE':agKey==='SISTEMA_WUPHF'?'RASCUNHO_LINKEDIN':'MISSAO_EXECUTADA',entrada||'Monitoramento de Projetos',resp,st);
+      speak(exigeAval?'Material pronto! Aguardo sua autorização obrigatória no Memorando abaixo antes de postar na rede.':'Alvo neutralizado! Confira o resultado completo no Memorando de Auditoria.');
     }
   }catch(err){
     speak('Tivemos um contratempo técnico: '+err.message);
@@ -1027,6 +1143,7 @@ async function chamarGeminiBrowser(apiKey,agKey,entrada,extra,dossie){
     NEUTRALIZADOR_TOBY:`Você é o Agente Neutralizador Toby (Especialista Anti-ATS). Cruze a vaga abaixo com o DOSSIÊ CURRICULAR OFICIAL do Gerente Regional e gere:\n1) DIAGNÓSTICO DE PALAVRAS-CHAVE DO ATS;\n2) CURRÍCULO COMPLETO OTIMIZADO para destruir o filtro.\n\nVAGA:\n${entrada}\n\nEXTRA: ${extra}\n\n${dossie}`,
     PROTOCOLO_RECYCLOPS:`Você é Dwight Kurt Schrute III operando o Protocolo Recyclops (OSINT). Gere o Dossiê de Ataque contra a empresa "${entrada}" (${extra}), expondo suas ineficiências e provando nossa superioridade com base no DOSSIÊ CURRICULAR abaixo. Formule 3 perguntas interrogatórias e impiedosas para a entrevista.\n\n${dossie}`,
     SISTEMA_WUPHF:`Você é o Agente Sistema WUPHF.com. Escreva um post de LinkedIn direto e focado em redução de custos e vitória técnica sobre (${entrada||'Avanço nos projetos assistant-to-the-lead-manager, AWAProject e Bet-Trader'}) usando o DOSSIÊ abaixo.\n\n${dossie}`,
+    ESTUDIO_YOUTUBE:`Você é o Diretor Scarn, Chefe do Setor de Edição de Vídeo e Postagem no YouTube da Filial Scranton. Gere um PACOTE COMPLETO DE PRODUÇÃO E EDIÇÃO DE VÍDEO para o YouTube sobre: "${entrada||'Como construí uma arquitetura Multi-Agente em Python e automações que economizam R$ 20 mil anual'}".\nInclua:\n1) 3 Títulos de alto CTR;\n2) Briefing de Thumbnail;\n3) Roteiro com timecodes [00:00] e instruções de corte/B-Roll de tela;\n4) Versão de 45s para YouTube Shorts / Reels;\n5) Descrição com capítulos, 15 tags de SEO e linha de comando FFmpeg para corte rápido.\n\n${dossie}`,
     OPERADOR_MOSE:`Você é o Operador Mose (Auto-Commit GitHub). Gere uma mensagem Conventional Commits cirúrgica e o resumo de sincronização para (${entrada||'Atualização nos repositórios andream001'}).`
   };
   const modelos=['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash'];
@@ -1084,8 +1201,14 @@ window.renderAudit=()=>{
       <div class="memo-actions">
         <button class="btn" type="button" onclick="lerMemo('${item.id}')">🔍 Ler Tudo</button>
         <button class="btn" type="button" onclick="copiarMemo('${item.id}')">📋 Copiar</button>
+        ${item.agente==='SISTEMA_WUPHF'&&item.status==='AUTORIZADO'?`
+          <button class="net-btn in" type="button" onclick="publicarNaRede('${item.id}','LINKEDIN')">💼 Postar no LinkedIn</button>
+        `:''}
+        ${item.agente==='ESTUDIO_YOUTUBE'&&item.status==='AUTORIZADO'?`
+          <button class="net-btn yt" type="button" onclick="publicarNaRede('${item.id}','YOUTUBE')">▶️ Abrir YouTube Studio</button>
+        `:''}
         ${pendente?`
-          <button class="btn ok" type="button" onclick="decidirWuphf('${item.id}','A')">✅ Autorizar WUPHF</button>
+          <button class="btn ok" type="button" onclick="decidirWuphf('${item.id}','A')">✅ Autorizar Publicação</button>
           <button class="btn" type="button" onclick="decidirWuphf('${item.id}','R')">✏️ Revisar</button>
           <button class="btn end" type="button" onclick="decidirWuphf('${item.id}','C')">🚫 Vetar</button>
         `:''}
@@ -1131,16 +1254,85 @@ window.copiarModalRead=()=>{
 };
 
 window.abrirAbaPasta=aba=>{
-  const isAud=aba==='AUDIT';
-  document.getElementById('ftabAudit').className='ftab'+(isAud?' active':'');
-  document.getElementById('ftabCv').className='ftab'+(!isAud?' active':'');
-  document.getElementById('bodyAudit').hidden=!isAud;
-  document.getElementById('bodyCv').hidden=isAud;
+  document.getElementById('ftabAudit').className='ftab'+(aba==='AUDIT'?' active':'');
+  document.getElementById('ftabNet').className='ftab'+(aba==='NET'?' active':'');
+  document.getElementById('ftabCv').className='ftab'+(aba==='CV'?' active':'');
+  document.getElementById('bodyAudit').hidden=(aba!=='AUDIT');
+  document.getElementById('bodyNet').hidden=(aba!=='NET');
+  document.getElementById('bodyCv').hidden=(aba!=='CV');
+};
+
+window.acionarSetorVideoYoutube=()=>{
+  const scarn=byId.rv;
+  if(scarn)openInterview(scarn);
+  abrirAbaPasta('NET');
+};
+
+window.acionarSetorShortsReels=()=>{
+  const scarn=byId.rv;
+  if(scarn){
+    openInterview(scarn);
+    document.getElementById('missionInput2').value='Corte Vertical 45s para YouTube Shorts / Instagram Reels / TikTok';
+  }
+  abrirAbaPasta('NET');
+};
+
+window.acionarRedeLinkedin=()=>{
+  const wuphf=byId.rc;
+  if(wuphf)openInterview(wuphf);
+};
+
+window.acionarMoseGit=()=>{
+  const mose=byId.dp;
+  if(mose)openInterview(mose);
+};
+
+window.gerarPacoteVideoPainel=async()=>{
+  const tema=document.getElementById('ytTemaInput').value.trim();
+  const formato=document.getElementById('ytFormatoSelect').value;
+  const scarn=byId.rv;
+  if(scarn){
+    openInterview(scarn);
+    document.getElementById('missionInput1').value=tema;
+    document.getElementById('missionInput2').value=formato;
+    await executarMissaoAgente(scarn,tema||scarn.p1,formato);
+  }
+  abrirAbaPasta('AUDIT');
+};
+
+window.publicarNaRede=async(id,rede)=>{
+  const it=auditoria.find(x=>x.id===id);if(!it)return;
+  await navigator.clipboard.writeText(it.saida);
+  const cfg=JSON.parse(localStorage.getItem('PERFECTENSCHLAG_REDES')||'{}');
+  if(rede==='LINKEDIN'){
+    if(cfg.linkedinWebhook){
+      try{await fetch(cfg.linkedinWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(it)})}catch(e){}
+    }
+    window.open('https://www.linkedin.com/feed/','_blank');
+  }else if(rede==='YOUTUBE'){
+    if(cfg.youtubeWebhook){
+      try{await fetch(cfg.youtubeWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(it)})}catch(e){}
+    }
+    window.open('https://studio.youtube.com','_blank');
+  }
+};
+
+window.salvarConfigRedes=()=>{
+  const cfg={
+    youtubeUrl:document.getElementById('cfgYoutubeUrl').value.trim(),
+    youtubeWebhook:document.getElementById('cfgYoutubeWebhook').value.trim(),
+    linkedinUrl:document.getElementById('cfgLinkedinUrl').value.trim(),
+    linkedinWebhook:document.getElementById('cfgLinkedinWebhook').value.trim(),
+    whatsappWebhook:document.getElementById('cfgWhatsappWebhook').value.trim()
+  };
+  localStorage.setItem('PERFECTENSCHLAG_REDES',JSON.stringify(cfg));
+  registrarMemoLocal('ORQUESTRADOR_REGIONAL','INTEGRACAO_REDES_SALVA','YouTube, LinkedIn, GitHub & WhatsApp','Configurações de canais e webhooks de publicação atualizadas na filial.','CONCLUIDO');
+  abrirAbaPasta('AUDIT');
 };
 
 window.filtrarWuphfPendentes=()=>{
   abrirAbaPasta('AUDIT');
-  document.getElementById('fAgente').value='SISTEMA_WUPHF';
+  document.getElementById('fAgente').value='TODOS';
   document.getElementById('fStatus').value='AGUARDANDO_AUTORIZACAO';
   renderAudit();
 };
@@ -1168,6 +1360,12 @@ window.exportarAuditoria=()=>{
 window.simularTurnoDocumentario=(silencioso=false)=>{
   const dh=new Date().toLocaleString('pt-BR');
   const demos=[
+    {
+      id:'YT0001',timestamp:dh,agente:'ESTUDIO_YOUTUBE',acao:'PACOTE_EDICAO_YOUTUBE',
+      entrada:'Vídeo: Como automatizei prospecção no WhatsApp (4.523 leads) e economizei R$ 20 mil/ano com Python e Docker',
+      saida:`1. TÍTULOS DE ALTO CTR SUGERIDOS:\n• Como Construí um Exército de Agentes em Python que Economiza R$ 20 Mil/Ano\n• Automatizando 4.523 Leads na API Oficial do WhatsApp com Python (Sem Bloqueio)\n• Meu Escritório Virtual de IA: Por Dentro do Sistema Perfectenschlag\n\n2. ROTEIRO COM MARCAÇÕES DE EDIÇÃO (B-ROLL):\n• [00:00 - 00:15] GANCHO: Mostrar a tela do AgentCraft Filial Scranton rodando em pixel-art enquanto os commits sobem pro GitHub.\n• [00:15 - 01:30] ARQUITETURA: Corte para o código do send_campaigns.py e webhook_receiver.py mostrando a persistência atômica e o DDI +55.\n• [01:30 - 02:30] INFRA & ROI: Mostrar containers Docker + Snipe-IT e explicar como a automação eliminou R$ 20.000/ano de custo manual.\n\n3. CORTE VERTICAL (YOUTUBE SHORTS / REELS - 45s):\n• Gancho de 3s: "Seu script de automação aguenta cair no meio de 4.500 envios sem duplicar mensagem?" -> Mostra o salvamento atômico .tmp no CSV.\n\n4. LINHA DE COMANDO FFMPEG PARA CORTE RÁPIDO:\nffmpeg -i gravacao_bruta.mp4 -ss 00:00:03 -to 00:08:45 -c:v libx264 -crf 20 -c:a aac video_youtube_pronto.mp4`,
+      status:'AGUARDANDO_AUTORIZACAO'
+    },
     {
       id:'WUPHF01',timestamp:dh,agente:'SISTEMA_WUPHF',acao:'RASCUNHO_LINKEDIN',
       entrada:'Commit [assistant-to-the-lead-manager]: Persistência atômica CSV, DDI +55 e auto-resposta no Webhook',
