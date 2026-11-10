@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentCraft: Dunder Mifflin Scranton RTS — Sistema Perfectenschlag</title>
+  <style>
+    :root {
+      --bg-void: #070a10;
+      --bg-panel: #0f1623;
+      --bg-card: #151f32;
+      --bg-card-hover: #1b2840;
+      --border-gold: #d4a843;
+      --border-subtle: #26354f;
+      --accent-gold: #f5b82e;
+      --accent-cyan: #22d3ee;
+      --accent-emerald: #10b981;
+      --accent-crimson: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-violet: #a855f7;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-void);
+      color: var(--text-primary);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==================== TOP COMMAND BAR ==================== */
+    .topbar {
+      height: 56px;
+      background: linear-gradient(180deg, #162033 0%, #0b101b 100%);
+      border-bottom: 2px solid var(--border-gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75);
+      z-index: 30;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dm-sign {
+      background: #0f172a;
+      color: #fff;
+      border: 2px solid var(--border-gold);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 1.2px;
+      line-height: 1.05;
+      text-align: center;
+      box-shadow: inset 0 0 10px rgba(245, 184, 46, 0.2);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .telemetry-pills {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill {
+      background: rgba(15, 22, 35, 0.92);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .pill.gold {
+      border-color: rgba(245, 184, 46, 0.55);
+      color: #fde68a;
+    }
+
+    .pill.cyan {
+      border-color: rgba(34, 211, 238, 0.45);
+      color: #a5f3fc;
+    }
+
+    .pill.clickable {
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .pill.clickable:hover {
+      border-color: var(--accent-gold);
+      transform: translateY(-1px);
+    }
+
+    .top-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      background: linear-gradient(180deg, #25344f 0%, #162033 100%);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 7px 13px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent-gold);
+      background: linear-gradient(180deg, #304466 0%, #1d2a42 100%);
+      box-shadow: 0 0 12px rgba(245, 184, 46, 0.25);
+    }
+
+    .btn-gold {
+      background: linear-gradient(180deg, #eab308 0%, #b45309 100%);
+      border-color: #fde047;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+
+    .btn-gold:hover {
+      background: linear-gradient(180deg, #facc15 0%, #d97706 100%);
+      box-shadow: 0 0 16px rgba(245, 184, 46, 0.5);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(180deg, #10b981 0%, #047857 100%);
+      border-color: #6ee7b7;
+      color: #fff;
+    }
+
+    .btn-crimson {
+      background: linear-gradient(180deg, #f43f5e 0%, #9f1239 100%);
+      border-color: #fda4af;
+      color: #fff;
+    }
+
+    /* ==================== MAIN WORKSPACE ==================== */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 460px;
+      overflow: hidden;
+    }
+
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 45%, #162238 0%, #080c14 100%);
+      position: relative;
+    }
+
+    /* ==================== OFFICE MAP STAGE ==================== */
+    .map-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas#officeCanvas {
+      border-radius: 10px;
+      border: 2px solid #2b3d5c;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(245, 184, 46, 0.2);
+      cursor: pointer;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .toast-banner {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(11, 16, 27, 0.96);
+      border: 2px solid var(--accent-gold);
+      color: #fff;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.85);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s;
+      z-index: 25;
+    }
+
+    .toast-banner.visible {
+      opacity: 1;
+    }
+
+    /* ==================== BOTTOM RTS COMMAND HUD ==================== */
+    .rts-hud {
+      height: 222px;
+      background: linear-gradient(180deg, #131c2e 0%, #090e18 100%);
+      border-top: 3px solid var(--border-gold);
+      display: grid;
+      grid-template-columns: 245px 1fr 310px;
+      gap: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.85);
+    }
+
+    .hud-panel {
+      background: #0b111d;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hud-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--accent-gold);
+      margin-bottom: 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* UNIT ROSTER */
+    .roster-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .roster-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 9px;
+      background: #131d31;
+      border: 1px solid #223252;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+
+    .roster-item:hover,
+    .roster-item.selected {
+      background: #1c2b47;
+      border-color: var(--accent-gold);
+      box-shadow: inset 0 0 10px rgba(245, 184, 46, 0.15);
+    }
+
+    .roster-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* CENTER HERO COMMAND CONSOLE */
+    .hud-center {
+      display: grid;
+      grid-template-columns: 162px 1fr;
+      gap: 14px;
+    }
+
+    .portrait-frame {
+      background: radial-gradient(circle at 50% 30%, #27395c 0%, #0d1424 100%);
+      border: 2px solid var(--border-gold);
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      position: relative;
+    }
+
+    .portrait-avatar {
+      font-size: 38px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
+    }
+
+    .portrait-name {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+    }
+
+    .portrait-sub {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .stat-bars {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bar-track {
+      height: 12px;
+      background: #060911;
+      border: 1px solid #283a5c;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+      font-size: 9px;
+      font-weight: 800;
+      line-height: 11px;
+      color: #fff;
+    }
+
+    .bar-fill.hp {
+      background: linear-gradient(90deg, #059669, #10b981);
+      width: 100%;
+      height: 100%;
+    }
+
+    .bar-fill.mp {
+      background: linear-gradient(90deg, #0284c7, #22d3ee);
+      width: 100%;
+      height: 100%;
+    }
+
+    .bar-track span {
+      position: absolute;
+      inset: 0;
+      text-align: center;
+    }
+
+    .order-form {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .agent-quote {
+      font-size: 11.5px;
+      font-style: italic;
+      color: #e2e8f0;
+      background: rgba(245, 184, 46, 0.07);
+      border-left: 3px solid var(--accent-gold);
+      padding: 5px 10px;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 8px;
+    }
+
+    .input-field {
+      width: 100%;
+      background: #070b13;
+      border: 1px solid #2c3f63;
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 10px rgba(245, 184, 46, 0.25);
+    }
+
+    .order-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 3x2 COMMAND MATRIX */
+    .cmd-matrix {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 6px;
+    }
+
+    .cmd-btn {
+      background: linear-gradient(180deg, #1b2842 0%, #101829 100%);
+      border: 1px solid #2e4369;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      cursor: pointer;
+      position: relative;
+      text-align: center;
+      transition: all 0.14s;
+    }
+
+    .cmd-btn:hover {
+      border-color: var(--accent-gold);
+      background: #243557;
+      transform: translateY(-1px);
+    }
+
+    .cmd-key {
+      position: absolute;
+      top: 3px;
+      left: 5px;
+      font-size: 9px;
+      font-weight: 900;
+      color: var(--accent-gold);
+    }
+
+    .cmd-ico {
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+
+    .cmd-txt {
+      font-size: 10px;
+      font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1.1;
+    }
+
+    /* ==================== RIGHT SIDEBAR: EASY AUDIT & TABS ==================== */
+    .right-sidebar {
+      background: var(--bg-panel);
+      border-left: 2px solid var(--border-gold);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .sidebar-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #090e17;
+      border-bottom: 2px solid var(--border-subtle);
+    }
+
+    .tab-btn {
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-bottom: 3px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      color: var(--accent-gold);
+      background: #131d30;
+      border-bottom-color: var(--accent-gold);
+    }
+
+    .tab-pane {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    /* AUDIT PANE */
+    .audit-controls {
+      padding: 10px 14px;
+      background: #131c2e;
+      border-bottom: 1px solid var(--border-subtle);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .select-box {
+      background: #080d16;
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 6px 8px;
+      border-radius: 5px;
+      font-size: 11.5px;
+    }
+
+    .wuphf-alert {
+      background: rgba(245, 158, 11, 0.16);
+      border-bottom: 2px solid var(--accent-amber);
+      padding: 9px 14px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #fde68a;
+      display: none;
+    }
+
+    .wuphf-alert.show {
+      display: block;
+    }
+
+    .audit-feed {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .audit-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 11px;
+      transition: border-color 0.15s;
+    }
+
+    .audit-item.needs-approval {
+      border: 2px solid var(--accent-amber);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .audit-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .tag-agent {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .tag-status {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .st-CONCLUIDO, .st-AUTORIZADO {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid #059669;
+    }
+
+    .st-AGUARDANDO_AUTORIZACAO {
+      background: rgba(245, 158, 11, 0.25);
+      color: #fbbf24;
+      border: 1px solid #d97706;
+    }
+
+    .st-VETADO, .st-ERRO {
+      background: rgba(244, 63, 94, 0.2);
+      color: #fb7185;
+      border: 1px solid #e11d48;
+    }
+
+    .audit-meta {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+
+    .audit-box {
+      background: #080c14;
+      border: 1px solid #1e293b;
+      border-radius: 5px;
+      padding: 8px 10px;
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: #e2e8f0;
+      max-height: 165px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .audit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ==================== DOSSIÊ & CURRÍCULO EDITOR PANE ==================== */
+    .dossier-pane {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .upload-dropzone {
+      border: 2px dashed var(--accent-gold);
+      background: rgba(245, 184, 46, 0.06);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .upload-dropzone:hover {
+      background: rgba(245, 184, 46, 0.14);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .field-textarea {
+      width: 100%;
+      background: #080c14;
+      border: 1px solid #2b3d5c;
+      color: #f8fafc;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      line-height: 1.45;
+      resize: vertical;
+    }
+
+    .field-textarea:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+
+    /* ==================== MODALS ==================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #101827;
+      border: 2px solid var(--border-gold);
+      border-radius: 10px;
+      width: 720px;
+      max-width: 94vw;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.95);
+    }
+
+    .modal-header {
+      padding: 13px 18px;
+      background: #182338;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      color: var(--accent-gold);
+    }
+
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .modal-pre {
+      background: #070a11;
+      border: 1px solid var(--border-subtle);
+      padding: 14px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      font-family: Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #f1f5f9;
+      max-height: 58vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP COMMAND BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="dm-sign">DUNDER<br/>MIFFLIN</div>
+      <div>
+        <div class="brand-title">AgentCraft: Filial Scranton RTS</div>
+        <div class="brand-subtitle">Sistema Perfectenschlag — Comando do Gerente Regional</div>
+      </div>
+    </div>
+
+    <div class="telemetry-pills">
+      <div class="pill gold">
+        💰 Economia Auditada: <strong>R$ 20.000 / ano</strong>
+      </div>
+      <div class="pill cyan">
+        🐳 Infra: <strong>Docker + Snipe-IT</strong>
+      </div>
+      <div class="pill clickable" id="pillApiKey" onclick="abrirModal('modalApiKey')">
+        🔑 GEMINI_API_KEY: <strong id="txtApiKey">VERIFICANDO...</strong>
+      </div>
+      <div class="pill clickable" onclick="irParaAbaCurriculo()" style="border-color:#a855f7; color:#e9d5ff;">
+        📂 Currículo: <strong id="txtStatusCurriculo">CARREGADO</strong>
+      </div>
+    </div>
+
+    <div class="top-buttons">
+      <button class="btn btn-gold" onclick="irParaAbaCurriculo()">
+        📂 Subir Currículo & Dados
+      </button>
+      <button class="btn" onclick="abrirModal('modalApiKey')">
+        🔑 API Key
+      </button>
+      <button class="btn" onclick="exportarAuditoriaJson()">
+        📥 Exportar Auditoria
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="workspace">
+
+    <!-- LEFT: ARCHITECTURAL DUNDER MIFFLIN FLOORPLAN + RTS HUD -->
+    <div class="left-column">
+      <div class="map-stage">
+        <div id="toastBanner" class="toast-banner">Ordem recebida!</div>
+        <canvas id="officeCanvas" width="940" height="490"></canvas>
+      </div>
+
+      <!-- BOTTOM RTS HUD -->
+      <section class="rts-hud">
+        <!-- ROSTER -->
+        <div class="hud-panel">
+          <div class="hud-title">
+            <span>Tropas da Filial</span>
+            <span id="tagServerMode" style="color:#34d399;">ONLINE</span>
+          </div>
+          <div class="roster-list" id="rosterContainer"></div>
+        </div>
+
+        <!-- SELECTED AGENT PORTRAIT & ORDER CONSOLE -->
+        <div class="hud-panel hud-center">
+          <div class="portrait-frame">
+            <div class="portrait-avatar" id="hudAvatar">🎯</div>
+            <div>
+              <div class="portrait-name" id="hudName">Neutralizador Toby</div>
+              <div class="portrait-sub" id="hudRole">Especialista Anti-ATS</div>
+            </div>
+            <div class="stat-bars">
+              <div class="bar-track"><div class="bar-fill hp"></div><span>EFICIÊNCIA 100%</span></div>
+              <div class="bar-track"><div class="bar-fill mp"></div><span id="hudStatusText">PRONTO</span></div>
+            </div>
+          </div>
+
+          <div class="order-form">
+            <div>
+              <div class="hud-title">
+                <span id="hudRoomLabel">SETOR: O ANEXO (CAÇA AO TOBY)</span>
+                <span style="color:var(--text-secondary); font-size:10px;">Usa seu Dossiê Curricular automaticamente</span>
+              </div>
+              <div class="agent-quote" id="hudQuote"></div>
+            </div>
+
+            <div class="form-row">
+              <input id="inputTarget" class="input-field" placeholder="Cole a descrição da vaga alvo..." />
+              <input id="inputExtra" class="input-field" placeholder="Observação extra para esta missão (opcional)..." />
+            </div>
+
+            <div class="order-footer">
+              <span style="font-size:11px; color:var(--text-secondary);">
+                Dica: Seus dados da aba <strong>📂 Meu Currículo & Dados</strong> são injetados em todas as missões.
+              </span>
+              <button class="btn btn-gold" onclick="executarMissao()">
+                ⚡ [Q] EXECUTAR MISSÃO AGORA
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3x2 COMMAND MATRIX -->
+        <div class="hud-panel">
+          <div class="hud-title">
+            <span>Matriz AgentCraft</span>
+            <span>Atalhos</span>
+          </div>
+          <div class="cmd-matrix">
+            <div class="cmd-btn" onclick="selecionarUnidade('NEUTRALIZADOR_TOBY')">
+              <span class="cmd-key">1</span>
+              <div class="cmd-ico">🎯</div>
+              <div class="cmd-txt">Neutralizar Toby</div>
+            </div>
+            <div class="cmd-btn" onclick="selecionarUnidade('PROTOCOLO_RECYCLOPS')">
+              <span class="cmd-key">2</span>
+              <div class="cmd-ico">🤖</div>
+              <div class="cmd-txt">Recyclops OSINT</div>
+            </div>
+            <div class="cmd-btn" onclick="selecionarUnidade('SISTEMA_WUPHF')">
+              <span class="cmd-key">3</span>
+              <div class="cmd-ico">📯</div>
+              <div class="cmd-txt">WUPHF LinkedIn</div>
+            </div>
+            <div class="cmd-btn" onclick="selecionarUnidade('OPERADOR_MOSE')">
+              <span class="cmd-key">4</span>
+              <div class="cmd-ico">🚜</div>
+              <div class="cmd-txt">Mose Auto-Git</div>
+            </div>
+            <div class="cmd-btn" onclick="irParaAbaCurriculo()">
+              <span class="cmd-key">P</span>
+              <div class="cmd-ico">📂</div>
+              <div class="cmd-txt">Subir Currículo</div>
+            </div>
+            <div class="cmd-btn" onclick="simularTurnoCompleto()">
+              <span class="cmd-key">D</span>
+              <div class="cmd-ico">🧪</div>
+              <div class="cmd-txt">Simular Turno</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT SIDEBAR: TAB 1 = AUDITORIA FÁCIL | TAB 2 = MEU CURRÍCULO & INFORMAÇÕES COMPLEMENTARES -->
+    <aside class="right-sidebar">
+      <div class="sidebar-tabs">
+        <div class="tab-btn active" id="tabBtnAudit" onclick="alternarAba('AUDIT')">
+          📋 Auditoria Fácil (<span id="badgeAuditCount">0</span>)
+        </div>
+        <div class="tab-btn" id="tabBtnDossier" onclick="alternarAba('DOSSIER')">
+          📂 Meu Currículo & Dados
+        </div>
+      </div>
+
+      <!-- ABA 1: AUDITORIA FÁCIL & APROVAÇÃO WUPHF -->
+      <div class="tab-pane active" id="paneAudit">
+        <div class="audit-controls">
+          <select id="selFiltroAgente" class="select-box" onchange="renderizarAuditoria()">
+            <option value="TODOS">Todos os Agentes</option>
+            <option value="NEUTRALIZADOR_TOBY">🎯 Neutralizador Toby (ATS)</option>
+            <option value="PROTOCOLO_RECYCLOPS">🤖 Protocolo Recyclops (OSINT)</option>
+            <option value="SISTEMA_WUPHF">📯 Sistema WUPHF (LinkedIn)</option>
+            <option value="OPERADOR_MOSE">🚜 Operador Mose (GitHub)</option>
+          </select>
+          <select id="selFiltroStatus" class="select-box" onchange="renderizarAuditoria()">
+            <option value="TODOS">Todos os Status</option>
+            <option value="AGUARDANDO_AUTORIZACAO">⏳ Aguardando Sua Autorização</option>
+            <option value="AUTORIZADO">✅ Autorizados</option>
+            <option value="CONCLUIDO">✔ Concluídos</option>
+            <option value="VETADO">🚫 Vetados / Erros</option>
+          </select>
+        </div>
+
+        <div id="bannerWuphfPendente" class="wuphf-alert">
+          ⚠️ O Sistema WUPHF gerou rascunho(s) de LinkedIn e aguarda sua autorização expressa abaixo!
+        </div>
+
+        <div class="audit-feed" id="auditFeed"></div>
+      </div>
+
+      <!-- ABA 2: CENTRAL DE DADOS CURRICULARES E INFORMAÇÕES COMPLEMENTARES -->
+      <div class="tab-pane" id="paneDossier">
+        <div class="dossier-pane">
+          <!-- UPLOAD DE ARQUIVO (.TXT, .MD, .JSON) -->
+          <div class="upload-dropzone" onclick="document.getElementById('fileUploadCurriculo').click()">
+            <div style="font-size:22px; margin-bottom:4px;">📄⬆️</div>
+            <div style="font-size:12.5px; font-weight:800; color:var(--accent-gold);">
+              CLIQUE PARA SUBIR SEU ARQUIVO DE CURRÍCULO (.TXT, .MD, .JSON)
+            </div>
+            <div style="font-size:11px; color:var(--text-secondary); margin-top:3px;">
+              Ou cole o conteúdo completo do seu currículo / LinkedIn nos campos abaixo
+            </div>
+            <input
+              type="file"
+              id="fileUploadCurriculo"
+              accept=".txt,.md,.json,.csv"
+              style="display:none"
+              onchange="processarUploadArquivo(event)"
+            />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Seu Nome Completo & Título Profissional Alvo</label>
+            <input id="cvNome" class="input-field" placeholder="Ex: André — Engenheiro de Software | DevOps & Automação" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Contatos & Links (LinkedIn, GitHub, Email, Telefone, Cidade)</label>
+            <input id="cvContatos" class="input-field" placeholder="Ex: linkedin.com/in/... | github.com/... | email@..." />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Marcos Obrigatórios de Impacto (Economia R$ 20k/ano + Docker/Snipe-IT)</label>
+            <textarea id="cvMarcos" class="field-textarea" rows="3"></textarea>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Competências Técnicas / Stack Dominante</label>
+            <textarea id="cvSkills" class="field-textarea" rows="2" placeholder="Python, Docker, Snipe-IT, Linux, CI/CD, SQL, AWS/GCP, Git..."></textarea>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Currículo Completo (Experiências, Projetos AWAProject / Bet-Trader, Formação)</label>
+            <textarea
+              id="cvBruto"
+              class="field-textarea"
+              rows="6"
+              placeholder="Cole aqui todo o texto do seu currículo atual, experiências anteriores, datas, empresas, cursos e certificações..."
+            ></textarea>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Informações Complementares & Diretrizes para os Agentes</label>
+            <textarea
+              id="cvComplementar"
+              class="field-textarea"
+              rows="3"
+              placeholder="Ex: Foco em vagas remotas/híbridas Sênior/Pleno, destacar perfil hands-on e visão de negócios..."
+            ></textarea>
+          </div>
+
+          <div style="display:flex; gap:8px; justify-content:space-between; padding-top:4px;">
+            <button class="btn" onclick="exportarPerfilJson()">📤 Baixar Backup (.json)</button>
+            <button class="btn btn-gold" onclick="salvarDadosCurriculares()">
+              💾 SALVAR E INJETAR NOS AGENTES
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- MODAL API KEY -->
+  <div class="modal-overlay" id="modalApiKey">
+    <div class="modal-card" style="width:480px;">
+      <div class="modal-header">
+        <span>🔑 Configurar GEMINI_API_KEY</span>
+        <button class="btn" onclick="fecharModal('modalApiKey')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
+          Sem a chave configurada, qualquer agente aborta com:<br/>
+          <strong style="color:var(--accent-crimson);">"Fato: Você esqueceu a chave da API. Inaceitável."</strong>
+        </p>
+        <input id="inputApiKeyModal" type="password" class="input-field" placeholder="Cole sua chave AIzaSy..." style="margin-bottom:14px;" />
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button class="btn" onclick="fecharModal('modalApiKey')">Cancelar</button>
+          <button class="btn btn-gold" onclick="confirmarApiKey()">Ativar Chave Agora</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EXPANDIR AUDITORIA -->
+  <div class="modal-overlay" id="modalExpandir">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span id="modalExpandirTitulo">Inspeção de Auditoria</span>
+        <button class="btn" onclick="fecharModal('modalExpandir')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="modalExpandirMeta" style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;"></div>
+        <pre class="modal-pre" id="modalExpandirConteudo"></pre>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+          <button class="btn" onclick="copiarModalConteudo()">📋 Copiar Tudo</button>
+          <button class="btn btn-gold" onclick="fecharModal('modalExpandir')">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // ESTADO DO PERFIL CURRICULAR DO GERENTE REGIONAL
+    // =========================================================================
+    const PERFIL_PADRAO = {
+      nome_completo: "André — Engenheiro de Software | Automação, Docker & Governança de TI",
+      contatos: "Brasil | LinkedIn | GitHub: AWAProject & Bet-Trader",
+      marcos_obrigatorios:
+        "• Automação de Processos com impacto financeiro auditado: economia recorrente de R$ 20.000,00 anuais (R$ 20 mil/ano).\n" +
+        "• Implantação produtiva de containers Docker e governança de ativos de TI com Snipe-IT.\n" +
+        "• Arquitetura e engenharia dos sistemas AWAProject e Bet-Trader.",
+      competencias_tecnicas:
+        "Python, Docker, Snipe-IT, Automação de Processos, Integração de APIs, Git/GitHub, Linux, SQL, Arquitetura de Software, Redução de Custos Operacionais (ROI)",
+      curriculo_bruto_integral:
+        "EXPERIÊNCIA EM DESTAQUE:\n" +
+        "- Concepção, desenvolvimento e sustentação de automações corporativas gerando R$ 20 mil anual de economia direta.\n" +
+        "- Padronização de infraestrutura via Docker e controle de inventário/ativos de hardware e software com Snipe-IT.\n" +
+        "- AWAProject: Desenvolvimento de plataforma modular de automação.\n" +
+        "- Bet-Trader: Motor analítico e transacional automatizado.",
+      informacoes_complementares:
+        "Priorizar destaque em eficiência financeira (R$ 20 mil/ano), domínio prático de Docker/Snipe-IT e capacidade de resolver problemas reais de infraestrutura e engenharia sem burocracia."
+    };
+
+    let perfilAtual = { ...PERFIL_PADRAO };
+    let auditoriaRegistros = [];
+    let servidorPythonAtivo = false;
+    let unidadeAtiva = "NEUTRALIZADOR_TOBY";
+    let feixesTaticos = [];
+
+    // =========================================================================
+    // DEFINIÇÃO DAS UNIDADES HERÓIS (AGENTCRAFT)
+    // =========================================================================
+    const UNIDADES = {
+      NEUTRALIZADOR_TOBY: {
+        id: "NEUTRALIZADOR_TOBY",
+        nome: "Neutralizador Toby",
+        papel: "Destruidor de Filtros ATS",
+        icone: "🎯",
+        cor: "#f43f5e",
+        setor: "O ANEXO (CAÇA AO TOBY FLENDERSON)",
+        quote: "\"Cruzo a vaga com seu currículo real, sua economia de R$ 20 mil anual e Docker/Snipe-IT para gabaritar qualquer algoritmo de RH.\"",
+        ph1: "Cole aqui a descrição completa da vaga alvo...",
+        ph2: "Destaque específico para esta vaga (opcional)...",
+        x: 760, y: 125, tx: 760, ty: 125, hx: 760, hy: 125,
+        status: "PRONTO",
+        balao: "Toby na mira."
+      },
+      PROTOCOLO_RECYCLOPS: {
+        id: "PROTOCOLO_RECYCLOPS",
+        nome: "Protocolo Recyclops",
+        papel: "Dwight Schrute — Inteligência OSINT",
+        icone: "🤖",
+        cor: "#10b981",
+        setor: "BULLPEN — MESA DO DWIGHT SCHRUTE",
+        quote: "\"Fato: Vou dissecar a empresa alvo, cruzar com seu dossiê curricular e criar 3 perguntas impiedosas para encurralar o recrutador.\"",
+        ph1: "Nome da Empresa Alvo para o Dossiê de Ataque...",
+        ph2: "Setor da empresa, stack ou link da vaga (opcional)...",
+        x: 445, y: 310, tx: 445, ty: 310, hx: 445, hy: 310,
+        status: "VIGILANTE",
+        balao: "Fato: Pronto."
+      },
+      SISTEMA_WUPHF: {
+        id: "SISTEMA_WUPHF",
+        nome: "Sistema WUPHF.com",
+        papel: "Propaganda Técnica (Com Seu Aval)",
+        icone: "📯",
+        cor: "#f59e0b",
+        setor: "ESTAÇÃO DE TRANSMISSÃO WUPHF",
+        quote: "\"Transformo seus commits do AWAProject e Bet-Trader em posts de LinkedIn focados em ROI e aguardo sua autorização obrigatória.\"",
+        ph1: "Resumo do commit/vitória técnica (ou vazio p/ ler Git)...",
+        ph2: "Diretório local dos projetos (opcional)...",
+        x: 155, y: 355, tx: 155, ty: 355, hx: 155, hy: 355,
+        status: "AGUARDANDO",
+        balao: "Submeto ao Chefe!"
+      },
+      OPERADOR_MOSE: {
+        id: "OPERADOR_MOSE",
+        nome: "Operador Mose (Git)",
+        papel: "Auto-Commit & GitHub Sync",
+        icone: "🚜",
+        cor: "#a855f7",
+        setor: "DEPÓSITO / SERVIDOR FAZENDA SCHRUTE",
+        quote: "\"Mose monitora AWAProject e Bet-Trader silenciosamente, gera Conventional Commits com IA e faz git push automático.\"",
+        ph1: "Caminho local dos repositórios (vazio = busca automática)...",
+        ph2: "Observação de sincronização (opcional)...",
+        x: 760, y: 360, tx: 760, ty: 360, hx: 760, hy: 360,
+        status: "AUTÔNOMO",
+        balao: "Git Sync ativo."
+      }
+    };
+
+    // =========================================================================
+    // PLANTA ARQUITETÔNICA DETALHADA DA DUNDER MIFFLIN SCRANTON
+    // =========================================================================
+    const SALAS_ESCRITORIO = [
+      {
+        id: "SALA_MICHAEL",
+        titulo: "SALA DO GERENTE REGIONAL",
+        sub: "Seu Gabinete Executivo",
+        x: 20, y: 20, w: 255, h: 195,
+        piso: "#1e293b",
+        borda: "#f5b82e",
+        agente: null
+      },
+      {
+        id: "SALA_CONFERENCIA",
+        titulo: "SALA DE CONFERÊNCIAS",
+        sub: "Briefing & Interrogatório",
+        x: 290, y: 20, w: 315, h: 165,
+        piso: "#17253b",
+        borda: "#38bdf8",
+        agente: "PROTOCOLO_RECYCLOPS"
+      },
+      {
+        id: "ANEXO_RH",
+        titulo: "O ANEXO (TOBY / RH)",
+        sub: "Zona de Abate de Filtros ATS",
+        x: 620, y: 20, w: 300, h: 195,
+        piso: "#281826",
+        borda: "#f43f5e",
+        agente: "NEUTRALIZADOR_TOBY"
+      },
+      {
+        id: "ESTACAO_WUPHF",
+        titulo: "RECEPCAO & TORRE WUPHF.COM",
+        sub: "Propaganda LinkedIn (Exige Seu Aval)",
+        x: 20, y: 230, w: 255, h: 240,
+        piso: "#27201c",
+        borda: "#f59e0b",
+        agente: "SISTEMA_WUPHF"
+      },
+      {
+        id: "BULLPEN_CENTRAL",
+        titulo: "BULLPEN — MESA DO DWIGHT",
+        sub: "Centro OSINT Protocolo Recyclops",
+        x: 290, y: 200, w: 315, h: 270,
+        piso: "#152628",
+        borda: "#10b981",
+        agente: "PROTOCOLO_RECYCLOPS"
+      },
+      {
+        id: "DEPOSITO_MOSE",
+        titulo: "DEPÓSITO / FAZENDA SCHRUTE",
+        sub: "Operador Mose — Auto-Commit GitHub",
+        x: 620, y: 230, w: 300, h: 240,
+        piso: "#211830",
+        borda: "#a855f7",
+        agente: "OPERADOR_MOSE"
+      }
+    ];
+
+    // =========================================================================
+    // CARREGAMENTO E SALVAMENTO DO DOSSIÊ CURRICULAR
+    // =========================================================================
+    function carregarFormularioCurriculo() {
+      const salvoLocal = localStorage.getItem("PERFECTENSCHLAG_PERFIL");
+      if (salvoLocal) {
+        try {
+          perfilAtual = { ...PERFIL_PADRAO, ...JSON.parse(salvoLocal) };
+        } catch (e) {}
+      }
+      preencherCamposCurriculo(perfilAtual);
+    }
+
+    function preencherCamposCurriculo(p) {
+      document.getElementById("cvNome").value = p.nome_completo || "";
+      document.getElementById("cvContatos").value =
+        typeof p.contatos === "object"
+          ? Object.entries(p.contatos).filter(([,v]) => v).map(([k,v]) => `${k}: ${v}`).join(" | ")
+          : (p.contatos || "");
+      document.getElementById("cvMarcos").value =
+        Array.isArray(p.marcos_obrigatorios)
+          ? p.marcos_obrigatorios.map(m => `• ${m}`).join("\n")
+          : (p.marcos_obrigatorios || "");
+      document.getElementById("cvSkills").value =
+        Array.isArray(p.competencias_tecnicas)
+          ? p.competencias_tecnicas.join(", ")
+          : (p.competencias_tecnicas || "");
+      document.getElementById("cvBruto").value = p.curriculo_bruto_integral || "";
+      document.getElementById("cvComplementar").value = p.informacoes_complementares || "";
+    }
+
+    async function salvarDadosCurriculares() {
+      perfilAtual = {
+        nome_completo: document.getElementById("cvNome").value.trim(),
+        contatos: document.getElementById("cvContatos").value.trim(),
+        marcos_obrigatorios: document.getElementById("cvMarcos").value.trim(),
+        competencias_tecnicas: document.getElementById("cvSkills").value.trim(),
+        curriculo_bruto_integral: document.getElementById("cvBruto").value.trim(),
+        informacoes_complementares: document.getElementById("cvComplementar").value.trim()
+      };
+
+      localStorage.setItem("PERFECTENSCHLAG_PERFIL", JSON.stringify(perfilAtual));
+      document.getElementById("txtStatusCurriculo").textContent = "ATUALIZADO ✔";
+
+      if (servidorPythonAtivo) {
+        try {
+          await fetch("/api/perfil", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(perfilAtual)
+          });
+          await sincronizarServidor();
+        } catch (e) {}
+      } else {
+        registrarEventoLocal(
+          "ORQUESTRADOR_REGIONAL",
+          "ATUALIZACAO_DOSSIE_CURRICULAR",
+          `Perfil de ${perfilAtual.nome_completo || "Gerente Regional"}`,
+          `Dossiê Curricular e Informações Complementares salvos e prontos para uso imediato pelos 4 agentes.\n\nResumo de Competências:\n${perfilAtual.competencias_tecnicas}\n\nMarcos:\n${perfilAtual.marcos_obrigatorios}`,
+          "CONCLUIDO"
+        );
+      }
+
+      notificar("💾 Seus dados curriculares foram salvos e injetados em todos os agentes!");
+    }
+
+    function processarUploadArquivo(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const conteudo = String(e.target.result || "");
+        if (file.name.endsWith(".json")) {
+          try {
+            const parsed = JSON.parse(conteudo);
+            perfilAtual = { ...perfilAtual, ...parsed };
+            preencherCamposCurriculo(perfilAtual);
+            salvarDadosCurriculares();
+            notificar(`📂 Arquivo JSON '${file.name}' importado com sucesso!`);
+            return;
+          } catch (err) {}
+        }
+        // Para .txt, .md, etc., anexa ao campo de currículo bruto integral
+        const atual = document.getElementById("cvBruto").value.trim();
+        document.getElementById("cvBruto").value =
+          (atual ? atual + "\n\n" : "") + `--- [ARQUIVO ENVIADO: ${file.name}] ---\n` + conteudo;
+        salvarDadosCurriculares();
+        notificar(`📄 Currículo '${file.name}' carregado! Revise os campos e clique em Salvar.`);
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    function exportarPerfilJson() {
+      const blob = new Blob([JSON.stringify(perfilAtual, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "meu_dossie_perfectenschlag.json";
+      a.click();
+      notificar("📤 Backup do seu Dossiê Curricular exportado!");
+    }
+
+    function montarDossieTextoParaPrompt() {
+      return `
+=== DOSSIÊ CURRICULAR OFICIAL DO GERENTE REGIONAL ===
+NOME / TÍTULO: ${perfilAtual.nome_completo}
+CONTATOS: ${perfilAtual.contatos}
+
+MARCOS OBRIGATÓRIOS:
+${perfilAtual.marcos_obrigatorios}
+
+COMPETÊNCIAS TÉCNICAS:
+${perfilAtual.competencias_tecnicas}
+
+CURRÍCULO INTEGRAL / EXPERIÊNCIAS E PROJETOS:
+${perfilAtual.curriculo_bruto_integral}
+
+INFORMAÇÕES COMPLEMENTARES E DIRETRIZES:
+${perfilAtual.informacoes_complementares}
+`.trim();
+    }
+
+    // =========================================================================
+    // SINCRONIZAÇÃO COM SERVIDOR PYTHON / MODO NAVEGADOR
+    // =========================================================================
+    async function sincronizarServidor() {
+      try {
+        const r = await fetch("/api/status");
+        if (!r.ok) throw new Error("Offline");
+        const dados = await r.json();
+        servidorPythonAtivo = true;
+        document.getElementById("tagServerMode").textContent = "BACKEND PYTHON";
+        document.getElementById("tagServerMode").style.color = "#34d399";
+        atualizarStatusKeyUI(dados.api_key_configurada);
+        auditoriaRegistros = dados.auditoria || [];
+        if (dados.perfil && dados.perfil.nome_completo) {
+          perfilAtual = { ...perfilAtual, ...dados.perfil };
+          preencherCamposCurriculo(perfilAtual);
+        }
+        renderizarAuditoria();
+      } catch (err) {
+        servidorPythonAtivo = false;
+        document.getElementById("tagServerMode").textContent = "DIRETO NO BROWSER";
+        document.getElementById("tagServerMode").style.color = "#fbbf24";
+        const k = localStorage.getItem("PERFECTENSCHLAG_GEMINI_KEY");
+        atualizarStatusKeyUI(Boolean(k));
+        const salvo = localStorage.getItem("PERFECTENSCHLAG_AUDITORIA");
+        if (salvo) {
+          auditoriaRegistros = JSON.parse(salvo);
+        } else if (auditoriaRegistros.length === 0) {
+          simularTurnoCompleto(true);
+        }
+        renderizarAuditoria();
+      }
+    }
+
+    function atualizarStatusKeyUI(ativa) {
+      const txt = document.getElementById("txtApiKey");
+      const pill = document.getElementById("pillApiKey");
+      if (ativa) {
+        txt.textContent = "ATIVA ✔";
+        txt.style.color = "#34d399";
+        pill.style.borderColor = "#10b981";
+      } else {
+        txt.textContent = "CONFIGURAR";
+        txt.style.color = "#fb7185";
+        pill.style.borderColor = "#f43f5e";
+      }
+    }
+
+    // =========================================================================
+    // SELEÇÃO DE UNIDADE E EXECUÇÃO DE MISSÕES COM DOSSIÊ INJETADO
+    // =========================================================================
+    function selecionarUnidade(id) {
+      if (!UNIDADES[id]) return;
+      unidadeAtiva = id;
+      const u = UNIDADES[id];
+      document.getElementById("hudAvatar").textContent = u.icone;
+      document.getElementById("hudName").textContent = u.nome;
+      document.getElementById("hudRole").textContent = u.papel;
+      document.getElementById("hudRoomLabel").textContent = "SETOR: " + u.setor;
+      document.getElementById("hudQuote").textContent = u.quote;
+      document.getElementById("inputTarget").placeholder = u.ph1;
+      document.getElementById("inputExtra").placeholder = u.ph2;
+      document.getElementById("hudStatusText").textContent = u.status;
+      renderizarRoster();
+    }
+
+    function renderizarRoster() {
+      const el = document.getElementById("rosterContainer");
+      el.innerHTML = "";
+      Object.values(UNIDADES).forEach(u => {
+        const item = document.createElement("div");
+        item.className = "roster-item" + (u.id === unidadeAtiva ? " selected" : "");
+        item.onclick = () => selecionarUnidade(u.id);
+        item.innerHTML = `
+          <span><strong>${u.icone} ${u.nome}</strong></span>
+          <span class="roster-tag" style="color:${u.cor};">${u.status}</span>
+        `;
+        el.appendChild(item);
+      });
+    }
+
+    async function executarMissao() {
+      const u = UNIDADES[unidadeAtiva];
+      const entrada = document.getElementById("inputTarget").value.trim();
+      const extra = document.getElementById("inputExtra").value.trim();
+
+      if ((u.id === "NEUTRALIZADOR_TOBY" || u.id === "PROTOCOLO_RECYCLOPS") && !entrada) {
+        notificar(`Fato: Preencha o campo alvo para o ${u.nome} iniciar o ataque!`);
+        document.getElementById("inputTarget").focus();
+        return;
+      }
+
+      // Movimenta o agente até a sala do Gerente Regional
+      u.status = "EM MISSÃO";
+      u.balao = "Em combate!";
+      u.tx = 148;
+      u.ty = 118;
+      feixesTaticos.push({ x1: u.x, y1: u.y, x2: 148, y2: 118, cor: u.cor, alpha: 1 });
+      renderizarRoster();
+      alternarAba("AUDIT");
+
+      const dossie = montarDossieTextoParaPrompt();
+
+      if (servidorPythonAtivo) {
+        try {
+          const resp = await fetch("/api/executar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              agente: u.id,
+              entrada,
+              contexto: extra ? `${extra}\n\n${dossie}` : dossie
+            })
+          });
+          const data = await resp.json();
+          if (!resp.ok) {
+            notificar(data.erro || "Falha na missão");
+            u.status = "ERRO";
+          } else {
+            u.status = u.id === "SISTEMA_WUPHF" ? "AGUARDANDO AVAL" : "CONCLUÍDO";
+            u.balao = u.id === "SISTEMA_WUPHF" ? "Autorize meu post!" : "Missão cumprida!";
+            notificar(`✅ ${u.nome} concluiu a operação com seus dados curriculares!`);
+          }
+          await sincronizarServidor();
+        } catch (e) {
+          notificar("Erro ao contatar servidor: " + e.message);
+        }
+      } else {
+        const key = localStorage.getItem("PERFECTENSCHLAG_GEMINI_KEY");
+        if (!key) {
+          const msg = "Fato: Você esqueceu a chave da API. Inaceitável.";
+          notificar(msg);
+          registrarEventoLocal(u.id, "BLOQUEIO_API_KEY", entrada || "Sem entrada", msg, "ERRO");
+          u.status = "SEM CHAVE";
+          abrirModal("modalApiKey");
+        } else {
+          try {
+            const respostaIA = await consultarGeminiBrowser(key, u.id, entrada, extra, dossie);
+            const st = u.id === "SISTEMA_WUPHF" ? "AGUARDANDO_AUTORIZACAO" : "CONCLUIDO";
+            registrarEventoLocal(
+              u.id,
+              u.id === "SISTEMA_WUPHF" ? "RASCUNHO_LINKEDIN_WUPHF" : "OPERACAO_COM_DOSSIE",
+              entrada || "Monitoramento AWAProject & Bet-Trader",
+              respostaIA,
+              st
+            );
+            u.status = u.id === "SISTEMA_WUPHF" ? "AGUARDANDO AVAL" : "CONCLUÍDO";
+            u.balao = u.id === "SISTEMA_WUPHF" ? "Aguardando seu aval!" : "Alvo neutralizado!";
+            notificar(`✅ ${u.nome} gerou o resultado usando seu currículo!`);
+          } catch (err) {
+            registrarEventoLocal(u.id, "ERRO_EXECUCAO", entrada, err.message, "ERRO");
+            notificar("Erro na chamada Gemini: " + err.message);
+          }
+        }
+      }
+
+      setTimeout(() => {
+        u.tx = u.hx;
+        u.ty = u.hy;
+        renderizarRoster();
+      }, 1700);
+    }
+
+    async function consultarGeminiBrowser(apiKey, agenteId, entrada, extra, dossie) {
+      const instrucoes = {
+        NEUTRALIZADOR_TOBY: `Você é o Agente Neutralizador Toby (Especialista Anti-ATS). Cruza a vaga abaixo com o DOSSIÊ CURRICULAR OFICIAL do Gerente Regional e gere: 1) Diagnóstico de palavras-chave ATS da vaga; 2) O Currículo Completo otimizado matematicamente para destruir o filtro de RH.\n\nVAGA ALVO:\n${entrada}\n\nOBSERVAÇÃO EXTRA: ${extra}\n\n${dossie}`,
+        PROTOCOLO_RECYCLOPS: `Você é Dwight Kurt Schrute III operando o Protocolo Recyclops (OSINT). Gere um Dossiê de Ataque implacável sobre a empresa "${entrada}" (${extra}), expondo suas ineficiências e usando o DOSSIÊ CURRICULAR OFICIAL abaixo como prova de superioridade. Ao final, formule 3 perguntas interrogatórias e impiedosas para usar na entrevista.\n\n${dossie}`,
+        SISTEMA_WUPHF: `Você é o Agente Sistema WUPHF.com. Escreva um rascunho de post de LinkedIn direto e sem firulas celebrando o avanço técnico (${entrada || "Novo commit nos projetos AWAProject e Bet-Trader"}) alinhado ao DOSSIÊ CURRICULAR abaixo.\n\n${dossie}`,
+        OPERADOR_MOSE: `Você é o Operador Mose (Auto-Commit GitHub). Gere uma mensagem Conventional Commits cirúrgica e o relatório de sincronização para AWAProject e Bet-Trader considerando: ${entrada || "Atualização de código e automação"}.`
+      };
+
+      const modelosCandidatos = [
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
+        "gemini-2.0-flash"
+      ];
+
+      let ultimoErro = "Falha ao consultar API Gemini";
+      for (const modelo of modelosCandidatos) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: instrucoes[agenteId] }] }]
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          return data.candidates?.[0]?.content?.parts?.[0]?.text || "Sem retorno.";
+        }
+        ultimoErro = data.error?.message || ultimoErro;
+        if (res.status !== 404) {
+          throw new Error(ultimoErro);
+        }
+      }
+
+      // Fallback dinâmico via ListModels caso a conta use outro identificador
+      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`;
+      const listRes = await fetch(listUrl);
+      const listData = await listRes.json();
+      const modeloDisponivel = (listData.models || []).find(
+        m => (m.supportedGenerationMethods || []).includes("generateContent") && m.name.includes("gemini")
+      );
+      if (modeloDisponivel) {
+        const genUrl = `https://generativelanguage.googleapis.com/v1beta/${modeloDisponivel.name}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const genRes = await fetch(genUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: instrucoes[agenteId] }] }]
+          })
+        });
+        const genData = await genRes.json();
+        if (genRes.ok) {
+          return genData.candidates?.[0]?.content?.parts?.[0]?.text || "Sem retorno.";
+        }
+      }
+      throw new Error(ultimoErro);
+    }
+
+    function registrarEventoLocal(agente, acao, entrada, saida, status) {
+      auditoriaRegistros.unshift({
+        id: Math.random().toString(36).substring(2, 8).toUpperCase(),
+        timestamp: new Date().toLocaleString("pt-BR"),
+        agente,
+        acao,
+        entrada,
+        saida,
+        status
+      });
+      localStorage.setItem("PERFECTENSCHLAG_AUDITORIA", JSON.stringify(auditoriaRegistros));
+      renderizarAuditoria();
+    }
+
+    // =========================================================================
+    // AUDITORIA FÁCIL & DESPACHO DE AUTORIZAÇÃO DO WUPHF
+    // =========================================================================
+    function renderizarAuditoria() {
+      const fAg = document.getElementById("selFiltroAgente").value;
+      const fSt = document.getElementById("selFiltroStatus").value;
+      const feed = document.getElementById("auditFeed");
+
+      const pendentes = auditoriaRegistros.filter(r => r.status === "AGUARDANDO_AUTORIZACAO").length;
+      document.getElementById("bannerWuphfPendente").className =
+        "wuphf-alert" + (pendentes > 0 ? " show" : "");
+
+      const lista = auditoriaRegistros.filter(r => {
+        const okA = fAg === "TODOS" || r.agente === fAg;
+        const okS =
+          fSt === "TODOS" ||
+          r.status === fSt ||
+          (fSt === "VETADO" && (r.status === "VETADO" || r.status === "ERRO"));
+        return okA && okS;
+      });
+
+      document.getElementById("badgeAuditCount").textContent = lista.length;
+      feed.innerHTML = "";
+
+      const mapaCores = {
+        NEUTRALIZADOR_TOBY: "#f43f5e",
+        PROTOCOLO_RECYCLOPS: "#10b981",
+        SISTEMA_WUPHF: "#f59e0b",
+        OPERADOR_MOSE: "#a855f7",
+        ORQUESTRADOR_REGIONAL: "#f5b82e"
+      };
+
+      lista.forEach(item => {
+        const card = document.createElement("div");
+        const pendente = item.status === "AGUARDANDO_AUTORIZACAO";
+        card.className = "audit-item" + (pendente ? " needs-approval" : "");
+        const cor = mapaCores[item.agente] || "#38bdf8";
+
+        card.innerHTML = `
+          <div class="audit-top">
+            <span class="tag-agent" style="background:${cor}22; color:${cor}; border:1px solid ${cor};">
+              ${item.agente}
+            </span>
+            <span class="tag-status st-${item.status}">
+              ${pendente ? "⏳ EXIGE SUA AUTORIZAÇÃO" : item.status}
+            </span>
+          </div>
+          <div class="audit-meta">
+            <strong>#${item.id}</strong> • ${item.timestamp}<br/>
+            <strong>Alvo:</strong> ${escapar(item.entrada || "-")}
+          </div>
+          <div class="audit-box">${escapar(item.saida || "")}</div>
+          <div class="audit-actions">
+            <button class="btn" onclick="abrirInspecao('${item.id}')">🔍 Expandir</button>
+            <button class="btn" onclick="copiarItem('${item.id}')">📋 Copiar</button>
+            ${
+              pendente
+                ? `
+                  <button class="btn btn-emerald" onclick="despacharWuphf('${item.id}', 'A')">✅ Autorizar</button>
+                  <button class="btn" onclick="despacharWuphf('${item.id}', 'R')">✏️ Revisar</button>
+                  <button class="btn btn-crimson" onclick="despacharWuphf('${item.id}', 'C')">🚫 Vetar</button>
+                `
+                : ""
+            }
+          </div>
+        `;
+        feed.appendChild(card);
+      });
+    }
+
+    async function despacharWuphf(id, decisao) {
+      const item = auditoriaRegistros.find(r => r.id === id);
+      if (!item) return;
+
+      let feedback = "";
+      if (decisao === "R") {
+        feedback = prompt("Qual ajuste o WUPHF deve fazer no post?", "Destaque mais a economia de R$ 20 mil anual e Docker.") || "";
+        if (!feedback) return;
+      }
+
+      if (servidorPythonAtivo) {
+        await fetch("/api/autorizar_wuphf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, decisao, feedback, saida: item.saida })
+        });
+        await sincronizarServidor();
+      } else {
+        if (decisao === "A") item.status = "AUTORIZADO";
+        if (decisao === "C") item.status = "VETADO";
+        if (decisao === "R") item.saida = `[DIRETRIZ DO GERENTE: ${feedback}]\n\n` + item.saida;
+        localStorage.setItem("PERFECTENSCHLAG_AUDITORIA", JSON.stringify(auditoriaRegistros));
+        renderizarAuditoria();
+      }
+
+      notificar(
+        decisao === "A"
+          ? "✅ Post WUPHF autorizado pelo Gerente Regional!"
+          : decisao === "C"
+          ? "🚫 Post WUPHF vetado!"
+          : "♻️ Rascunho revisado!"
+      );
+    }
+
+    // =========================================================================
+    // RENDERIZAÇÃO ARQUITETÔNICA DA PLANTA DUNDER MIFFLIN NO CANVAS
+    // =========================================================================
+    const canvas = document.getElementById("officeCanvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.addEventListener("click", e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+      for (const u of Object.values(UNIDADES)) {
+        if (Math.hypot(mx - u.x, my - u.y) <= 28) {
+          selecionarUnidade(u.id);
+          notificar(`Unidade selecionada: ${u.nome}`);
+          return;
+        }
+      }
+
+      for (const s of SALAS_ESCRITORIO) {
+        if (mx >= s.x && mx <= s.x + s.w && my >= s.y && my <= s.y + s.h) {
+          if (s.agente && UNIDADES[s.agente]) {
+            selecionarUnidade(s.agente);
+            UNIDADES[s.agente].tx = mx;
+            UNIDADES[s.agente].ty = my;
+            notificar(`${UNIDADES[s.agente].nome} deslocando-se para ${s.titulo}`);
+          } else {
+            irParaAbaCurriculo();
+          }
+          return;
+        }
+      }
+    });
+
+    function desenharEscritorio() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Piso base escuro
+      ctx.fillStyle = "#0b101b";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Desenha cada sala com textura de piso, paredes duplas e mobília
+      SALAS_ESCRITORIO.forEach(s => {
+        ctx.fillStyle = s.piso;
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+
+        // Grade sutil interna do carpete
+        ctx.strokeStyle = "rgba(255,255,255,0.03)";
+        ctx.lineWidth = 1;
+        for (let gx = s.x + 25; gx < s.x + s.w; gx += 25) {
+          ctx.beginPath();
+          ctx.moveTo(gx, s.y + 42);
+          ctx.lineTo(gx, s.y + s.h);
+          ctx.stroke();
+        }
+        for (let gy = s.y + 42; gy < s.y + s.h; gy += 25) {
+          ctx.beginPath();
+          ctx.moveTo(s.x, gy);
+          ctx.lineTo(s.x + s.w, gy);
+          ctx.stroke();
+        }
+
+        // Parede externa
+        ctx.strokeStyle = s.borda;
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(s.x, s.y, s.w, s.h);
+
+        // Faixa de título da sala
+        ctx.fillStyle = "rgba(7, 10, 16, 0.88)";
+        ctx.fillRect(s.x + 2, s.y + 2, s.w - 4, 40);
+
+        ctx.fillStyle = s.borda;
+        ctx.font = "bold 12px 'Segoe UI', sans-serif";
+        ctx.fillText(s.titulo, s.x + 12, s.y + 19);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "11px 'Segoe UI', sans-serif";
+        ctx.fillText(s.sub, s.x + 12, s.y + 34);
+      });
+
+      // Mobília detalhada estilo Dunder Mifflin
+      desenharMobilia(105, 105, 85, 42, "#78350f", "#f59e0b", "MESA GERENTE");
+      desenharMobilia(385, 95, 130, 48, "#451a03", "#38bdf8", "MESA DE CONFERÊNCIA");
+      desenharMobilia(395, 290, 105, 55, "#1e293b", "#10b981", "MESAS DWIGHT & JIM");
+      desenharMobilia(720, 105, 95, 42, "#31102f", "#f43f5e", "BAIA DO TOBY (ATS)");
+      desenharMobilia(100, 335, 105, 45, "#3b2314", "#f59e0b", "RECEPÇÃO / WUPHF");
+      desenharMobilia(710, 335, 115, 48, "#1e1b4b", "#a855f7", "RACK GITHUB MOSE");
+
+      // Feixes de transmissão tática
+      for (let i = feixesTaticos.length - 1; i >= 0; i--) {
+        const f = feixesTaticos[i];
+        ctx.save();
+        ctx.strokeStyle = f.cor;
+        ctx.globalAlpha = f.alpha;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 5]);
+        ctx.beginPath();
+        ctx.moveTo(f.x1, f.y1);
+        ctx.lineTo(f.x2, f.y2);
+        ctx.stroke();
+        ctx.restore();
+        f.alpha -= 0.02;
+        if (f.alpha <= 0) feixesTaticos.splice(i, 1);
+      }
+
+      // Desenha o Gerente Regional (Você) na Sala do Michael
+      ctx.save();
+      ctx.fillStyle = "#0f172a";
+      ctx.strokeStyle = "#f5b82e";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(148, 125, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = "17px 'Segoe UI Emoji', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("👑", 148, 125);
+      ctx.fillStyle = "#fde68a";
+      ctx.font = "bold 10px 'Segoe UI', sans-serif";
+      ctx.fillText("GERENTE REGIONAL (VOCÊ)", 148, 155);
+      ctx.restore();
+
+      // Desenha os 4 Agentes Heróis
+      Object.values(UNIDADES).forEach(u => {
+        const dx = u.tx - u.x;
+        const dy = u.ty - u.y;
+        const d = Math.hypot(dx, dy);
+        if (d > 1.5) {
+          u.x += (dx / d) * 2.8;
+          u.y += (dy / d) * 2.8;
+        }
+
+        const isSel = u.id === unidadeAtiva;
+
+        if (isSel) {
+          ctx.save();
+          ctx.strokeStyle = "#10b981";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.ellipse(u.x, u.y + 15, 26, 12, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        ctx.save();
+        ctx.fillStyle = "#0b111d";
+        ctx.strokeStyle = u.cor;
+        ctx.lineWidth = isSel ? 3.5 : 2;
+        ctx.beginPath();
+        ctx.arc(u.x, u.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = "19px 'Segoe UI Emoji', sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(u.icone, u.x, u.y + 1);
+
+        // Barra HP RTS
+        ctx.fillStyle = "#000";
+        ctx.fillRect(u.x - 21, u.y - 31, 42, 6);
+        ctx.fillStyle = "#10b981";
+        ctx.fillRect(u.x - 20, u.y - 30, 40, 4);
+
+        ctx.fillStyle = "#f8fafc";
+        ctx.font = "bold 10.5px 'Segoe UI', sans-serif";
+        ctx.fillText(u.nome, u.x, u.y + 32);
+
+        if (u.balao) {
+          ctx.font = "bold 10px 'Segoe UI', sans-serif";
+          const w = ctx.measureText(u.balao).width + 14;
+          ctx.fillStyle = "rgba(9, 13, 22, 0.94)";
+          ctx.strokeStyle = u.cor;
+          ctx.lineWidth = 1.2;
+          ctx.fillRect(u.x - w / 2, u.y - 52, w, 17);
+          ctx.strokeRect(u.x - w / 2, u.y - 52, w, 17);
+          ctx.fillStyle = "#fff";
+          ctx.fillText(u.balao, u.x, u.y - 43);
+        }
+        ctx.restore();
+      });
+
+      requestAnimationFrame(desenharEscritorio);
+    }
+
+    function desenharMobilia(x, y, w, h, corFundo, corBorda, label) {
+      ctx.save();
+      ctx.fillStyle = corFundo;
+      ctx.strokeStyle = corBorda;
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeRect(x, y, w, h);
+      ctx.fillStyle = "#e2e8f0";
+      ctx.font = "bold 9px 'Segoe UI', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(label, x + w / 2, y + h / 2 + 3);
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // NAVEGAÇÃO DE ABAS, MODAIS E SIMULAÇÃO
+    // =========================================================================
+    function alternarAba(aba) {
+      const isAudit = aba === "AUDIT";
+      document.getElementById("tabBtnAudit").className = "tab-btn" + (isAudit ? " active" : "");
+      document.getElementById("tabBtnDossier").className = "tab-btn" + (!isAudit ? " active" : "");
+      document.getElementById("paneAudit").className = "tab-pane" + (isAudit ? " active" : "");
+      document.getElementById("paneDossier").className = "tab-pane" + (!isAudit ? " active" : "");
+    }
+
+    function irParaAbaCurriculo() {
+      alternarAba("DOSSIER");
+      notificar("📂 Aba 'Meu Currículo & Dados' aberta à direita. Suba seu arquivo ou edite os campos!");
+    }
+
+    function abrirInspecao(id) {
+      const item = auditoriaRegistros.find(r => r.id === id);
+      if (!item) return;
+      document.getElementById("modalExpandirTitulo").textContent = `${item.agente} — Registro #${item.id}`;
+      document.getElementById("modalExpandirMeta").innerHTML =
+        `<strong>Horário:</strong> ${item.timestamp} | <strong>Status:</strong> ${item.status}<br/><strong>Alvo:</strong> ${escapar(item.entrada)}`;
+      document.getElementById("modalExpandirConteudo").textContent = item.saida;
+      abrirModal("modalExpandir");
+    }
+
+    function copiarItem(id) {
+      const item = auditoriaRegistros.find(r => r.id === id);
+      if (!item) return;
+      navigator.clipboard.writeText(item.saida);
+      notificar(`📋 Conteúdo do registro #${id} copiado!`);
+    }
+
+    function copiarModalConteudo() {
+      navigator.clipboard.writeText(document.getElementById("modalExpandirConteudo").textContent);
+      notificar("📋 Copiado para a área de transferência!");
+    }
+
+    function abrirModal(id) {
+      document.getElementById(id).classList.add("open");
+    }
+
+    function fecharModal(id) {
+      document.getElementById(id).classList.remove("open");
+    }
+
+    async function confirmarApiKey() {
+      const k = document.getElementById("inputApiKeyModal").value.trim();
+      if (!k) {
+        notificar("Fato: Você esqueceu a chave da API. Inaceitável.");
+        return;
+      }
+      localStorage.setItem("PERFECTENSCHLAG_GEMINI_KEY", k);
+      if (servidorPythonAtivo) {
+        await fetch("/api/config_apikey", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: k })
+        });
+        await sincronizarServidor();
+      } else {
+        atualizarStatusKeyUI(true);
+      }
+      fecharModal("modalApiKey");
+      notificar("🔑 GEMINI_API_KEY ativada com sucesso!");
+    }
+
+    function exportarAuditoriaJson() {
+      const blob = new Blob([JSON.stringify(auditoriaRegistros, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "auditoria_perfectenschlag.json";
+      a.click();
+      notificar("📥 Histórico de auditoria exportado!");
+    }
+
+    function simularTurnoCompleto(silencioso = false) {
+      const dh = new Date().toLocaleString("pt-BR");
+      const demo = [
+        {
+          id: "WUPHF99",
+          timestamp: dh,
+          agente: "SISTEMA_WUPHF",
+          acao: "RASCUNHO_LINKEDIN_WUPHF",
+          entrada: "Commit [AWAProject & Bet-Trader]: Otimização e conteinerização Docker",
+          saida: `Engenharia de software sem impacto financeiro é apenas hobby caro.\n\nAcabamos de subir uma nova atualização no AWAProject e Bet-Trader consolidando a mesma arquitetura de automação que gera R$ 20.000,00 anuais de economia comprovada e governança de ativos com Docker e Snipe-IT.\n\n• Automação ponta a ponta sem intervenção manual.\n• Ambientes padronizados em containers Docker.\n• Foco absoluto em disponibilidade e redução de custos.\n\n#SoftwareEngineering #Python #Docker #Automacao #DevOps`,
+          status: "AGUARDANDO_AUTORIZACAO"
+        },
+        {
+          id: "TOBY99",
+          timestamp: dh,
+          agente: "NEUTRALIZADOR_TOBY",
+          acao: "DESTRUICAO_FILTRO_ATS",
+          entrada: "Vaga: Engenheiro de Software / DevOps & Automação",
+          saida: `[PALAVRAS-CHAVE ATS DETECTADAS]: Python, Docker, Snipe-IT, Automação, CI/CD, Redução de Custos.\n\n[CURRÍCULO OTIMIZADO COM SEU DOSSIÊ]:\n• Economia auditada de R$ 20 mil anual (R$ 20.000,00/ano) via automação de processos.\n• Implantação de infraestrutura conteinerizada Docker e gestão de ativos Snipe-IT.\n• Autor dos projetos AWAProject e Bet-Trader.`,
+          status: "CONCLUIDO"
+        }
+      ];
+      auditoriaRegistros = [...demo, ...auditoriaRegistros];
+      localStorage.setItem("PERFECTENSCHLAG_AUDITORIA", JSON.stringify(auditoriaRegistros));
+      renderizarAuditoria();
+      if (!silencioso) notificar("🧪 Turno de demonstração carregado na Auditoria!");
+    }
+
+    function notificar(msg) {
+      const b = document.getElementById("toastBanner");
+      b.textContent = msg;
+      b.classList.add("visible");
+      clearTimeout(window._tTimer);
+      window._tTimer = setTimeout(() => b.classList.remove("visible"), 3600);
+    }
+
+    function escapar(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    window.addEventListener("keydown", e => {
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) return;
+      const k = e.key.toUpperCase();
+      if (k === "1") selecionarUnidade("NEUTRALIZADOR_TOBY");
+      if (k === "2") selecionarUnidade("PROTOCOLO_RECYCLOPS");
+      if (k === "3") selecionarUnidade("SISTEMA_WUPHF");
+      if (k === "4") selecionarUnidade("OPERADOR_MOSE");
+      if (k === "P") irParaAbaCurriculo();
+      if (k === "Q") executarMissao();
+      if (k === "D") simularTurnoCompleto();
+    });
+
+    carregarFormularioCurriculo();
+    selecionarUnidade("NEUTRALIZADOR_TOBY");
+    sincronizarServidor();
+    requestAnimationFrame(desenharEscritorio);
+  </script>
+</body>
+</html>

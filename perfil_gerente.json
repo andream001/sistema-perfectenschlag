@@ -1,0 +1,61 @@
+{
+  "nome_completo": "André (Gerente Regional)",
+  "titulo_profissional": "Engenheiro de Software | Automação, Infraestrutura Docker & Governança de TI",
+  "localizacao": "Brasil (Disponível Remoto / Híbrido)",
+  "contatos": {
+    "email": "",
+    "telefone": "",
+    "linkedin": "",
+    "github": "",
+    "portfolio": ""
+  },
+  "resumo_executivo": "Profissional de Engenharia de Software, Automação e Infraestrutura com foco implacável em ROI operacional, redução de custos e confiabilidade de sistemas. Responsável por arquitetar automações que geram economia comprovada de R$ 20.000,00 anuais (R$ 20 mil/ano) e por implantar infraestrutura conteinerizada em Docker com governança completa de ativos via Snipe-IT.",
+  "marcos_obrigatorios": [
+    "Automação de Processos com impacto financeiro direto: economia comprovada e recorrente de R$ 20 mil anual (R$ 20.000,00/ano), eliminando trabalho manual e gargalos operacionais.",
+    "Infraestrutura & DevOps: Implantação produtiva de containers Docker e sistema de gestão de ativos de TI Snipe-IT, garantindo rastreabilidade ponta a ponta e padronização de ambiente.",
+    "AWAProject: Arquitetura e desenvolvimento de solução modular voltada a automação e eficiência operacional.",
+    "Bet-Trader: Engenharia de sistema analítico e transacional de alta performance, processamento de dados em tempo real e gestão automatizada de estratégias."
+  ],
+  "experiencias_profissionais": [
+    {
+      "cargo": "Engenheiro de Automação & Infraestrutura / Desenvolvedor",
+      "empresa": "Experiência Principal",
+      "periodo": "Atual",
+      "realizacoes": [
+        "Concepção e implementação de pipelines de automação que geram economia direta de R$ 20 mil anual.",
+        "Implantação e administração de ambiente Docker produtivo integrado ao Snipe-IT para controle rigoroso de inventário e ativos.",
+        "Desenvolvimento contínuo dos ecossistemas AWAProject e Bet-Trader."
+      ]
+    }
+  ],
+  "projetos_destaque": [
+    {
+      "nome": "AWAProject",
+      "stack": "Python, Automação, APIs, Docker",
+      "descricao": "Sistema focado em automação de fluxos operacionais e integração de serviços."
+    },
+    {
+      "nome": "Bet-Trader",
+      "stack": "Python, Análise de Dados, Automação Transacional, Git",
+      "descricao": "Motor analítico e de execução automatizada com foco em performance e gestão de risco."
+    }
+  ],
+  "competencias_tecnicas": [
+    "Python",
+    "Docker & Conteinerização",
+    "Snipe-IT (IT Asset Management)",
+    "Automação de Processos (RPA / Scripts / APIs)",
+    "Linux & Administração de Servidores",
+    "Git & GitHub Actions / CI-CD",
+    "SQL & Bancos de Dados",
+    "Arquitetura de Software & Integração de Sistemas"
+  ],
+  "formacao_e_certificacoes": [],
+  "idiomas": [
+    "Português (Nativo)",
+    "Inglês (Técnico / Leitura e Escrita)"
+  ],
+  "curriculo_bruto_integral": "",
+  "informacoes_complementares": "Foco em vagas de Engenharia de Software, DevOps, Automação, SRE, Infraestrutura e Sustentação/Arquitetura."
+}
+
