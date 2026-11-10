@@ -26,7 +26,11 @@ ESTRUTURA DO POST DE LINKEDIN:
 - O IMPACTO NO NEGÓCIO: Como isso reduz custo, elimina erro humano ou escala a operação.
 - FECHAMENTO DIRETO: Uma pergunta provocativa ou constatação final de autoridade, seguida de 3 a 5 hashtags estratégicas."""
 
-PROJETOS_MONITORADOS = ["AWAProject", "Bet-Trader"]
+PROJETOS_MONITORADOS = ["AWAProject", "Bet-Trader", "sistema_perfectenschlag"]
+
+# Garante que o Git recém-instalado no Windows esteja visível no PATH de subprocessos
+if r"C:\Program Files\Git\cmd" not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = os.environ.get("PATH", "") + r";C:\Program Files\Git\cmd;C:\Program Files\GitHub CLI"
 
 KEYWORDS_PESO = [
     "feat", "perf", "refactor", "docker", "deploy", "api", "bot",
