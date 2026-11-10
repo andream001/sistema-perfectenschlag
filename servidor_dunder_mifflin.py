@@ -26,6 +26,7 @@ from agentes.esteira_golden_ticket import (
     carregar_candidaturas,
     criar_pacote_candidatura,
     decidir_envio_candidatura,
+    registrar_retorno_webhook,
     verificar_status_vaga_E_email,
 )
 

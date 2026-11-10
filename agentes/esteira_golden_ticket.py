@@ -226,3 +226,45 @@ def decidir_envio_candidatura(
             salvar_candidaturas(todas)
             return c
     return None
+
+
+def registrar_retorno_webhook(
+    empresa_ou_id: str,
+    remetente: str,
+    assunto: str,
+    mensagem: str,
+) -> Optional[Dict[str, Any]]:
+    """
+    Recebe um evento externo via Webhook (n8n, Make, Google Apps Script ou Evolution API)
+    avisando que um recrutador respondeu por e-mail/WhatsApp ou que o status na plataforma mudou.
+    """
+    todas = carregar_candidaturas()
+    agora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    termo = (empresa_ou_id or "").strip().lower()
+
+    alvo = None
+    for c in todas:
+        if c.get("id", "").lower() == termo or termo in c.get("cargo_empresa", "").lower() or termo in c.get("link_ou_email", "").lower():
+            alvo = c
+            break
+
+    if not alvo and todas:
+        alvo = todas[0]
+
+    if not alvo:
+        return None
+
+    resumo_seguro = censurar_dados_sensiveis(f"De: {remetente} | Assunto: {assunto} | Msg: {mensagem[:300]}")
+    alvo.setdefault("alertas_monitoramento", []).append(
+        f"[{agora}] 🔔 WEBHOOK RECEBIDO -> {resumo_seguro}"
+    )
+    alvo["ultimo_check_monitoramento"] = agora
+
+    texto_comb = f"{assunto} {mensagem}".lower()
+    if any(k in texto_comb for k in ("entrevista", "interview", "bate-papo", "agenda", "reunião", "reuniao", "avançou")):
+        alvo["status"] = "ENTREVISTA_CONVOCADA"
+
+    salvar_candidaturas(todas)
+    return alvo
+
+
