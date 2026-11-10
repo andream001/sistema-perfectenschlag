@@ -136,6 +136,64 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
             self._enviar_json({"ok": True, "candidatura": atualizada})
             return
 
+        if self.path == "/webhook/vaga":
+            if not os.environ.get("GEMINI_API_KEY"):
+                self._enviar_json(
+                    {"erro": "Fato: Você esqueceu a chave da API. Inaceitável."},
+                    status_code=403,
+                )
+                return
+            cargo_empresa = str(payload.get("cargo_empresa", payload.get("title", "Vaga via Webhook"))).strip()
+            link_ou_email = str(payload.get("link_ou_email", payload.get("url", ""))).strip()
+            descricao_vaga = str(payload.get("descricao_vaga", payload.get("description", ""))).strip()
+            pacote = criar_pacote_candidatura(
+                cargo_empresa=cargo_empresa,
+                link_ou_email=link_ou_email,
+                descricao_vaga=descricao_vaga,
+                observacoes_extras="Capturada automaticamente via Webhook Externo (Trava de Aprovação Ativa)",
+            )
+            registrar_evento_auditoria(
+                agente="GOLDEN_TICKET",
+                acao="WEBHOOK_NOVA_VAGA_DETECTADA",
+                entrada=f"{cargo_empresa} ({link_ou_email})",
+                saida=pacote.get("curriculo_moldado", ""),
+                status="AGUARDANDO_AUTORIZACAO",
+                requer_autorizacao=True,
+            )
+            self._enviar_json({"ok": True, "status": "AGUARDANDO_AUTORIZACAO_GERENTE", "candidatura": pacote})
+            return
+
+        if self.path == "/webhook/retorno-recrutador":
+            empresa_ou_id = str(payload.get("empresa_ou_id", payload.get("id", ""))).strip()
+            remetente = str(payload.get("remetente", payload.get("from", "Recrutador"))).strip()
+            assunto = str(payload.get("assunto", payload.get("subject", "Retorno Processo Seletivo"))).strip()
+            mensagem = str(payload.get("mensagem", payload.get("body", ""))).strip()
+            atualizada = registrar_retorno_webhook(empresa_ou_id, remetente, assunto, mensagem)
+            registrar_evento_auditoria(
+                agente="OPERADOR_MOSE",
+                acao="WEBHOOK_RETORNO_RECRUTADOR_EMAIL",
+                entrada=f"De: {remetente} | Assunto: {assunto}",
+                saida=mensagem,
+                status="CONCLUIDO",
+            )
+            self._enviar_json({"ok": True, "candidatura": atualizada})
+            return
+
+        if self.path == "/webhook/whatsapp-lead":
+            telefone = str(payload.get("phone", payload.get("telefone", ""))).strip()
+            nome = str(payload.get("name", payload.get("nome", "Lead WhatsApp"))).strip()
+            msg = str(payload.get("text", payload.get("mensagem", ""))).strip()
+            status_lead = str(payload.get("status", "respondeu")).strip()
+            evento = registrar_evento_auditoria(
+                agente="SISTEMA_WUPHF",
+                acao=f"WEBHOOK_WHATSAPP_LEAD_{status_lead.upper()}",
+                entrada=f"{nome} ({telefone})",
+                saida=f"Mensagem recebida no WhatsApp: {msg}",
+                status="CONCLUIDO",
+            )
+            self._enviar_json({"ok": True, "evento": evento})
+            return
+
         if self.path == "/api/perfil":
             perfil_salvo = salvar_perfil_gerente(payload)
             registrar_evento_auditoria(
