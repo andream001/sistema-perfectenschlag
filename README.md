@@ -9,3 +9,4 @@ Arquitetura multi-agente autônoma em Python (`google-generativeai` / Gemini) co
 4. **Sistema WUPHF.com (`agentes/sistema_wuphf.py`)**: Unidade de propaganda técnica para LinkedIn com trava obrigatória de autorização do Gerente Regional.
 5. **Operador Mose (`agentes/operador_mose.py`)**: Unidade autônoma de Auto-Commit e sincronização GitHub.
 6. **Front-End AgentCraft RTS (`frontend/index.html` & `servidor_dunder_mifflin.py`)**: Planta interativa do escritório Dunder Mifflin Scranton + Painel de Auditoria Fácil + Central de Upload de Currículo.
+
