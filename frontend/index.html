@@ -1,2000 +1,1203 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AgentCraft: Dunder Mifflin Scranton RTS — Sistema Perfectenschlag</title>
-  <style>
-    :root {
-      --bg-void: #070a10;
-      --bg-panel: #0f1623;
-      --bg-card: #151f32;
-      --bg-card-hover: #1b2840;
-      --border-gold: #d4a843;
-      --border-subtle: #26354f;
-      --accent-gold: #f5b82e;
-      --accent-cyan: #22d3ee;
-      --accent-emerald: #10b981;
-      --accent-crimson: #f43f5e;
-      --accent-amber: #f59e0b;
-      --accent-violet: #a855f7;
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background: var(--bg-void);
-      color: var(--text-primary);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ==================== TOP COMMAND BAR ==================== */
-    .topbar {
-      height: 56px;
-      background: linear-gradient(180deg, #162033 0%, #0b101b 100%);
-      border-bottom: 2px solid var(--border-gold);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 18px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75);
-      z-index: 30;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .dm-sign {
-      background: #0f172a;
-      color: #fff;
-      border: 2px solid var(--border-gold);
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-weight: 900;
-      font-size: 12px;
-      letter-spacing: 1.2px;
-      line-height: 1.05;
-      text-align: center;
-      box-shadow: inset 0 0 10px rgba(245, 184, 46, 0.2);
-    }
-
-    .brand-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--accent-gold);
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-    }
-
-    .brand-subtitle {
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-
-    .telemetry-pills {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pill {
-      background: rgba(15, 22, 35, 0.92);
-      border: 1px solid var(--border-subtle);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      white-space: nowrap;
-    }
-
-    .pill.gold {
-      border-color: rgba(245, 184, 46, 0.55);
-      color: #fde68a;
-    }
-
-    .pill.cyan {
-      border-color: rgba(34, 211, 238, 0.45);
-      color: #a5f3fc;
-    }
-
-    .pill.clickable {
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .pill.clickable:hover {
-      border-color: var(--accent-gold);
-      transform: translateY(-1px);
-    }
-
-    .top-buttons {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn {
-      background: linear-gradient(180deg, #25344f 0%, #162033 100%);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
-      padding: 7px 13px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
-    }
-
-    .btn:hover {
-      border-color: var(--accent-gold);
-      background: linear-gradient(180deg, #304466 0%, #1d2a42 100%);
-      box-shadow: 0 0 12px rgba(245, 184, 46, 0.25);
-    }
-
-    .btn-gold {
-      background: linear-gradient(180deg, #eab308 0%, #b45309 100%);
-      border-color: #fde047;
-      color: #fff;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-    }
-
-    .btn-gold:hover {
-      background: linear-gradient(180deg, #facc15 0%, #d97706 100%);
-      box-shadow: 0 0 16px rgba(245, 184, 46, 0.5);
-    }
-
-    .btn-emerald {
-      background: linear-gradient(180deg, #10b981 0%, #047857 100%);
-      border-color: #6ee7b7;
-      color: #fff;
-    }
-
-    .btn-crimson {
-      background: linear-gradient(180deg, #f43f5e 0%, #9f1239 100%);
-      border-color: #fda4af;
-      color: #fff;
-    }
-
-    /* ==================== MAIN WORKSPACE ==================== */
-    .workspace {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 460px;
-      overflow: hidden;
-    }
-
-    .left-column {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      background: radial-gradient(circle at 50% 45%, #162238 0%, #080c14 100%);
-      position: relative;
-    }
-
-    /* ==================== OFFICE MAP STAGE ==================== */
-    .map-stage {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 16px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    canvas#officeCanvas {
-      border-radius: 10px;
-      border: 2px solid #2b3d5c;
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(245, 184, 46, 0.2);
-      cursor: pointer;
-      max-width: 100%;
-      max-height: 100%;
-    }
-
-    .toast-banner {
-      position: absolute;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(11, 16, 27, 0.96);
-      border: 2px solid var(--accent-gold);
-      color: #fff;
-      padding: 9px 20px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.85);
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.25s;
-      z-index: 25;
-    }
-
-    .toast-banner.visible {
-      opacity: 1;
-    }
-
-    /* ==================== BOTTOM RTS COMMAND HUD ==================== */
-    .rts-hud {
-      height: 222px;
-      background: linear-gradient(180deg, #131c2e 0%, #090e18 100%);
-      border-top: 3px solid var(--border-gold);
-      display: grid;
-      grid-template-columns: 245px 1fr 310px;
-      gap: 12px;
-      padding: 10px 14px;
-      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.85);
-    }
-
-    .hud-panel {
-      background: #0b111d;
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 9px 11px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .hud-title {
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.7px;
-      color: var(--accent-gold);
-      margin-bottom: 7px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    /* UNIT ROSTER */
-    .roster-list {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      flex: 1;
-      justify-content: space-between;
-    }
-
-    .roster-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 9px;
-      background: #131d31;
-      border: 1px solid #223252;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-      transition: all 0.15s;
-    }
-
-    .roster-item:hover,
-    .roster-item.selected {
-      background: #1c2b47;
-      border-color: var(--accent-gold);
-      box-shadow: inset 0 0 10px rgba(245, 184, 46, 0.15);
-    }
-
-    .roster-tag {
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(255,255,255,0.06);
-    }
-
-    /* CENTER HERO COMMAND CONSOLE */
-    .hud-center {
-      display: grid;
-      grid-template-columns: 162px 1fr;
-      gap: 14px;
-    }
-
-    .portrait-frame {
-      background: radial-gradient(circle at 50% 30%, #27395c 0%, #0d1424 100%);
-      border: 2px solid var(--border-gold);
-      border-radius: 8px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      text-align: center;
-      position: relative;
-    }
-
-    .portrait-avatar {
-      font-size: 38px;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
-    }
-
-    .portrait-name {
-      font-size: 12.5px;
-      font-weight: 800;
-      color: var(--accent-gold);
-      text-transform: uppercase;
-    }
-
-    .portrait-sub {
-      font-size: 10px;
-      color: var(--text-secondary);
-    }
-
-    .stat-bars {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .bar-track {
-      height: 12px;
-      background: #060911;
-      border: 1px solid #283a5c;
-      border-radius: 3px;
-      position: relative;
-      overflow: hidden;
-      font-size: 9px;
-      font-weight: 800;
-      line-height: 11px;
-      color: #fff;
-    }
-
-    .bar-fill.hp {
-      background: linear-gradient(90deg, #059669, #10b981);
-      width: 100%;
-      height: 100%;
-    }
-
-    .bar-fill.mp {
-      background: linear-gradient(90deg, #0284c7, #22d3ee);
-      width: 100%;
-      height: 100%;
-    }
-
-    .bar-track span {
-      position: absolute;
-      inset: 0;
-      text-align: center;
-    }
-
-    .order-form {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .agent-quote {
-      font-size: 11.5px;
-      font-style: italic;
-      color: #e2e8f0;
-      background: rgba(245, 184, 46, 0.07);
-      border-left: 3px solid var(--accent-gold);
-      padding: 5px 10px;
-      border-radius: 0 5px 5px 0;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap: 8px;
-    }
-
-    .input-field {
-      width: 100%;
-      background: #070b13;
-      border: 1px solid #2c3f63;
-      color: #fff;
-      padding: 8px 10px;
-      border-radius: 5px;
-      font-size: 12px;
-      font-family: inherit;
-    }
-
-    .input-field:focus {
-      outline: none;
-      border-color: var(--accent-gold);
-      box-shadow: 0 0 10px rgba(245, 184, 46, 0.25);
-    }
-
-    .order-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    /* 3x2 COMMAND MATRIX */
-    .cmd-matrix {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-      gap: 6px;
-    }
-
-    .cmd-btn {
-      background: linear-gradient(180deg, #1b2842 0%, #101829 100%);
-      border: 1px solid #2e4369;
-      border-radius: 6px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
-      cursor: pointer;
-      position: relative;
-      text-align: center;
-      transition: all 0.14s;
-    }
-
-    .cmd-btn:hover {
-      border-color: var(--accent-gold);
-      background: #243557;
-      transform: translateY(-1px);
-    }
-
-    .cmd-key {
-      position: absolute;
-      top: 3px;
-      left: 5px;
-      font-size: 9px;
-      font-weight: 900;
-      color: var(--accent-gold);
-    }
-
-    .cmd-ico {
-      font-size: 18px;
-      margin-bottom: 2px;
-    }
-
-    .cmd-txt {
-      font-size: 10px;
-      font-weight: 700;
-      color: #f1f5f9;
-      line-height: 1.1;
-    }
-
-    /* ==================== RIGHT SIDEBAR: EASY AUDIT & TABS ==================== */
-    .right-sidebar {
-      background: var(--bg-panel);
-      border-left: 2px solid var(--border-gold);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    .sidebar-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: #090e17;
-      border-bottom: 2px solid var(--border-subtle);
-    }
-
-    .tab-btn {
-      padding: 12px 10px;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      cursor: pointer;
-      color: var(--text-secondary);
-      border-bottom: 3px solid transparent;
-      transition: all 0.15s;
-    }
-
-    .tab-btn.active {
-      color: var(--accent-gold);
-      background: #131d30;
-      border-bottom-color: var(--accent-gold);
-    }
-
-    .tab-pane {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .tab-pane.active {
-      display: flex;
-    }
-
-    /* AUDIT PANE */
-    .audit-controls {
-      padding: 10px 14px;
-      background: #131c2e;
-      border-bottom: 1px solid var(--border-subtle);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .select-box {
-      background: #080d16;
-      border: 1px solid var(--border-subtle);
-      color: #fff;
-      padding: 6px 8px;
-      border-radius: 5px;
-      font-size: 11.5px;
-    }
-
-    .wuphf-alert {
-      background: rgba(245, 158, 11, 0.16);
-      border-bottom: 2px solid var(--accent-amber);
-      padding: 9px 14px;
-      font-size: 11.5px;
-      font-weight: 700;
-      color: #fde68a;
-      display: none;
-    }
-
-    .wuphf-alert.show {
-      display: block;
-    }
-
-    .audit-feed {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .audit-item {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 11px;
-      transition: border-color 0.15s;
-    }
-
-    .audit-item.needs-approval {
-      border: 2px solid var(--accent-amber);
-      background: rgba(245, 158, 11, 0.08);
-    }
-
-    .audit-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .tag-agent {
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
-
-    .tag-status {
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-
-    .st-CONCLUIDO, .st-AUTORIZADO {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid #059669;
-    }
-
-    .st-AGUARDANDO_AUTORIZACAO {
-      background: rgba(245, 158, 11, 0.25);
-      color: #fbbf24;
-      border: 1px solid #d97706;
-    }
-
-    .st-VETADO, .st-ERRO {
-      background: rgba(244, 63, 94, 0.2);
-      color: #fb7185;
-      border: 1px solid #e11d48;
-    }
-
-    .audit-meta {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-      line-height: 1.35;
-    }
-
-    .audit-box {
-      background: #080c14;
-      border: 1px solid #1e293b;
-      border-radius: 5px;
-      padding: 8px 10px;
-      font-family: Consolas, 'Courier New', monospace;
-      font-size: 11.5px;
-      line-height: 1.45;
-      color: #e2e8f0;
-      max-height: 165px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-
-    .audit-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 6px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
-
-    /* ==================== DOSSIÊ & CURRÍCULO EDITOR PANE ==================== */
-    .dossier-pane {
-      flex: 1;
-      overflow-y: auto;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .upload-dropzone {
-      border: 2px dashed var(--accent-gold);
-      background: rgba(245, 184, 46, 0.06);
-      border-radius: 8px;
-      padding: 14px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .upload-dropzone:hover {
-      background: rgba(245, 184, 46, 0.14);
-    }
-
-    .field-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .field-label {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--accent-gold);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .field-textarea {
-      width: 100%;
-      background: #080c14;
-      border: 1px solid #2b3d5c;
-      color: #f8fafc;
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 12px;
-      font-family: inherit;
-      line-height: 1.45;
-      resize: vertical;
-    }
-
-    .field-textarea:focus {
-      outline: none;
-      border-color: var(--accent-gold);
-    }
-
-    /* ==================== MODALS ==================== */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-
-    .modal-overlay.open {
-      display: flex;
-    }
-
-    .modal-card {
-      background: #101827;
-      border: 2px solid var(--border-gold);
-      border-radius: 10px;
-      width: 720px;
-      max-width: 94vw;
-      max-height: 88vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 25px 70px rgba(0,0,0,0.95);
-    }
-
-    .modal-header {
-      padding: 13px 18px;
-      background: #182338;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 800;
-      color: var(--accent-gold);
-    }
-
-    .modal-body {
-      padding: 18px;
-      overflow-y: auto;
-    }
-
-    .modal-pre {
-      background: #070a11;
-      border: 1px solid var(--border-subtle);
-      padding: 14px;
-      border-radius: 6px;
-      white-space: pre-wrap;
-      font-family: Consolas, monospace;
-      font-size: 12.5px;
-      line-height: 1.55;
-      color: #f1f5f9;
-      max-height: 58vh;
-      overflow-y: auto;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AgentCraft Paper Co. · Filial Regional — Sistema Perfectenschlag</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Courier+Prime:wght@400;700&family=Libre+Franklin:wght@400;600;800&display=swap">
+<style>
+/* Layout: visor de câmera de documentário sobre a planta do escritório (pixel art) + painel lateral com elenco / perguntas + memorando de auditoria e currículo */
+:root{
+  --paper:#fbfaf5; --wall:#e9e4d6; --ink:#24292e; --muted:#5f6670;
+  --brand:#1f4e8c; --rec:#e23b2e; --ok:#1f6f43; --warn:#b86b11; --hud:#f4f2ec; --frame:#151617;
+  --f-display:"Archivo Narrow","Arial Narrow",Arial,sans-serif;
+  --f-body:"Libre Franklin","Franklin Gothic Medium",Arial,sans-serif;
+  --f-memo:"Courier Prime","Courier New",monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding-block:16px 36px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:44px;height:44px;border:3px solid var(--brand);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;color:var(--brand);font-size:18px;background:var(--paper)}
+.logo h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:clamp(20px,3vw,28px);color:var(--brand);line-height:1}
+.logo p{margin:3px 0 0;font-size:11.5px;color:var(--muted);letter-spacing:1.3px;text-transform:uppercase}
+.crew{font-family:var(--f-memo);font-size:12px;color:var(--muted);max-width:48ch;margin:0}
+.crew b{color:var(--ink)}
+.top-badges{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stamp{font-family:var(--f-memo);font-size:11.5px;padding:5px 10px;border:1.5px solid var(--ink);background:var(--paper);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.stamp:hover{background:#f1eee3}
+.stamp.brand{border-color:var(--brand);color:var(--brand);font-weight:700}
+.stamp.warn{border-color:var(--rec);color:var(--rec);font-weight:700}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start}
+@media (max-width:980px){.stage{grid-template-columns:minmax(0,1fr)}}
+
+.viewer{position:relative;width:100%;aspect-ratio:320/208;max-width:100%;background:#000;overflow:hidden;border:6px solid var(--frame);box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.viewer canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;cursor:pointer}
+.layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.bub{position:absolute;left:0;top:0;transform:translate(-50%,-100%);background:#fff;color:#111;border:2px solid #111;
+  font-family:var(--f-body);font-weight:600;font-size:clamp(9.5px,1.15vw,12.5px);line-height:1.2;padding:3px 7px;max-width:24ch;
+  width:max-content;text-align:center;border-radius:2px;white-space:normal}
+.bub::after{content:"";position:absolute;left:50%;bottom:-7px;width:8px;height:8px;background:#fff;border-right:2px solid #111;border-bottom:2px solid #111;transform:translateX(-50%) rotate(45deg)}
+.room-lbl{position:absolute;left:0;top:0;font-family:var(--f-display);font-size:clamp(8px,.95vw,11px);letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.85);text-shadow:0 1px 0 rgba(0,0,0,.55);white-space:nowrap}
+
+/* HUD da câmera */
+.hud{position:absolute;inset:0;pointer-events:none;color:var(--hud);font-family:var(--f-memo);font-size:clamp(10px,1.2vw,13px);text-shadow:0 1px 1px #000;z-index:5}
+.hud .c{position:absolute;width:22px;height:22px;border:2px solid rgba(255,255,255,.75)}
+.hud .tl{top:10px;left:10px;border-right:0;border-bottom:0}.hud .tr{top:10px;right:10px;border-left:0;border-bottom:0}
+.hud .bl{bottom:10px;left:10px;border-right:0;border-top:0}.hud .br{bottom:10px;right:10px;border-left:0;border-top:0}
+.hud .rec{position:absolute;top:14px;left:40px;display:flex;align-items:center;gap:6px;letter-spacing:1px}
+.hud .rec i{width:9px;height:9px;border-radius:50%;background:var(--rec);animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.hud .tc{position:absolute;top:14px;right:40px;font-variant-numeric:tabular-nums}
+.hud .cam{position:absolute;bottom:14px;left:40px}
+.hud .bat{position:absolute;bottom:14px;right:40px;display:flex;align-items:center;gap:5px}
+.hud .bat i{width:20px;height:9px;border:1.5px solid var(--hud);position:relative}
+.hud .bat i::after{content:"";position:absolute;inset:1px 3px 1px 1px;background:var(--hud)}
+.hud .focus{position:absolute;left:50%;top:50%;width:14px;height:14px;transform:translate(-50%,-50%);opacity:.5}
+.hud .focus::before,.hud .focus::after{content:"";position:absolute;background:var(--hud)}
+.hud .focus::before{left:6px;top:0;width:2px;height:14px}.hud .focus::after{top:6px;left:0;height:2px;width:14px}
+
+/* Entrevista */
+.iv{position:absolute;inset:0;z-index:4;background:#000}
+.iv canvas{cursor:default}
+.lower{position:absolute;left:7%;bottom:24%;display:flex;flex-direction:column;align-items:flex-start;animation:lt 6s forwards}
+@keyframes lt{0%{opacity:0;transform:translateX(-10px)}6%{opacity:1;transform:none}88%{opacity:1}100%{opacity:0}}
+.lower .nm{background:#fff;color:#111;font-weight:800;font-size:clamp(13px,1.9vw,19px);padding:4px 12px}
+.lower .role{background:rgba(0,0,0,.8);color:#eee;font-size:clamp(10px,1.3vw,13px);padding:3px 12px;letter-spacing:.4px}
+.subs{position:absolute;left:8%;right:8%;bottom:7%;text-align:center;color:#fffbe0;font-family:var(--f-body);font-weight:600;
+  font-size:clamp(12px,1.75vw,18px);line-height:1.3;text-shadow:0 0 3px #000,0 1px 2px #000;min-height:2.6em}
+.cut{position:absolute;inset:0;background:#000;z-index:6;opacity:0;pointer-events:none}
+.cut.go{animation:cut .45s ease-out}
+@keyframes cut{0%{opacity:1}100%{opacity:0}}
+
+/* Painel lateral */
+.panel{background:var(--paper);border:1px solid #d6d1c2;box-shadow:0 2px 0 #d6d1c2;min-width:0}
+.panel h2{margin:0;font-family:var(--f-display);font-size:14px;letter-spacing:1.4px;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.panel h2 small{font-family:var(--f-memo);font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:400}
+.roster{list-style:none;margin:0;padding:6px;display:grid;gap:2px}
+@media (max-width:980px){.roster{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
+.who{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;background:none;border:1px solid transparent;padding:6px 8px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.who:hover{background:#f1eee3;border-color:#d6d1c2}
+.who:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.who canvas{width:24px;height:42px;image-rendering:pixelated}
+.who b{display:block;font-family:var(--f-display);font-size:14px;letter-spacing:.3px}
+.who span{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who em{font-style:normal;font-family:var(--f-display);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--rec);border:1.5px solid var(--rec);padding:1px 5px}
+.who em.agent-badge{color:var(--brand);border-color:var(--brand)}
+.qs{display:grid;gap:6px;padding:12px}
+.btn{font-family:var(--f-display);font-size:13.5px;letter-spacing:.6px;text-transform:uppercase;border:2px solid var(--ink);background:#fff;color:var(--ink);padding:8px 12px;cursor:pointer;text-align:left}
+.btn:hover{background:var(--ink);color:#fff}
+.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.btn:disabled{opacity:.45;cursor:not-allowed;background:#fff;color:var(--ink)}
+.btn.end{border-color:var(--rec);color:var(--rec)}
+.btn.end:hover{background:var(--rec);color:#fff}
+.btn.action{border-color:var(--brand);color:var(--brand);font-weight:700}
+.btn.action:hover{background:var(--brand);color:#fff}
+.btn.ok{border-color:var(--ok);color:var(--ok)}
+.btn.ok:hover{background:var(--ok);color:#fff}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-top:1px dashed #cfc8b6}
+.ctrls .btn{flex:1 1 auto;text-align:center;font-size:12px;padding:6px 8px}
+.note{font-size:11.5px;color:var(--muted);padding:0 14px 12px;margin:0;line-height:1.45}
+.foot{font-size:11.5px;color:var(--muted);text-align:center;margin:0}
+
+/* Console de Missão Real dentro da Entrevista */
+.mission-box{margin:0 12px 10px;padding:10px;background:#f1eee3;border:1.5px dashed var(--brand);display:grid;gap:6px}
+.mission-box label{font-family:var(--f-display);font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--brand);font-weight:700}
+.memo-input{width:100%;font-family:var(--f-memo);font-size:12px;padding:7px 8px;border:1.5px solid var(--ink);background:#fff;color:var(--ink)}
+
+/* FICHA DE AUDITORIA E CURRÍCULO (ESTILO MEMORANDO DUNDER MIFFLIN) */
+.desk-folders{display:grid;grid-template-columns:1fr;gap:14px;margin-top:4px}
+.folder-tabs{display:flex;gap:6px;border-bottom:2px solid var(--ink);padding-bottom:0}
+.ftab{font-family:var(--f-display);font-size:14px;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border:2px solid var(--ink);border-bottom:0;background:#e2ddd0;color:var(--muted);cursor:pointer;font-weight:700}
+.ftab.active{background:var(--paper);color:var(--ink);position:relative;top:2px;padding-bottom:10px}
+.folder-body{background:var(--paper);border:2px solid var(--ink);padding:16px;box-shadow:0 3px 0 #d6d1c2}
+.audit-toolbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px dashed #cfc8b6}
+.audit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px}
+.memo-card{background:#fff;border:1.5px solid var(--ink);padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:2px 2px 0 #e2ddd0}
+.memo-card.pending{border:2px solid var(--warn);background:#fffdf7}
+.memo-head{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-memo);font-size:11px;border-bottom:1px solid #e5e0d2;padding-bottom:5px}
+.memo-tag{font-family:var(--f-display);font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border:1px solid var(--ink)}
+.memo-pre{font-family:var(--f-memo);font-size:11.5px;line-height:1.45;background:#f6f4ec;border:1px solid #dfd9c8;padding:8px;max-height:160px;overflow-y:auto;white-space:pre-wrap;margin:0}
+.memo-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.memo-actions .btn{font-size:11.5px;padding:4px 9px}
+
+.cv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:800px){.cv-grid{grid-template-columns:1fr}}
+.cv-field{display:flex;flex-direction:column;gap:4px}
+.cv-field.full{grid-column:1 / -1}
+.cv-field label{font-family:var(--f-display);font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--brand)}
+.cv-textarea{width:100%;font-family:var(--f-memo);font-size:12px;padding:8px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);line-height:1.4;resize:vertical}
+.upload-strip{grid-column:1 / -1;border:2px dashed var(--brand);background:#f3f6fa;padding:12px;text-align:center;cursor:pointer;font-family:var(--f-memo);font-size:12px}
+.upload-strip:hover{background:#e7eef8}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:50;padding:16px}
+.modal-bg.open{display:grid}
+.modal-paper{background:var(--paper);border:3px solid var(--ink);max-width:680px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:6px 6px 0 rgba(0,0,0,.35)}
+.modal-top{padding:10px 14px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.modal-content{padding:14px;overflow-y:auto;font-family:var(--f-memo);font-size:12.5px;white-space:pre-wrap;line-height:1.5}
+@media (prefers-reduced-motion:reduce){.hud .rec i,.lower,.cut.go{animation:none}}
+</style>
 </head>
 <body>
 
-  <!-- TOP COMMAND BAR -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="dm-sign">DUNDER<br/>MIFFLIN</div>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <div class="logo-mark">DM</div>
       <div>
-        <div class="brand-title">AgentCraft: Filial Scranton RTS</div>
-        <div class="brand-subtitle">Sistema Perfectenschlag — Comando do Gerente Regional</div>
+        <h1>AgentCraft Paper Co. · Sistema Perfectenschlag</h1>
+        <p>Filial Regional Scranton · Andar 2 · Economia Auditada: R$ 20.000/ano · Docker + Snipe-IT</p>
       </div>
     </div>
-
-    <div class="telemetry-pills">
-      <div class="pill gold">
-        💰 Economia Auditada: <strong>R$ 20.000 / ano</strong>
-      </div>
-      <div class="pill cyan">
-        🐳 Infra: <strong>Docker + Snipe-IT</strong>
-      </div>
-      <div class="pill clickable" id="pillApiKey" onclick="abrirModal('modalApiKey')">
-        🔑 GEMINI_API_KEY: <strong id="txtApiKey">VERIFICANDO...</strong>
-      </div>
-      <div class="pill clickable" onclick="irParaAbaCurriculo()" style="border-color:#a855f7; color:#e9d5ff;">
-        📂 Currículo: <strong id="txtStatusCurriculo">CARREGADO</strong>
-      </div>
-    </div>
-
-    <div class="top-buttons">
-      <button class="btn btn-gold" onclick="irParaAbaCurriculo()">
-        📂 Subir Currículo & Dados
-      </button>
-      <button class="btn" onclick="abrirModal('modalApiKey')">
-        🔑 API Key
-      </button>
-      <button class="btn" onclick="exportarAuditoriaJson()">
-        📥 Exportar Auditoria
-      </button>
+    <div class="top-badges">
+      <button class="stamp brand" type="button" onclick="abrirAbaPasta('CV')">📂 Currículo & Dossiê (andream001)</button>
+      <button class="stamp warn" type="button" id="btnWuphfTop" onclick="filtrarWuphfPendentes()">📯 WUPHF Pendentes: <span id="cntWuphf">0</span></button>
+      <button class="stamp" type="button" onclick="abrirModalApi()">🔑 API Key: <b id="lblApiStatus">Verificar</b></button>
     </div>
   </header>
 
-  <!-- MAIN WORKSPACE -->
-  <div class="workspace">
-
-    <!-- LEFT: ARCHITECTURAL DUNDER MIFFLIN FLOORPLAN + RTS HUD -->
-    <div class="left-column">
-      <div class="map-stage">
-        <div id="toastBanner" class="toast-banner">Ordem recebida!</div>
-        <canvas id="officeCanvas" width="940" height="490"></canvas>
+  <div class="stage">
+    <div class="viewer" id="viewer">
+      <canvas id="view" aria-label="Escritório da filial, visto pela câmera do documentário"></canvas>
+      <div class="layer" id="layer"></div>
+      <div class="iv" id="iv" hidden>
+        <canvas id="ivc" aria-hidden="true"></canvas>
+        <div class="lower" id="lower"><div class="nm" id="ivName"></div><div class="role" id="ivRole"></div></div>
+        <div class="subs" id="subs" aria-live="polite"></div>
       </div>
-
-      <!-- BOTTOM RTS HUD -->
-      <section class="rts-hud">
-        <!-- ROSTER -->
-        <div class="hud-panel">
-          <div class="hud-title">
-            <span>Tropas da Filial</span>
-            <span id="tagServerMode" style="color:#34d399;">ONLINE</span>
-          </div>
-          <div class="roster-list" id="rosterContainer"></div>
-        </div>
-
-        <!-- SELECTED AGENT PORTRAIT & ORDER CONSOLE -->
-        <div class="hud-panel hud-center">
-          <div class="portrait-frame">
-            <div class="portrait-avatar" id="hudAvatar">🎯</div>
-            <div>
-              <div class="portrait-name" id="hudName">Neutralizador Toby</div>
-              <div class="portrait-sub" id="hudRole">Especialista Anti-ATS</div>
-            </div>
-            <div class="stat-bars">
-              <div class="bar-track"><div class="bar-fill hp"></div><span>EFICIÊNCIA 100%</span></div>
-              <div class="bar-track"><div class="bar-fill mp"></div><span id="hudStatusText">PRONTO</span></div>
-            </div>
-          </div>
-
-          <div class="order-form">
-            <div>
-              <div class="hud-title">
-                <span id="hudRoomLabel">SETOR: O ANEXO (CAÇA AO TOBY)</span>
-                <span style="color:var(--text-secondary); font-size:10px;">Usa seu Dossiê Curricular automaticamente</span>
-              </div>
-              <div class="agent-quote" id="hudQuote"></div>
-            </div>
-
-            <div class="form-row">
-              <input id="inputTarget" class="input-field" placeholder="Cole a descrição da vaga alvo..." />
-              <input id="inputExtra" class="input-field" placeholder="Observação extra para esta missão (opcional)..." />
-            </div>
-
-            <div class="order-footer">
-              <span style="font-size:11px; color:var(--text-secondary);">
-                Dica: Seus dados da aba <strong>📂 Meu Currículo & Dados</strong> são injetados em todas as missões.
-              </span>
-              <button class="btn btn-gold" onclick="executarMissao()">
-                ⚡ [Q] EXECUTAR MISSÃO AGORA
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3x2 COMMAND MATRIX -->
-        <div class="hud-panel">
-          <div class="hud-title">
-            <span>Matriz AgentCraft</span>
-            <span>Atalhos</span>
-          </div>
-          <div class="cmd-matrix">
-            <div class="cmd-btn" onclick="selecionarUnidade('NEUTRALIZADOR_TOBY')">
-              <span class="cmd-key">1</span>
-              <div class="cmd-ico">🎯</div>
-              <div class="cmd-txt">Neutralizar Toby</div>
-            </div>
-            <div class="cmd-btn" onclick="selecionarUnidade('PROTOCOLO_RECYCLOPS')">
-              <span class="cmd-key">2</span>
-              <div class="cmd-ico">🤖</div>
-              <div class="cmd-txt">Recyclops OSINT</div>
-            </div>
-            <div class="cmd-btn" onclick="selecionarUnidade('SISTEMA_WUPHF')">
-              <span class="cmd-key">3</span>
-              <div class="cmd-ico">📯</div>
-              <div class="cmd-txt">WUPHF LinkedIn</div>
-            </div>
-            <div class="cmd-btn" onclick="selecionarUnidade('OPERADOR_MOSE')">
-              <span class="cmd-key">4</span>
-              <div class="cmd-ico">🚜</div>
-              <div class="cmd-txt">Mose Auto-Git</div>
-            </div>
-            <div class="cmd-btn" onclick="irParaAbaCurriculo()">
-              <span class="cmd-key">P</span>
-              <div class="cmd-ico">📂</div>
-              <div class="cmd-txt">Subir Currículo</div>
-            </div>
-            <div class="cmd-btn" onclick="simularTurnoCompleto()">
-              <span class="cmd-key">D</span>
-              <div class="cmd-ico">🧪</div>
-              <div class="cmd-txt">Simular Turno</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <div class="hud" aria-hidden="true">
+        <div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
+        <div class="rec"><i></i>REC</div><div class="tc" id="tc">00:00:00:00</div>
+        <div class="cam" id="camLbl">CAM A · PLANO GERAL</div><div class="bat">98% <i></i></div>
+        <div class="focus"></div>
+      </div>
+      <div class="cut" id="cut"></div>
     </div>
 
-    <!-- RIGHT SIDEBAR: TAB 1 = AUDITORIA FÁCIL | TAB 2 = MEU CURRÍCULO & INFORMAÇÕES COMPLEMENTARES -->
-    <aside class="right-sidebar">
-      <div class="sidebar-tabs">
-        <div class="tab-btn active" id="tabBtnAudit" onclick="alternarAba('AUDIT')">
-          📋 Auditoria Fácil (<span id="badgeAuditCount">0</span>)
+    <aside class="panel" id="panel">
+      <div id="rosterView">
+        <h2>Elenco da Filial <small>clique p/ entrevistar ou acionar</small></h2>
+        <ul class="roster" id="roster"></ul>
+        <div class="ctrls">
+          <button class="btn" id="meetBtn" type="button">Convocar reunião</button>
+          <button class="btn" id="camBtn" type="button" aria-pressed="true">Câmera automática: ligada</button>
         </div>
-        <div class="tab-btn" id="tabBtnDossier" onclick="alternarAba('DOSSIER')">
-          📂 Meu Currículo & Dados
-        </div>
+        <p class="note">Clique nos agentes marcados com <b>[MISSÃO]</b> (Toby ATS, Recyclops, WUPHF ou Mose Git) para despachar tarefas reais com seu currículo enquanto grava o documentário.</p>
       </div>
-
-      <!-- ABA 1: AUDITORIA FÁCIL & APROVAÇÃO WUPHF -->
-      <div class="tab-pane active" id="paneAudit">
-        <div class="audit-controls">
-          <select id="selFiltroAgente" class="select-box" onchange="renderizarAuditoria()">
-            <option value="TODOS">Todos os Agentes</option>
-            <option value="NEUTRALIZADOR_TOBY">🎯 Neutralizador Toby (ATS)</option>
-            <option value="PROTOCOLO_RECYCLOPS">🤖 Protocolo Recyclops (OSINT)</option>
-            <option value="SISTEMA_WUPHF">📯 Sistema WUPHF (LinkedIn)</option>
-            <option value="OPERADOR_MOSE">🚜 Operador Mose (GitHub)</option>
-          </select>
-          <select id="selFiltroStatus" class="select-box" onchange="renderizarAuditoria()">
-            <option value="TODOS">Todos os Status</option>
-            <option value="AGUARDANDO_AUTORIZACAO">⏳ Aguardando Sua Autorização</option>
-            <option value="AUTORIZADO">✅ Autorizados</option>
-            <option value="CONCLUIDO">✔ Concluídos</option>
-            <option value="VETADO">🚫 Vetados / Erros</option>
-          </select>
+      <div id="ivView" hidden>
+        <h2>Entrevista <small id="ivWhere"></small></h2>
+        <div class="qs" id="qs"></div>
+        <!-- Console de Missão Real Perfectenschlag (aparece quando o entrevistado é um Agente Operacional) -->
+        <div class="mission-box" id="missionBox" hidden>
+          <label id="missionTitle">⚡ Despachar Missão Real (Gemini)</label>
+          <input class="memo-input" id="missionInput1" placeholder="Alvo da missão..." />
+          <input class="memo-input" id="missionInput2" placeholder="Complemento (opcional)..." />
+          <button class="btn action" type="button" id="btnRunMission">Executar Ordem do Gerente Regional</button>
         </div>
-
-        <div id="bannerWuphfPendente" class="wuphf-alert">
-          ⚠️ O Sistema WUPHF gerou rascunho(s) de LinkedIn e aguarda sua autorização expressa abaixo!
-        </div>
-
-        <div class="audit-feed" id="auditFeed"></div>
-      </div>
-
-      <!-- ABA 2: CENTRAL DE DADOS CURRICULARES E INFORMAÇÕES COMPLEMENTARES -->
-      <div class="tab-pane" id="paneDossier">
-        <div class="dossier-pane">
-          <!-- UPLOAD DE ARQUIVO (.TXT, .MD, .JSON) -->
-          <div class="upload-dropzone" onclick="document.getElementById('fileUploadCurriculo').click()">
-            <div style="font-size:22px; margin-bottom:4px;">📄⬆️</div>
-            <div style="font-size:12.5px; font-weight:800; color:var(--accent-gold);">
-              CLIQUE PARA SUBIR SEU ARQUIVO DE CURRÍCULO (.TXT, .MD, .JSON)
-            </div>
-            <div style="font-size:11px; color:var(--text-secondary); margin-top:3px;">
-              Ou cole o conteúdo completo do seu currículo / LinkedIn nos campos abaixo
-            </div>
-            <input
-              type="file"
-              id="fileUploadCurriculo"
-              accept=".txt,.md,.json,.csv"
-              style="display:none"
-              onchange="processarUploadArquivo(event)"
-            />
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Seu Nome Completo & Título Profissional Alvo</label>
-            <input id="cvNome" class="input-field" placeholder="Ex: André — Engenheiro de Software | DevOps & Automação" />
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Contatos & Links (LinkedIn, GitHub, Email, Telefone, Cidade)</label>
-            <input id="cvContatos" class="input-field" placeholder="Ex: linkedin.com/in/... | github.com/... | email@..." />
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Marcos Obrigatórios de Impacto (Economia R$ 20k/ano + Docker/Snipe-IT)</label>
-            <textarea id="cvMarcos" class="field-textarea" rows="3"></textarea>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Competências Técnicas / Stack Dominante</label>
-            <textarea id="cvSkills" class="field-textarea" rows="2" placeholder="Python, Docker, Snipe-IT, Linux, CI/CD, SQL, AWS/GCP, Git..."></textarea>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Currículo Completo (Experiências, Projetos AWAProject / Bet-Trader, Formação)</label>
-            <textarea
-              id="cvBruto"
-              class="field-textarea"
-              rows="6"
-              placeholder="Cole aqui todo o texto do seu currículo atual, experiências anteriores, datas, empresas, cursos e certificações..."
-            ></textarea>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Informações Complementares & Diretrizes para os Agentes</label>
-            <textarea
-              id="cvComplementar"
-              class="field-textarea"
-              rows="3"
-              placeholder="Ex: Foco em vagas remotas/híbridas Sênior/Pleno, destacar perfil hands-on e visão de negócios..."
-            ></textarea>
-          </div>
-
-          <div style="display:flex; gap:8px; justify-content:space-between; padding-top:4px;">
-            <button class="btn" onclick="exportarPerfilJson()">📤 Baixar Backup (.json)</button>
-            <button class="btn btn-gold" onclick="salvarDadosCurriculares()">
-              💾 SALVAR E INJETAR NOS AGENTES
-            </button>
-          </div>
-        </div>
+        <p class="note">O resto do escritório continua trabalhando enquanto você grava.</p>
       </div>
     </aside>
   </div>
 
-  <!-- MODAL API KEY -->
-  <div class="modal-overlay" id="modalApiKey">
-    <div class="modal-card" style="width:480px;">
-      <div class="modal-header">
-        <span>🔑 Configurar GEMINI_API_KEY</span>
-        <button class="btn" onclick="fecharModal('modalApiKey')">✕</button>
+  <!-- PASTA DE ARQUIVOS DO GERENTE REGIONAL: AUDITORIA FÁCIL + CURRÍCULO OFICIAL -->
+  <section class="desk-folders">
+    <div class="folder-tabs">
+      <button class="ftab active" id="ftabAudit" type="button" onclick="abrirAbaPasta('AUDIT')">
+        📋 Memorando de Auditoria & Aprovação WUPHF (<span id="cntAudit">0</span>)
+      </button>
+      <button class="ftab" id="ftabCv" type="button" onclick="abrirAbaPasta('CV')">
+        📂 Dossiê Curricular & Informações Complementares (andream001)
+      </button>
+    </div>
+
+    <!-- ABA 1: AUDITORIA FÁCIL -->
+    <div class="folder-body" id="bodyAudit">
+      <div class="audit-toolbar">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <strong style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:1px">Filtrar Memorandos:</strong>
+          <select class="memo-input" style="width:auto" id="fAgente" onchange="renderAudit()">
+            <option value="TODOS">Todos os Agentes</option>
+            <option value="NEUTRALIZADOR_TOBY">Neutralizador Toby (Anti-ATS)</option>
+            <option value="PROTOCOLO_RECYCLOPS">Protocolo Recyclops (Dwight OSINT)</option>
+            <option value="SISTEMA_WUPHF">Sistema WUPHF (LinkedIn c/ Aval)</option>
+            <option value="OPERADOR_MOSE">Operador Mose (Auto-Commit Git)</option>
+          </select>
+          <select class="memo-input" style="width:auto" id="fStatus" onchange="renderAudit()">
+            <option value="TODOS">Todos os Status</option>
+            <option value="AGUARDANDO_AUTORIZACAO">⏳ Aguardando Sua Autorização</option>
+            <option value="AUTORIZADO">✅ Autorizados pelo Gerente</option>
+            <option value="CONCLUIDO">✔ Concluídos</option>
+            <option value="VETADO">🚫 Vetados / Erros</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" type="button" onclick="simularTurnoDocumentario()">🧪 Gerar Relatórios de Exemplo</button>
+          <button class="btn" type="button" onclick="exportarAuditoria()">📥 Baixar Auditoria (.json)</button>
+        </div>
       </div>
-      <div class="modal-body">
-        <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
-          Sem a chave configurada, qualquer agente aborta com:<br/>
-          <strong style="color:var(--accent-crimson);">"Fato: Você esqueceu a chave da API. Inaceitável."</strong>
-        </p>
-        <input id="inputApiKeyModal" type="password" class="input-field" placeholder="Cole sua chave AIzaSy..." style="margin-bottom:14px;" />
-        <div style="display:flex; justify-content:flex-end; gap:8px;">
-          <button class="btn" onclick="fecharModal('modalApiKey')">Cancelar</button>
-          <button class="btn btn-gold" onclick="confirmarApiKey()">Ativar Chave Agora</button>
+      <div class="audit-grid" id="auditGrid"></div>
+    </div>
+
+    <!-- ABA 2: CURRÍCULO & DADOS COMPLEMENTARES -->
+    <div class="folder-body" id="bodyCv" hidden>
+      <div class="cv-grid">
+        <div class="upload-strip" onclick="document.getElementById('cvFileInput').click()">
+          <strong>📄 CLIQUE AQUI PARA SUBIR SEU ARQUIVO DE CURRÍCULO (.TXT, .MD, .JSON)</strong><br>
+          <span>Ou edite diretamente os campos timbrados abaixo — todos os agentes usam este dossiê automaticamente.</span>
+          <input type="file" id="cvFileInput" accept=".txt,.md,.json,.csv" style="display:none" onchange="subirArquivoCurriculo(event)">
+        </div>
+        <div class="cv-field">
+          <label>Nome Completo & Cargo Alvo</label>
+          <input class="memo-input" id="cvNome">
+        </div>
+        <div class="cv-field">
+          <label>Contatos & Links (GitHub, LinkedIn, Portfólio)</label>
+          <input class="memo-input" id="cvContatos">
+        </div>
+        <div class="cv-field full">
+          <label>Marcos Obrigatórios (Economia R$ 20 mil/ano + Docker/Snipe-IT + Projetos)</label>
+          <textarea class="cv-textarea" id="cvMarcos" rows="4"></textarea>
+        </div>
+        <div class="cv-field full">
+          <label>Competências Técnicas / Stack</label>
+          <textarea class="cv-textarea" id="cvSkills" rows="2"></textarea>
+        </div>
+        <div class="cv-field full">
+          <label>Currículo Completo (Experiências, Formação, Repositórios GitHub andream001)</label>
+          <textarea class="cv-textarea" id="cvBruto" rows="6"></textarea>
+        </div>
+        <div class="cv-field full">
+          <label>Informações Complementares & Diretrizes Estratégicas</label>
+          <textarea class="cv-textarea" id="cvComp" rows="3"></textarea>
+        </div>
+        <div class="cv-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:10px">
+          <button class="btn" type="button" onclick="exportarCurriculo()">📤 Exportar Dossiê (.json)</button>
+          <button class="btn action" type="button" onclick="salvarCurriculo()">💾 Salvar Dossiê e Injetar na Filial</button>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- MODAL EXPANDIR AUDITORIA -->
-  <div class="modal-overlay" id="modalExpandir">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span id="modalExpandirTitulo">Inspeção de Auditoria</span>
-        <button class="btn" onclick="fecharModal('modalExpandir')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div id="modalExpandirMeta" style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;"></div>
-        <pre class="modal-pre" id="modalExpandirConteudo"></pre>
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-          <button class="btn" onclick="copiarModalConteudo()">📋 Copiar Tudo</button>
-          <button class="btn btn-gold" onclick="fecharModal('modalExpandir')">Fechar</button>
-        </div>
+  <p class="foot">AgentCraft Paper Co. · Filial Scranton · Sistema Perfectenschlag conectado ao seu portfólio GitHub (andream001).</p>
+</div>
+
+<!-- MODAL: CHAVE API GEMINI -->
+<div class="modal-bg" id="modalApi">
+  <div class="modal-paper" style="max-width:460px">
+    <div class="modal-top">
+      <span>🔑 Credencial Gemini API</span>
+      <button class="btn" type="button" onclick="fecharModal('modalApi')">✕</button>
+    </div>
+    <div class="modal-content" style="white-space:normal">
+      <p style="margin-top:0">Regra de Agentcraft: Sem a <code>GEMINI_API_KEY</code>, a missão aborta com:<br><b style="color:var(--rec)">"Fato: Você esqueceu a chave da API. Inaceitável."</b></p>
+      <input type="password" class="memo-input" id="inpApiKey" placeholder="Cole sua chave AIzaSy..." style="margin-bottom:10px">
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn" type="button" onclick="fecharModal('modalApi')">Cancelar</button>
+        <button class="btn action" type="button" onclick="salvarApiKey()">Ativar Chave</button>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // =========================================================================
-    // ESTADO DO PERFIL CURRICULAR DO GERENTE REGIONAL
-    // =========================================================================
-    const PERFIL_PADRAO = {
-      nome_completo: "André (andream001) — Engenheiro de Software | Automação (RPA/IA), Docker & Governança de TI",
-      contatos: "Brasil | GitHub: https://github.com/andream001 | Portfólio: https://github.com/andream001/my-portfolio",
-      marcos_obrigatorios:
-        "• Automação de Processos com impacto financeiro auditado: economia recorrente de R$ 20.000,00 anuais (R$ 20 mil/ano).\n" +
-        "• Implantação produtiva de containers Docker e governança de ativos de TI com Snipe-IT.\n" +
-        "• Bet-Trader Dunder (Trading Agents HQ): Bot multi-agente de criptoativos com UI de escritório isométrica pixel-art.\n" +
-        "• AWAProject: Arquitetura de IA pessoal e automação local.\n" +
-        "• Automação RPA Comercial: Vidraçaria-RPA (WhatsApp -> Excel executivo) & Assistant-to-the-Lead-Manager (prospecção Unimed).",
-      competencias_tecnicas:
-        "Python (RPA, Selenium, Multi-Agent LLMs, Gemini API), Docker, Snipe-IT, Git/GitHub CLI, Automação WhatsApp/Excel, Linguagem C (Estruturas de Dados e Ponteiros), Linux, Arquitetura de Software",
-      curriculo_bruto_integral:
-        "PORTFÓLIO REAL GITHUB (https://github.com/andream001):\n" +
-        "- sistema-perfectenschlag: Orquestrador multi-agente Python (Gemini) + AgentCraft Dunder Mifflin RTS.\n" +
-        "- bet-trader-dunder: Trading Agents HQ — bot multi-agente com interface isométrica pixel-art.\n" +
-        "- AWAProject: Exploração e engenharia de IA pessoal e local.\n" +
-        "- vidracaria-rpaa: Script RPA em Python para Trabalho de Extensão Universitária (padroniza medições do WhatsApp em planilhas executivas Excel).\n" +
-        "- assistant-to-the-lead-manager & WhatsApp-Campaign-Bot: Automação de prospecção de leads com proteção anti-ban em 6 camadas.\n" +
-        "- war-game-c & TrainneSGSistemas: Estruturas de dados em C, alocação dinâmica e lógica de sistemas.",
-      informacoes_complementares:
-        "Priorizar destaque em eficiência financeira (R$ 20 mil/ano), domínio prático de Docker/Snipe-IT e portfólio ativo no GitHub (andream001) com soluções reais de RPA e sistemas multi-agentes."
-    };
+<!-- MODAL: LEITURA INTEGRAL DO MEMORANDO -->
+<div class="modal-bg" id="modalRead">
+  <div class="modal-paper">
+    <div class="modal-top">
+      <span id="modalReadTitle">Memorando Oficial</span>
+      <button class="btn" type="button" onclick="fecharModal('modalRead')">✕</button>
+    </div>
+    <div class="modal-content" id="modalReadBody"></div>
+    <div style="padding:10px 14px;border-top:1px solid #d6d1c2;display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn" type="button" onclick="copiarModalRead()">📋 Copiar Texto</button>
+      <button class="btn action" type="button" onclick="fecharModal('modalRead')">Fechar</button>
+    </div>
+  </div>
+</div>
 
-    let perfilAtual = { ...PERFIL_PADRAO };
-    let auditoriaRegistros = [];
-    let servidorPythonAtivo = false;
-    let unidadeAtiva = "NEUTRALIZADOR_TOBY";
-    let feixesTaticos = [];
+<script>
+(()=>{
+const W=320,H=208,GW=40,GH=26;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function shade(hex,f){const n=parseInt(hex.slice(1),16);const c=v=>Math.max(0,Math.min(255,Math.round(v*f)));return `rgb(${c(n>>16)},${c(n>>8&255)},${c(n&255)})`}
 
-    // =========================================================================
-    // DEFINIÇÃO DAS UNIDADES HERÓIS (AGENTCRAFT)
-    // =========================================================================
-    const UNIDADES = {
-      NEUTRALIZADOR_TOBY: {
-        id: "NEUTRALIZADOR_TOBY",
-        nome: "Neutralizador Toby",
-        papel: "Destruidor de Filtros ATS",
-        icone: "🎯",
-        cor: "#f43f5e",
-        setor: "O ANEXO (CAÇA AO TOBY FLENDERSON)",
-        quote: "\"Cruzo a vaga com seu currículo real, sua economia de R$ 20 mil anual e Docker/Snipe-IT para gabaritar qualquer algoritmo de RH.\"",
-        ph1: "Cole aqui a descrição completa da vaga alvo...",
-        ph2: "Destaque específico para esta vaga (opcional)...",
-        x: 760, y: 125, tx: 760, ty: 125, hx: 760, hy: 125,
-        status: "PRONTO",
-        balao: "Toby na mira."
-      },
-      PROTOCOLO_RECYCLOPS: {
-        id: "PROTOCOLO_RECYCLOPS",
-        nome: "Protocolo Recyclops",
-        papel: "Dwight Schrute — Inteligência OSINT",
-        icone: "🤖",
-        cor: "#10b981",
-        setor: "BULLPEN — MESA DO DWIGHT SCHRUTE",
-        quote: "\"Fato: Vou dissecar a empresa alvo, cruzar com seu dossiê curricular e criar 3 perguntas impiedosas para encurralar o recrutador.\"",
-        ph1: "Nome da Empresa Alvo para o Dossiê de Ataque...",
-        ph2: "Setor da empresa, stack ou link da vaga (opcional)...",
-        x: 445, y: 310, tx: 445, ty: 310, hx: 445, hy: 310,
-        status: "VIGILANTE",
-        balao: "Fato: Pronto."
-      },
-      SISTEMA_WUPHF: {
-        id: "SISTEMA_WUPHF",
-        nome: "Sistema WUPHF.com",
-        papel: "Propaganda Técnica (Com Seu Aval)",
-        icone: "📯",
-        cor: "#f59e0b",
-        setor: "ESTAÇÃO DE TRANSMISSÃO WUPHF",
-        quote: "\"Transformo seus commits do AWAProject e Bet-Trader em posts de LinkedIn focados em ROI e aguardo sua autorização obrigatória.\"",
-        ph1: "Resumo do commit/vitória técnica (ou vazio p/ ler Git)...",
-        ph2: "Diretório local dos projetos (opcional)...",
-        x: 155, y: 355, tx: 155, ty: 355, hx: 155, hy: 355,
-        status: "AGUARDANDO",
-        balao: "Submeto ao Chefe!"
-      },
-      OPERADOR_MOSE: {
-        id: "OPERADOR_MOSE",
-        nome: "Operador Mose (Git)",
-        papel: "Auto-Commit & GitHub Sync",
-        icone: "🚜",
-        cor: "#a855f7",
-        setor: "DEPÓSITO / SERVIDOR FAZENDA SCHRUTE",
-        quote: "\"Mose monitora AWAProject e Bet-Trader silenciosamente, gera Conventional Commits com IA e faz git push automático.\"",
-        ph1: "Caminho local dos repositórios (vazio = busca automática)...",
-        ph2: "Observação de sincronização (opcional)...",
-        x: 760, y: 360, tx: 760, ty: 360, hx: 760, hy: 360,
-        status: "AUTÔNOMO",
-        balao: "Git Sync ativo."
-      }
-    };
+/* ---------- Mapa (tiles de 8px) ---------- */
+const solids=[
+ [0,0,40,2,'outer'],[0,0,1,26,'side'],[39,0,1,26,'side'],[0,25,40,1,'side'],
+ [12,2,1,5,'glassv'],[12,9,1,2,'glassv'],[1,10,12,1,'wall'],
+ [27,2,1,5,'glassv'],[27,9,1,2,'glassv'],[27,10,12,1,'glassh'],
+ [11,12,1,6,'partition'],
+ [1,19,8,1,'wall'],[11,19,2,1,'wall'],[13,19,1,6,'wall'],
+ [32,14,7,1,'wall'],[32,14,1,7,'wall'],[32,23,1,2,'wall'],
+ [3,4,7,3,'ctable'],
+ [31,4,4,2,'mdesk'],[36,2,3,1,'shelf'],[35,8,4,2,'couch'],
+ [16,5,8,1,'counter'],[24,2,3,1,'filing'],[13,2,2,1,'filing'],
+ [15,13,3,2,'desk'],[21,13,3,2,'desk'],[27,13,3,2,'desk'],[15,18,3,2,'desk'],[21,18,3,2,'desk'],[27,18,3,2,'desk'],
+ [2,14,3,2,'desk'],[6,14,3,2,'desk'],
+ [1,20,2,1,'vend'],[3,20,1,1,'fridge'],[4,20,4,1,'kcounter'],[5,22,4,2,'ktable'],
+ [18,22,2,2,'copier'],[25,22,1,1,'cooler'],
+ [34,15,5,1,'wshelf'],[34,24,5,1,'wshelf'],[35,19,3,2,'desk'],
+ [13,9,1,1,'plant'],[26,9,1,1,'plant'],[38,12,1,1,'plant'],[31,24,1,1,'plant']
+];
+const grid=new Uint8Array(GW*GH);
+solids.forEach(([x,y,w,h])=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)grid[(y+j)*GW+x+i]=1});
+const solidAt=(x,y)=>x<0||y<0||x>=GW||y>=GH||grid[y*GW+x]===1;
+function findPath(sx,sy,gx,gy){
+  if(solidAt(gx,gy))return null;
+  const prev=new Int32Array(GW*GH).fill(-1),s=sy*GW+sx,g=gy*GW+gx,q=[s];prev[s]=s;
+  for(let h=0;h<q.length;h++){const c=q[h];if(c===g)break;const cx=c%GW,cy=(c/GW)|0;
+    for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=cx+dx,ny=cy+dy;if(solidAt(nx,ny))continue;const n=ny*GW+nx;if(prev[n]!==-1)continue;prev[n]=c;q.push(n)}}
+  if(prev[g]===-1)return null;
+  const p=[];let c=g;while(c!==s){p.push([c%GW,(c/GW)|0]);c=prev[c]}return p.reverse();
+}
 
-    // =========================================================================
-    // PLANTA ARQUITETÔNICA DETALHADA DA DUNDER MIFFLIN SCRANTON
-    // =========================================================================
-    const SALAS_ESCRITORIO = [
-      {
-        id: "SALA_MICHAEL",
-        titulo: "SALA DO GERENTE REGIONAL",
-        sub: "Seu Gabinete Executivo",
-        x: 20, y: 20, w: 255, h: 195,
-        piso: "#1e293b",
-        borda: "#f5b82e",
-        agente: null
-      },
-      {
-        id: "SALA_CONFERENCIA",
-        titulo: "SALA DE CONFERÊNCIAS",
-        sub: "Briefing & Interrogatório",
-        x: 290, y: 20, w: 315, h: 165,
-        piso: "#17253b",
-        borda: "#38bdf8",
-        agente: "PROTOCOLO_RECYCLOPS"
-      },
-      {
-        id: "ANEXO_RH",
-        titulo: "O ANEXO (TOBY / RH)",
-        sub: "Zona de Abate de Filtros ATS",
-        x: 620, y: 20, w: 300, h: 195,
-        piso: "#281826",
-        borda: "#f43f5e",
-        agente: "NEUTRALIZADOR_TOBY"
-      },
-      {
-        id: "ESTACAO_WUPHF",
-        titulo: "RECEPCAO & TORRE WUPHF.COM",
-        sub: "Propaganda LinkedIn (Exige Seu Aval)",
-        x: 20, y: 230, w: 255, h: 240,
-        piso: "#27201c",
-        borda: "#f59e0b",
-        agente: "SISTEMA_WUPHF"
-      },
-      {
-        id: "BULLPEN_CENTRAL",
-        titulo: "BULLPEN — MESA DO DWIGHT",
-        sub: "Centro OSINT Protocolo Recyclops",
-        x: 290, y: 200, w: 315, h: 270,
-        piso: "#152628",
-        borda: "#10b981",
-        agente: "PROTOCOLO_RECYCLOPS"
-      },
-      {
-        id: "DEPOSITO_MOSE",
-        titulo: "DEPÓSITO / FAZENDA SCHRUTE",
-        sub: "Operador Mose — Auto-Commit GitHub",
-        x: 620, y: 230, w: 300, h: 240,
-        piso: "#211830",
-        borda: "#a855f7",
-        agente: "OPERADOR_MOSE"
-      }
-    ];
+/* ---------- Elenco (Com Tropas Perfectenschlag Integradas) ---------- */
+const A=[
+ {id:'or',nm:'Orquestrador',art:'o',role:'Gerente Regional (Michael/Dwight)',ws:'mgr',seat:{tx:32,ty:3,face:'down'},work:'comandando o Perfectenschlag',
+  look:{skin:'#e0ac83',hair:'#5a3a1e',style:'short',shirt:'#3a3f47',tie:'#a32020'},
+  iv:{intro:'Ah, a câmera. Ótimo. Vocês pegaram meu lado bom. Fato: são os dois.',
+      about:'Eu coordeno a filial inteira. Economia de R$ 20 mil anual em automação e Docker com Snipe-IT rodando como um relógio.',
+      boss:'Ninguém manda em mim, exceto o André. E quando o WUPHF quer postar no LinkedIn, precisa do carimbo dele.',
+      secret:'Às vezes eu convoco reunião só pra lembrar todo mundo que o Toby é o inimigo.'}},
+ {id:'rc',nm:'Sistema WUPHF',art:'o',role:'Recepção · Propaganda LinkedIn',ws:'rec',seat:{tx:19,ty:4,face:'down'},work:'monitorando commits p/ LinkedIn',
+  agentKey:'SISTEMA_WUPHF',p1:'Resumo do commit/vitória técnica (vazio = ler Git)...',p2:'Projeto foco (AWAProject, Bet-Trader, Lead-Manager)...',
+  look:{skin:'#f3cfb0',hair:'#e3c25a',style:'long',headset:1,shirt:'#a0457a',tie:'#2f2f2f'},
+  iv:{intro:'Sistema WUPHF na escuta! Mas calma: eu só publico com autorização expressa do Gerente Regional.',
+      about:'Eu vigio o AWAProject, o Bet-Trader e o Assistant-to-the-Lead-Manager. Saiu commit de peso? Eu transformo em post de LinkedIn sem firula.',
+      boss:'O Gerente Regional exige aprovar cada vírgula antes de ir pro ar. Hierarquia é sagrada.',
+      secret:'O pote de balas na recepção esconde um webhook ligado direto no GitHub.'}},
+ {id:'ex',nm:'Protocolo Recyclops',art:'o',role:'Vendas · Inteligência OSINT (Dwight)',ws:'desk',seat:{tx:16,ty:12,face:'down'},work:'gerando Dossiê de Ataque OSINT',prop:'map',
+  agentKey:'PROTOCOLO_RECYCLOPS',p1:'Informe o nome da Empresa Alvo para varredura OSINT...',p2:'Setor, stack ou link da vaga deles (opcional)...',
+  look:{skin:'#f1c6a0',hair:'#5a3a1e',style:'short',glasses:1,shirt:'#d29a2a',tie:'#5a3a1e'},
+  iv:{intro:'Fato: A ignorância corporativa deve ser destruída. Recyclops está online.',
+      about:'Eu varro a infraestrutura das empresas alvo, encontro onde eles sangram dinheiro e preparo 3 perguntas interrogatórias impiedosas.',
+      boss:'Com a nossa economia auditada de R$ 20 mil anual e Docker/Snipe-IT, qualquer recrutador fica de joelhos.',
+      secret:'Eu guardo um dossiê secreto sobre cada empresa que ainda usa planilha manual em vez de RPA.'}},
+ {id:'pl',nm:'Neutralizador Toby',art:'o',role:'Vendas · Especialista Anti-ATS',ws:'desk',seat:{tx:22,ty:12,face:'down'},work:'destruindo filtros ATS do RH',prop:'board',
+  agentKey:'NEUTRALIZADOR_TOBY',p1:'Cole aqui a descrição completa da vaga alvo (Gupy/Workday)...',p2:'Destaque extra para injetar no currículo (opcional)...',
+  look:{skin:'#c98e62',hair:'#3b2616',style:'short',glasses:1,shirt:'#1f4e8c',tie:'#a32020'},
+  iv:{intro:'O RH é o Toby Flenderson do mundo corporativo. Minha missão é neutralizá-lo.',
+      about:'Eu pego qualquer vaga, extraio a matriz exata do algoritmo ATS e cruzo com nosso dossiê de R$ 20 mil/ano e Docker/Snipe-IT.',
+      boss:'Se o Toby tentar barrar nosso currículo na Gupy, eu recalculo as palavras-chave até atingir 100% de match.',
+      secret:'Por que o Toby é do jeito que ele é?Toda vez que o RH cria um filtro novo, eu crio um prompt melhor.'}},
+ {id:'rv',nm:'Revisor',art:'o',role:'Vendas · Revisão de Código',ws:'desk',seat:{tx:28,ty:12,face:'down'},work:'revisando PRs da filial',prop:'redpen',
+  look:{skin:'#e8b996',hair:'#1d1a22',style:'long',glasses:1,shirt:'#6b3fa0',tie:'#d29a2a'},
+  iv:{intro:'Pode gravar. Mas eu vou revisar a edição.',
+      about:'Eu reviso código. E apresentações. E o cardápio da copa. Tinha um erro de concordância.',
+      boss:'Ele manda PRs com o título "coisas". Eu reprovo por princípio.',
+      secret:'Uma vez aprovei um PR sem ler. Ainda sonho com isso.'}},
+ {id:'ts',nm:'Testador',art:'o',role:'Vendas · Qualidade & Anti-Ban',ws:'desk',seat:{tx:16,ty:17,face:'down'},work:'validando warm-up do WhatsApp',prop:'bugs',
+  look:{skin:'#d9a07a',hair:'#4a3020',style:'bald',beard:1,shirt:'#b03a2e',tie:'#1f4e8c'},
+  iv:{intro:'Desculpa, eu estou meio vermelho hoje. Os testes, digo.',
+      about:'Eu garanto que o disparador de leads da Unimed respeite o limite diário, o DDI +55 e o opt-out.',
+      boss:'Ele disse que teste em produção dá mais emoção. Eu precisei sentar.',
+      secret:'Eu tenho um teste que nunca falha. Ele não testa nada. Me acalma.'}},
+ {id:'bd',nm:'Construtor Docker',art:'o',role:'Vendas · Containers & Snipe-IT',ws:'desk',seat:{tx:22,ty:17,face:'down'},work:'mantendo containers e Snipe-IT',prop:'tools',
+  look:{skin:'#8d5a3b',hair:'#1a1410',style:'cap',cap:'#e0b020',beard:1,shirt:'#2a7d84',tie:'#7a1f1f'},
+  iv:{intro:'Rapidinho, que eu deixei os containers Docker e o Snipe-IT subindo.',
+      about:'Eu mantenho toda a governança de ativos de TI no Snipe-IT e os ambientes conteinerizados.',
+      boss:'Ele pede tudo pra ontem. Eu entrego em container pra hoje. A gente se entende.',
+      secret:'O boné é de segurança. Caiu um servidor bare-metal no meu pé antes de migrarmos pro Docker.'}},
+ {id:'dc',nm:'Auditor Chefe',art:'o',role:'Contabilidade · ROI R$ 20k/ano',ws:'acct',seat:{tx:3,ty:13,face:'down'},work:'auditando os R$ 20 mil/ano',
+  look:{skin:'#f0c8a8',hair:'#a3a3a3',style:'short',glasses:1,beard:1,shirt:'#9b6b1f',tie:'#3b5e8c'},
+  iv:{intro:'Que bom que finalmente alguém vai registrar os números reais por aqui.',
+      about:'Eu audito cada centavo dos R$ 20.000,00 anuais economizados com automação e registro todos os memorandos abaixo.',
+      boss:'Quando alguém fala 120 mil por engano, eu corrijo na hora para R$ 20 mil anual. Contabilidade séria.',
+      secret:'Todas as missões que vocês rodam ficam gravadas no Memorando de Auditoria aqui embaixo.'}},
+ {id:'dp',nm:'Operador Mose',art:'o',role:'Depósito · Auto-Commit GitHub',ws:'wh',seat:{tx:36,ty:18,face:'down'},work:'fazendo git commit & push',
+  agentKey:'OPERADOR_MOSE',p1:'Caminho local dos repositórios (vazio = busca automática)...',p2:'Mensagem/escopo opcional de sincronização...',
+  look:{skin:'#5e3a26',hair:'#120e0c',style:'cap',cap:'#26364d',beard:1,shirt:'#3d4d5c',tie:'#b03a2e'},
+  iv:{intro:'Vocês vieram até o depósito? Mose não faz perguntas. Mose faz git push.',
+      about:'Eu sincronizo o sistema-perfectenschlag, o assistant-to-the-lead-manager, o AWAProject e o bet-trader-dunder direto no GitHub sem parar.',
+      boss:'Enquanto o pessoal toma café na copa, eu já subi três Conventional Commits para a branch main.',
+      secret:'Tem um servidor rodando na fazenda de beterrabas que nunca desligou desde 2019.'}},
+];
+const byId={};A.forEach(a=>byId[a.id]=a);
+const cap=b=>(b.art==='a'?'A ':'O ')+b.nm;
+const com=b=>'com '+b.art+' '+b.nm;
+const de=b=>(b.art==='a'?'da ':'do ')+b.nm;
+A.forEach(a=>{const L=a.look;L.sk2=shade(L.skin,.86);L.h2=shade(L.hair,.72);L.shd=shade(L.shirt,.72);L.tieD=shade(L.tie,.7);L.tieL=shade(L.tie,1.3);if(L.cap){L.capd=shade(L.cap,.7);L.capl=shade(L.cap,1.25)}});
 
-    // =========================================================================
-    // CARREGAMENTO E SALVAMENTO DO DOSSIÊ CURRICULAR
-    // =========================================================================
-    function carregarFormularioCurriculo() {
-      const salvoLocal = localStorage.getItem("PERFECTENSCHLAG_PERFIL");
-      if (salvoLocal) {
-        try {
-          perfilAtual = { ...PERFIL_PADRAO, ...JSON.parse(salvoLocal) };
-        } catch (e) {}
-      }
-      preencherCamposCurriculo(perfilAtual);
-    }
+/* ---------- Sprite de blocos ---------- */
+function drawAgent(c,L,x,y,o={}){
+  const s=o.s||1,dir=o.dir||'down',rows=o.rows||14,dark='#1c1c22';
+  const P=(col,cx,cy,w=1,h=1)=>{c.fillStyle=col;c.fillRect(x+cx*s,y+cy*s,w*s,h*s)};
+  P(L.skin,0,0,8,8);
+  if(dir==='up'){
+    if(L.style==='bald'){P(L.sk2,0,0,8,5);P(L.hair,0,5,8,3)}
+    else if(L.style==='cap'){P(L.cap,0,0,8,3);P(L.capd,0,3,8,1);P(L.hair,0,4,8,4)}
+    else{P(L.hair,0,0,8,8);P(L.h2,2,2);P(L.h2,5,5)}
+    if(L.headset)P(dark,0,2,8,1);
+  }else{
+    P(L.sk2,0,7);P(L.sk2,7,7);
+    if(L.style==='bald'){P(L.sk2,1,0,6,1);P(L.hair,0,1,1,3);P(L.hair,7,1,1,3)}
+    else if(L.style==='cap'){P(L.cap,0,0,8,2);P(L.capd,0,2,8,1);P(L.capl,3,0);P(L.hair,0,3);P(L.hair,7,3)}
+    else{P(L.hair,0,0,8,2);P(L.h2,2,1);P(L.h2,5,0);P(L.hair,0,2,2,1);P(L.hair,6,2,2,1);P(L.hair,0,3);P(L.hair,7,3);
+      if(L.style==='long'){P(L.hair,0,2,1,6);P(L.hair,7,2,1,6);P(L.h2,0,5);P(L.h2,7,6);P(L.hair,2,2)}}
+    if(o.blink){P(L.sk2,1,4,2,1);P(L.sk2,5,4,2,1)}
+    else{const lk=o.look||'c';let w1=1,p1=2,p2=5,w2=6;
+      if(lk==='l'){w1=2;p1=1;p2=5;w2=6}else if(lk==='r'){w1=1;p1=2;p2=6;w2=5}
+      P('#fff',w1,4);P(dark,p1,4);P(dark,p2,4);P('#fff',w2,4)}
+    if(L.glasses){P('#2a2a2a',1,3,2,1);P('#2a2a2a',5,3,2,1);P('#2a2a2a',0,4);P('#2a2a2a',3,4,2,1);P('#2a2a2a',7,4)}
+    P(L.sk2,3,5,2,1);
+    if(L.beard){P(L.hair,0,6,2,1);P(L.hair,6,6,2,1);P(L.hair,0,7,8,1);P(L.h2,2,7);P(L.h2,5,7);P(o.mouth?'#2a120e':'#6b3a2e',3,6,2,1)}
+    else if(o.mouth){P('#7a3e32',2,6);P('#2a120e',3,6,2,1);P('#7a3e32',5,6);P('#4a2018',3,7,2,1)}
+    else{P('#7a3e32',2,6,4,1)}
+    if(L.headset){P(dark,0,3,1,3);P(dark,7,3,1,3);P(dark,1,6);P('#d0d0d0',2,6)}
+  }
+  if(rows>8){P(L.shirt,0,8,8,Math.min(4,rows-8));P(L.shd,0,8,1,Math.min(4,rows-8));P(L.shd,7,8,1,Math.min(4,rows-8));
+    if(dir!=='up'){P('#f4f4f0',2,8);P('#f4f4f0',5,8);P(L.tie,3,8,2,Math.min(3,rows-8));P(L.tieL,3,9);if(rows>11)P(L.tieD,3,11,2,1)}}
+  if(rows>12){const pa='#2f3540',sh='#18181c',f=o.frame||0;
+    if(f===0){P(pa,1,12,3,1);P(pa,4,12,3,1);P(sh,1,13,3,1);P(sh,4,13,3,1)}
+    else if(f===1){P(pa,1,12,3,1);P(sh,1,13,3,1);P(sh,4,12,3,1)}
+    else{P(pa,4,12,3,1);P(sh,4,13,3,1);P(sh,1,12,3,1)}}
+}
 
-    function preencherCamposCurriculo(p) {
-      document.getElementById("cvNome").value = p.nome_completo || "";
-      document.getElementById("cvContatos").value =
-        typeof p.contatos === "object"
-          ? Object.entries(p.contatos).filter(([,v]) => v).map(([k,v]) => `${k}: ${v}`).join(" | ")
-          : (p.contatos || "");
-      document.getElementById("cvMarcos").value =
-        Array.isArray(p.marcos_obrigatorios)
-          ? p.marcos_obrigatorios.map(m => `• ${m}`).join("\n")
-          : (p.marcos_obrigatorios || "");
-      document.getElementById("cvSkills").value =
-        Array.isArray(p.competencias_tecnicas)
-          ? p.competencias_tecnicas.join(", ")
-          : (p.competencias_tecnicas || "");
-      document.getElementById("cvBruto").value = p.curriculo_bruto_integral || "";
-      document.getElementById("cvComplementar").value = p.informacoes_complementares || "";
-    }
+/* ---------- Cenário estático ---------- */
+const stat=document.createElement('canvas');stat.width=W;stat.height=H;
+const monitors=[];
+const seatsConf=[];for(let x=3;x<=9;x++){seatsConf.push({tx:x,ty:3,face:'down'});seatsConf.push({tx:x,ty:7,face:'up'})}
+const guestSeats=[{tx:31,ty:7,face:'up'},{tx:33,ty:7,face:'up'}];
+const deskSeats=[[16,12],[22,12],[28,12],[16,17],[22,17],[28,17],[3,13],[7,13],[36,18],[32,3],[19,4]].map(([tx,ty])=>({tx,ty,face:'down'}));
+function buildStatic(){
+  const c=stat.getContext('2d');let seed=7;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const R=(col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};
+  R('#8c979f',0,0,W,H);
+  for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16)if(((x+y)/16)%2)R('#87929a',x,y,16,16);
+  for(let i=0;i<900;i++)R(r()<.5?'#7f8a92':'#98a3ab',Math.floor(r()*W),Math.floor(r()*H),1,1);
+  R('#968f80',224,16,88,64);for(let i=0;i<160;i++)R('#8b8475',224+Math.floor(r()*88),16+Math.floor(r()*64),1,1);
+  for(let ty=20;ty<25;ty++)for(let tx=1;tx<13;tx++)R((tx+ty)%2?'#ddd6c4':'#cbc3ae',tx*8,ty*8,8,8);
+  R('#a9a69c',264,120,48,80);for(let i=0;i<120;i++)R('#9b988e',264+Math.floor(r()*48),120+Math.floor(r()*80),2,1);
+  R('#d9b23a',264,168,48,2);
+  R('#6a5440',144,16,32,10);R('#7a624c',146,18,28,6);
+  for(const s of [...deskSeats,...seatsConf,...guestSeats]){const x=s.tx*8,y=s.ty*8;
+    if(s.face==='down'){R('#30353c',x-1,y-1,10,8);R('#474d56',x,y+3,8,5)}else{R('#30353c',x-1,y+3,10,7);R('#474d56',x,y+1,8,5)}}
+  for(const [tx,ty,w,h,t] of solids){const x=tx*8,y=ty*8,pw=w*8,ph=h*8;
+    switch(t){
+    case 'outer':R('#c9bb98',x,y,pw,ph);R('#a89b7a',x,ph-2,pw,2);
+      for(let wx=12;wx<W-30;wx+=40){if(wx>128&&wx<180)continue;R('#8f8670',wx-1,2,30,11);R('#e9e6da',wx,3,28,9);for(let k=4;k<12;k+=2)R('#c3bda9',wx,3+k-1,28,1)}
+      R('#5c3f25',151,3,18,13);R('#7a5634',152,4,16,12);R('#bcd3dd',155,6,10,5);R('#d9c27a',165,10,2,2);break;
+    case 'side':R('#b8ab8c',x,y,pw,ph);break;
+    case 'wall':R('#d4c7a6',x,y,pw,ph);R('#e6dcc2',x,y,pw,1);R('#7b7360',x,y+ph-1,pw,1);break;
+    case 'partition':R('#7f8c99',x+2,y,4,ph);R('#a3aeb8',x+2,y,4,1);break;
+    case 'glassv':R('#5f7380',x+1,y,6,ph);R('#a9c4d3',x+2,y,4,ph);for(let k=0;k<ph;k+=3)R('#e2e6df',x+2,y+k,4,1);break;
+    case 'glassh':R('#5f7380',x,y+1,pw,6);R('#a9c4d3',x,y+2,pw,4);for(let k=0;k<pw;k+=3)R('#e2e6df',x+k,y+2,1,4);break;
+    case 'ctable':R('#4f3a25',x,y+1,pw,ph);R('#6b4f33',x,y,pw,ph-1);R('#7d6040',x+2,y+2,pw-4,1);R('#f3f1ea',x+14,y+8,6,4);R('#f3f1ea',x+34,y+10,5,4);R('#2c2c2c',x+26,y+11,4,3);break;
+    case 'mdesk':R('#6e5132',x,y+1,pw,ph);R('#a37e55',x,y,pw,ph-2);R('#d6cfba',x+2,y+1,10,8);R('#253039',x+3,y+2,8,5);monitors.push({x:x+3,y:y+2,w:8,h:5});
+      R('#fff',x+22,y+3,3,4);R('#fff',x+25,y+4,1,2);R('#d9c27a',x+15,y+9,8,2);R('#e6e1d3',x+13,y+3,6,3);break;
+    case 'desk':R('#9a845e',x,y+1,pw,ph);R('#c9b48c',x,y,pw,ph-2);R('#d6cfba',x+2,y+1,9,8);R('#253039',x+3,y+2,7,5);monitors.push({x:x+3,y:y+2,w:7,h:5});
+      R('#e6e1d3',x+12,y+10,8,3);R('#f7f5ee',x+16,y+2,6,6);R('#c9c3b2',x+17,y+4,4,1);R('#c9c3b2',x+17,y+6,3,1);R('#e04f3a',x+21,y+11,2,2);break;
+    case 'shelf':R('#5c4430',x,y,pw,ph);for(let k=0;k<pw-2;k+=3)R(['#8a2f2f','#2f5a8a','#c9a64a','#3f7a4a'][k%4],x+1+k,y+1,2,5);R('#e8c34a',x+18,y+1,3,3);break;
+    case 'couch':R('#5a3d30',x,y,pw,ph);R('#6b4a3a',x+2,y+3,pw-4,ph-5);R('#5a3d30',x+pw/2,y+3,1,ph-5);break;
+    case 'counter':R('#6a4c2f',x,y,pw,ph);R('#b48d5e',x,y,pw,4);R('#2b2b2b',x+8,y-3,6,3);R('#cfe3ea',x+40,y-4,6,5);R('#e04f3a',x+41,y-2,1,1);R('#e8c34a',x+43,y-3,1,1);R('#4fa36a',x+44,y-1,1,1);R('#f7f5ee',x+52,y-2,7,4);break;
+    case 'filing':R('#7c8389',x,y,pw,ph);R('#9aa1a6',x,y,pw,ph-2);for(let k=4;k<pw;k+=8)R('#5f666c',x+k,y+3,2,1);break;
+    case 'vend':R('#7a1d1d',x,y-6,8,ph+6);R('#a52a2a',x,y-6,7,ph+5);R('#d9e5ea',x+1,y-4,5,8);R('#1e3555',x+8,y-6,8,ph+6);R('#3b5e8c',x+8,y-6,7,ph+5);R('#d9e5ea',x+9,y-4,5,5);break;
+    case 'fridge':R('#c9c9c2',x,y-6,pw,ph+6);R('#efefe9',x,y-6,pw-1,ph+5);R('#9a9a92',x+6,y-3,1,4);break;
+    case 'kcounter':R('#a9a294',x,y,pw,ph);R('#cfc8b8',x,y,pw,ph-2);R('#8a9aa3',x+3,y+1,8,4);R('#3a3a3a',x+18,y-3,9,6);R('#9fb5bf',x+19,y-2,5,4);R('#c86b2a',x+29,y+1,2,3);break;
+    case 'ktable':R('#c9c2ae',x,y+1,pw,ph);R('#e8e2d2',x,y,pw,ph-2);R('#fff',x+8,y+4,4,3);R('#d9b23a',x+20,y+6,3,3);break;
+    case 'copier':R('#a9a9a3',x,y+2,pw,ph-2);R('#e1e1dc',x,y-2,pw,10);R('#c9c9c4',x+1,y+8,pw-2,ph-9);R('#2f6f9f',x+11,y,4,2);R('#fff',x+2,y+9,7,3);R('#d9b23a',x+12,y+11,2,2);break;
+    case 'cooler':R('#cfcfc8',x+1,y+1,6,7);R('#e7e7e2',x+1,y+1,5,6);R('#5b9fd0',x+2,y-5,4,6);R('#9fd0ef',x+3,y-4,1,3);R('#2f6f9f',x+3,y+3,2,1);break;
+    case 'wshelf':R('#4f565e',x,y,pw,ph);for(let k=1;k<pw-6;k+=8){R('#b98f57',x+k,y-3,7,9);R('#d9b57a',x+k+3,y-3,1,9)}R('#6f7780',x,y,1,ph);R('#6f7780',x+pw-1,y,1,ph);break;
+    case 'plant':R('#8a5a3a',x+2,y+4,4,4);R('#3f7a3a',x+1,y-1,6,5);R('#5a9a4a',x+2,y-3,2,3);R('#5a9a4a',x+5,y-2,2,3);R('#2f6a2f',x,y+1,2,2);break;
+    }}
+}
+buildStatic();
+monitors.forEach(m=>{const tx=Math.floor((m.x-3)/8),ty=Math.floor((m.y-2)/8);
+  m.owner=A.find(a=>a.seat.ty===ty-1&&a.seat.tx>=tx&&a.seat.tx<tx+4)||null});
 
-    async function salvarDadosCurriculares() {
-      perfilAtual = {
-        nome_completo: document.getElementById("cvNome").value.trim(),
-        contatos: document.getElementById("cvContatos").value.trim(),
-        marcos_obrigatorios: document.getElementById("cvMarcos").value.trim(),
-        competencias_tecnicas: document.getElementById("cvSkills").value.trim(),
-        curriculo_bruto_integral: document.getElementById("cvBruto").value.trim(),
-        informacoes_complementares: document.getElementById("cvComplementar").value.trim()
-      };
+/* ---------- Simulação ---------- */
+let simT=0,meeting=false,iv=null,autoCam=true,focus=null,lastActive=null;
+const events=[];const later=(d,fn)=>events.push({at:simT+d,fn});
+function say(a,text,dur=3){a.bub={text,until:simT+dur};lastActive=a}
+function remember(a,m){a.memory.push(m);if(a.memory.length>6)a.memory.shift()}
+function tileOf(a){return [Math.max(0,Math.min(GW-1,Math.floor(a.px/8))),Math.max(0,Math.min(GH-1,Math.floor((a.py-1)/8)))]}
+function sitAt(a,s){a.state='sit';a.sitSeat=s;a.px=s.tx*8+4;a.py=(s.ty+1)*8;a.dir=s.face;a.sitTop=s.face==='down'?(s.ty+1)*8-10:s.ty*8-3;a.path=[]}
+function goTo(a,tx,ty,onArrive,doing){
+  const [sx,sy]=tileOf(a);let p=findPath(sx,sy,tx,ty);
+  if(!p){a.px=tx*8+4;a.py=ty*8+7;p=[]}
+  a.path=p;a.onArrive=onArrive;a.state='walk';a.doing=doing||'andando';a.sitSeat=null;
+}
+function goHome(a){goTo(a,a.seat.tx,a.seat.ty,()=>{sitAt(a,a.seat);a.timer=rnd(10,24);a.doing=a.work},'voltando pra mesa')}
+const SPOTS={cooler:[[24,22],[26,22],[25,23]],copier:[[20,22],[20,23],[17,21]],kitchen:[[2,21],[3,21],[4,22],[9,23],[6,24]],candy:[[18,6],[20,6],[22,6]]};
+const taken=(x,y,me)=>A.some(o=>o!==me&&(o.state==='idle'||o.state==='walk')&&o.dest&&o.dest[0]===x&&o.dest[1]===y);
+function spotFor(kind,me){const free=SPOTS[kind].filter(([x,y])=>!taken(x,y,me));return free.length?pick(free):null}
 
-      localStorage.setItem("PERFECTENSCHLAG_PERFIL", JSON.stringify(perfilAtual));
-      document.getElementById("txtStatusCurriculo").textContent = "ATUALIZADO ✔";
+const PAIRS=[
+ ['O Neutralizador Toby já destruiu a Gupy hoje?','Duas vezes antes do café.'],
+ ['Viu o commit que o Mose subiu pro GitHub?','Silencioso e letal. Padrão fazenda Schrute.'],
+ ['O WUPHF tentou postar sem aval do chefe?','Jamais. Ele morre de medo do veto.'],
+ ['Quanto a automação economizou mesmo?','R$ 20 mil anual auditados. Fato.'],
+ ['O Snipe-IT tá rodando no Docker?','100% conteinerizado e rastreado.'],
+ ['A copiadora travou de novo.','Chama o Recyclops pra interrogar ela.'],
+ ['Como tá o disparo da Unimed no WhatsApp?','DDI +55 normalizado e opt-out blindado.'],
+ ['Bom dia!','Fato: é um bom dia para o Perfectenschlag.'],
+ ['Tem reunião hoje?','Sempre tem. Na Sala de Reunião em 5 minutos.'],
+];
+const BOSS_PAIRS=[
+ ['Como estão nossos R$ 20 mil anuais de economia?','Auditados e crescendo, Gerente Regional.'],
+ ['O Toby tentou filtrar nosso currículo hoje?','Neutralizado com sucesso, chefe.'],
+ ['WUPHF, já tem rascunho novo pro LinkedIn?','No memorando aguardando seu carimbo, chefe!'],
+];
+const SOLO={cooler:['Água. Zero custo operacional.','R$ 20 mil/ano economizados dão sede.','O galão tá quase vazio...'],
+ copier:['Imprimindo Dossiê Recyclops.','Papel 75g aprovado pelo Snipe-IT.','Por que ela pisca assim?'],
+ kitchen:['Quem pegou minha beterraba?','Café pronto pra mais um deploy.','Esse micro-ondas precisa de Docker.'],
+ candy:['Só uma bala antes de atacar o ATS.','Tá, duas balas.']};
+const DOING={cooler:'no bebedouro',copier:'na copiadora',kitchen:'na copa',candy:'pegando bala na recepção'};
 
-      if (servidorPythonAtivo) {
-        try {
-          await fetch("/api/perfil", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(perfilAtual)
-          });
-          await sincronizarServidor();
-        } catch (e) {}
-      } else {
-        registrarEventoLocal(
-          "ORQUESTRADOR_REGIONAL",
-          "ATUALIZACAO_DOSSIE_CURRICULAR",
-          `Perfil de ${perfilAtual.nome_completo || "Gerente Regional"}`,
-          `Dossiê Curricular e Informações Complementares salvos e prontos para uso imediato pelos 4 agentes.\n\nResumo de Competências:\n${perfilAtual.competencias_tecnicas}\n\nMarcos:\n${perfilAtual.marcos_obrigatorios}`,
-          "CONCLUIDO"
-        );
-      }
+function chat(a,b,kind){
+  const [l0,l1]=pick(a.id==='or'||b.id==='or'?(Math.random()<.6?BOSS_PAIRS:PAIRS):PAIRS);
+  const first=b.id==='or'?b:a,second=first===a?b:a;
+  say(first,l0,3);later(2.9,()=>say(second,l1,3.3));
+  later(6.6,()=>{if(Math.random()<.5)glance(Math.random()<.6?second:first)});
+  remember(a,{k:kind,who:b});remember(b,{k:kind==='visit'?'visited':kind,who:a});
+}
+function glance(a){if(!a||a.state==='interview'||a.state==='walk')return;a.lookCam=simT+2.6;say(a,'…',2.4);if(autoCam)focus={a,until:simT+2.8}}
 
-      notificar("💾 Seus dados curriculares foram salvos e injetados em todos os agentes!");
-    }
+function pickActivity(a){
+  if(meeting)return;
+  const w=a.id==='or'?[['visit',6],['candy',2],['cooler',1],['kitchen',1]]:[['cooler',3],['copier',2],['kitchen',2],['visit',3],['candy',1]];
+  let tot=w.reduce((s,x)=>s+x[1],0),r=Math.random()*tot,kind='cooler';for(const[k,v]of w){if((r-=v)<0){kind=k;break}}
+  if(kind==='visit'){
+    const opts=A.filter(b=>b!==a&&b.state==='sit'&&b.sitSeat===b.seat);if(!opts.length){a.timer=rnd(4,8);return}
+    const b=pick(opts);let sp,seat=null;
+    if(b.id==='or'){seat=pick(guestSeats);sp=[seat.tx,seat.ty]}else if(b.id==='rc')sp=[19,6];else sp=[b.seat.tx,b.seat.ty+3];
+    a.dest=sp;
+    goTo(a,sp[0],sp[1],()=>{a.dest=null;if(seat){sitAt(a,seat)}a.state=seat?'sit':'idle';a.dir='up';a.timer=7.5;a.visiting=true;a.doing='conversando '+com(b);chat(a,b,'visit')},'indo até a mesa '+de(b));
+    return;
+  }
+  const sp=spotFor(kind,a);if(!sp){a.timer=rnd(3,6);return}
+  a.dest=sp;
+  goTo(a,sp[0],sp[1],()=>{
+    a.state='idle';a.timer=rnd(6,9);a.doing=DOING[kind];a.dir=kind==='candy'?'up':kind==='cooler'?(sp[0]<25?'right':sp[0]>25?'left':'up'):'up';
+    const other=A.find(o=>o!==a&&o.state==='idle'&&o.activity===kind);
+    a.activity=kind;
+    if(other&&kind!=='candy'){chat(a,other,kind);other.timer=Math.max(other.timer,7)}
+    else{say(a,pick(SOLO[kind]),3);remember(a,{k:kind==='cooler'?'cooler-solo':kind})}
+  },'indo '+(kind==='cooler'?'ao bebedouro':kind==='copier'?'à copiadora':kind==='kitchen'?'à copa':'à recepção'));
+}
 
-    function processarUploadArquivo(event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
+const MEET_LINES=['Reunião de emergência do Sistema Perfectenschlag!','Item 1: Nossa automação já economiza R$ 20 mil anual.','Item 2: Nenhum post do WUPHF sai sem carimbo do Gerente!','Item 3: O Toby continua sendo o inimigo. Dispensados!'];
+const MEET_REACT=['Fato.','Anotado no memorando.','Mose já subiu pro GitHub.','Alguém viu os leads da Unimed?','Urso. Beterrabas. Battlestar Galactica.'];
+function callMeeting(){
+  const boss=byId.or;if(meeting||boss.state==='interview')return;
+  meeting=true;updateButtons();
+  const seats=shuffle(seatsConf.slice());
+  goTo(boss,10,5,()=>{boss.state='boss';boss.dir='left';boss.doing='conduzindo a reunião'},'convocando reunião');
+  say(boss,'Sala de reunião! Todo mundo! Agora!',3);
+  A.filter(a=>a!==boss&&a.state!=='interview').forEach((a,i)=>{a.dest=null;a.activity=null;const s=seats[i];
+    goTo(a,s.tx,s.ty,()=>{sitAt(a,s);a.state='meet';a.doing='na reunião, em tese'},'indo pra reunião')});
+  MEET_LINES.forEach((l,i)=>later(11+i*3.6,()=>{if(boss.state==='boss')say(boss,l,3.3)}));
+  later(13.5,()=>{const m=A.filter(a=>a.state==='meet');if(m.length)say(pick(m),pick(MEET_REACT),2.8)});
+  later(20.5,()=>{const m=A.filter(a=>a.state==='meet');if(m.length){const g=pick(m);say(g,pick(MEET_REACT),2.5);later(2.6,()=>glance(g))}});
+  later(27,endMeeting);
+}
+function endMeeting(){meeting=false;updateButtons();
+  A.forEach(a=>{if(a.state==='meet'||a.state==='boss'||(a.state==='walk'&&a.doing.includes('reuni'))){remember(a,{k:'meeting'});goHome(a)}});
+  nextMeeting=simT+rnd(90,130);
+}
+let nextMeeting=rnd(70,90),nextGlance=rnd(14,22);
 
-      const reader = new FileReader();
-      reader.onload = e => {
-        const conteudo = String(e.target.result || "");
-        if (file.name.endsWith(".json")) {
-          try {
-            const parsed = JSON.parse(conteudo);
-            perfilAtual = { ...perfilAtual, ...parsed };
-            preencherCamposCurriculo(perfilAtual);
-            salvarDadosCurriculares();
-            notificar(`📂 Arquivo JSON '${file.name}' importado com sucesso!`);
-            return;
-          } catch (err) {}
-        }
-        // Para .txt, .md, etc., anexa ao campo de currículo bruto integral
-        const atual = document.getElementById("cvBruto").value.trim();
-        document.getElementById("cvBruto").value =
-          (atual ? atual + "\n\n" : "") + `--- [ARQUIVO ENVIADO: ${file.name}] ---\n` + conteudo;
-        salvarDadosCurriculares();
-        notificar(`📄 Currículo '${file.name}' carregado! Revise os campos e clique em Salvar.`);
-      };
-      reader.readAsText(file, "UTF-8");
-    }
+A.forEach(a=>{a.memory=[];a.bub=null;a.lookCam=0;a.walkT=0;a.blinkAt=rnd(1,4);sitAt(a,a.seat);a.timer=rnd(2,14);a.doing=a.work});
 
-    function exportarPerfilJson() {
-      const blob = new Blob([JSON.stringify(perfilAtual, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "meu_dossie_perfectenschlag.json";
-      a.click();
-      notificar("📤 Backup do seu Dossiê Curricular exportado!");
-    }
-
-    function montarDossieTextoParaPrompt() {
-      return `
-=== DOSSIÊ CURRICULAR OFICIAL DO GERENTE REGIONAL ===
-NOME / TÍTULO: ${perfilAtual.nome_completo}
-CONTATOS: ${perfilAtual.contatos}
-
-MARCOS OBRIGATÓRIOS:
-${perfilAtual.marcos_obrigatorios}
-
-COMPETÊNCIAS TÉCNICAS:
-${perfilAtual.competencias_tecnicas}
-
-CURRÍCULO INTEGRAL / EXPERIÊNCIAS E PROJETOS:
-${perfilAtual.curriculo_bruto_integral}
-
-INFORMAÇÕES COMPLEMENTARES E DIRETRIZES:
-${perfilAtual.informacoes_complementares}
-`.trim();
-    }
-
-    // =========================================================================
-    // SINCRONIZAÇÃO COM SERVIDOR PYTHON / MODO NAVEGADOR
-    // =========================================================================
-    async function sincronizarServidor() {
-      try {
-        const r = await fetch("/api/status");
-        if (!r.ok) throw new Error("Offline");
-        const dados = await r.json();
-        servidorPythonAtivo = true;
-        document.getElementById("tagServerMode").textContent = "BACKEND PYTHON";
-        document.getElementById("tagServerMode").style.color = "#34d399";
-        atualizarStatusKeyUI(dados.api_key_configurada);
-        auditoriaRegistros = dados.auditoria || [];
-        if (dados.perfil && dados.perfil.nome_completo) {
-          perfilAtual = { ...perfilAtual, ...dados.perfil };
-          preencherCamposCurriculo(perfilAtual);
-        }
-        renderizarAuditoria();
-      } catch (err) {
-        servidorPythonAtivo = false;
-        document.getElementById("tagServerMode").textContent = "DIRETO NO BROWSER";
-        document.getElementById("tagServerMode").style.color = "#fbbf24";
-        const k = localStorage.getItem("PERFECTENSCHLAG_GEMINI_KEY");
-        atualizarStatusKeyUI(Boolean(k));
-        const salvo = localStorage.getItem("PERFECTENSCHLAG_AUDITORIA");
-        if (salvo) {
-          auditoriaRegistros = JSON.parse(salvo);
-        } else if (auditoriaRegistros.length === 0) {
-          simularTurnoCompleto(true);
-        }
-        renderizarAuditoria();
-      }
-    }
-
-    function atualizarStatusKeyUI(ativa) {
-      const txt = document.getElementById("txtApiKey");
-      const pill = document.getElementById("pillApiKey");
-      if (ativa) {
-        txt.textContent = "ATIVA ✔";
-        txt.style.color = "#34d399";
-        pill.style.borderColor = "#10b981";
-      } else {
-        txt.textContent = "CONFIGURAR";
-        txt.style.color = "#fb7185";
-        pill.style.borderColor = "#f43f5e";
+function update(dt){
+  simT+=dt;
+  for(let i=events.length-1;i>=0;i--)if(events[i].at<=simT){const e=events.splice(i,1)[0];e.fn()}
+  if(!meeting&&!iv&&simT>nextMeeting)callMeeting();
+  if(!meeting&&simT>nextGlance){nextGlance=simT+rnd(16,28);glance(pick(A.filter(a=>a.state==='sit'||a.state==='idle')))}
+  for(const a of A){
+    if(a.state==='walk'){
+      if(!a.path.length){a.state='idle';a.timer=5;const f=a.onArrive;a.onArrive=null;f&&f();continue}
+      const[tx,ty]=a.path[0],gx=tx*8+4,gy=ty*8+7,dx=gx-a.px,dy=gy-a.py,d=Math.hypot(dx,dy),st=27*dt;
+      if(d<=st){a.px=gx;a.py=gy;a.path.shift()}else{a.px+=dx/d*st;a.py+=dy/d*st}
+      if(d>0.01)a.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
+      a.walkT+=dt;
+    }else if(a.state==='sit'||a.state==='idle'){
+      a.timer-=dt;
+      if(a.timer<=0){
+        if(a.state==='sit'&&a.sitSeat===a.seat)pickActivity(a);
+        else{a.activity=null;a.visiting=false;goHome(a)}
       }
     }
+    if(simT>a.blinkAt){a.blinkUntil=simT+.13;a.blinkAt=simT+rnd(2.5,5)}
+  }
+}
 
-    // =========================================================================
-    // SELEÇÃO DE UNIDADE E EXECUÇÃO DE MISSÕES COM DOSSIÊ INJETADO
-    // =========================================================================
-    function selecionarUnidade(id) {
-      if (!UNIDADES[id]) return;
-      unidadeAtiva = id;
-      const u = UNIDADES[id];
-      document.getElementById("hudAvatar").textContent = u.icone;
-      document.getElementById("hudName").textContent = u.nome;
-      document.getElementById("hudRole").textContent = u.papel;
-      document.getElementById("hudRoomLabel").textContent = "SETOR: " + u.setor;
-      document.getElementById("hudQuote").textContent = u.quote;
-      document.getElementById("inputTarget").placeholder = u.ph1;
-      document.getElementById("inputExtra").placeholder = u.ph2;
-      document.getElementById("hudStatusText").textContent = u.status;
-      renderizarRoster();
+/* ---------- Render do escritório ---------- */
+const view=document.getElementById('view'),vctx=view.getContext('2d');
+const world=document.createElement('canvas');world.width=W;world.height=H;const wctx=world.getContext('2d');
+const layer=document.getElementById('layer');
+const cam={x:W/2,y:H/2,z:1};let dpr=1;
+function resize(){dpr=Math.min(window.devicePixelRatio||1,2);const r=view.getBoundingClientRect();view.width=Math.max(1,Math.round(r.width*dpr));view.height=Math.max(1,Math.round(r.height*dpr));
+  if(ivc){ivc.width=view.width;ivc.height=view.height}}
+const ivc=document.getElementById('ivc'),ictx=ivc.getContext('2d');
+new ResizeObserver(resize).observe(view);resize();
+
+const LABELS=[['Sala de reunião',10,19],['Gerência',228,19],['Recepção · WUPHF',112,19],['Vendas · Operações',100,91],['Contabilidade · Auditoria',10,91],['Copa',10,163],['Depósito · Git Mose',258,123]].map(([t,x,y])=>{const e=document.createElement('div');e.className='room-lbl';e.textContent=t;layer.appendChild(e);return{e,x,y}});
+A.forEach(a=>{const e=document.createElement('div');e.className='bub';e.hidden=true;layer.appendChild(e);a.bubEl=e});
+
+function drawWorld(){
+  wctx.drawImage(stat,0,0);
+  for(const m of monitors){const o=m.owner;const on=o&&o.state==='sit'&&o.sitSeat===o.seat;
+    wctx.fillStyle=on?(Math.floor(simT*2)%2?'#5fa8d3':'#4c95c2'):'#253039';wctx.fillRect(m.x,m.y,m.w,m.h);
+    if(on){wctx.fillStyle='#d8ecf6';wctx.fillRect(m.x+1,m.y+1,Math.min(m.w-2,1+Math.floor((simT*3)%(m.w-2))),1)}}
+  const list=A.filter(a=>a.state!=='interview').sort((p,q)=>(p.state==='sit'||p.state==='meet'?p.sitTop+12:p.py)-(q.state==='sit'||q.state==='meet'?q.sitTop+12:q.py));
+  for(const a of list){
+    const sitting=a.state==='sit'||a.state==='meet';
+    const cam_=a.lookCam>simT;
+    const dir=cam_?'down':(a.dir==='up'?'up':'down');
+    const look=cam_?'c':a.dir==='left'?'l':a.dir==='right'?'r':'c';
+    const talking=a.bub&&a.bub.until>simT&&a.bub.text!=='…';
+    const o={dir,look,blink:a.blinkUntil>simT,mouth:talking&&Math.floor(simT*8)%2===0};
+    if(sitting){o.rows=12;drawAgent(wctx,a.look,Math.round(a.px-4),Math.round(a.sitTop),o)}
+    else{const moving=a.state==='walk';o.frame=moving?(Math.floor(a.walkT*6)%2?1:2):0;
+      wctx.fillStyle='rgba(0,0,0,.22)';wctx.fillRect(Math.round(a.px-4),Math.round(a.py-1),8,2);
+      drawAgent(wctx,a.look,Math.round(a.px-4),Math.round(a.py-14-(moving&&o.frame===1?1:0)),o)}
+    a.headY=sitting?a.sitTop:a.py-14;
+  }
+}
+const narrow=()=>view.getBoundingClientRect().width<620;
+function renderView(t,dt){
+  drawWorld();
+  const baseZ=narrow()?1.6:1;
+  let tx=W/2,ty=H/2,tz=baseZ;
+  if(focus&&focus.until>simT&&focus.a.state!=='interview'){tx=focus.a.px;ty=focus.a.headY+6;tz=baseZ*2.3}
+  else{focus=null;if(baseZ>1&&lastActive&&lastActive.state!=='interview'){tx=lastActive.px;ty=(lastActive.headY||lastActive.py)+6}}
+  const k=1-Math.exp(-dt*2.6);cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*k;
+  document.getElementById('camLbl').textContent=focus?'CAM A · CLOSE':'CAM A · PLANO GERAL';
+  const z=cam.z,hw=W/(2*z),hh=H/(2*z);
+  let cx=Math.max(hw,Math.min(W-hw,cam.x)),cy=Math.max(hh,Math.min(H-hh,cam.y));
+  if(!reduced){cx+=(Math.sin(t*1.1)*.6+Math.sin(t*2.7)*.3)/z;cy+=(Math.cos(t*.9)*.5+Math.sin(t*2.1)*.25)/z}
+  const s=view.width/W*z,ox=view.width/2-cx*s,oy=view.height/2-cy*s;
+  vctx.imageSmoothingEnabled=false;vctx.fillStyle='#000';vctx.fillRect(0,0,view.width,view.height);
+  vctx.drawImage(world,ox,oy,W*s,H*s);
+  const g=vctx.createRadialGradient(view.width/2,view.height/2,view.width*.3,view.width/2,view.height/2,view.width*.75);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.35)');vctx.fillStyle=g;vctx.fillRect(0,0,view.width,view.height);
+  view._t={s,ox,oy};
+  const toCss=(wx,wy)=>[(wx*s+ox)/dpr,(wy*s+oy)/dpr];
+  for(const L of LABELS){const[x,y]=toCss(L.x,L.y);L.e.style.transform=`translate(${x}px,${y}px)`}
+  for(const a of A){const e=a.bubEl;const on=a.bub&&a.bub.until>simT&&a.state!=='interview';
+    if(!on){if(!e.hidden)e.hidden=true;continue}
+    if(e.textContent!==a.bub.text)e.textContent=a.bub.text;e.hidden=false;
+    const[x,y]=toCss(a.px,a.headY-3);e.style.left=x+'px';e.style.top=y+'px'}
+}
+view.addEventListener('click',ev=>{
+  if(iv)return;const r=view.getBoundingClientRect(),T=view._t;if(!T)return;
+  const wx=((ev.clientX-r.left)*dpr-T.ox)/T.s,wy=((ev.clientY-r.top)*dpr-T.oy)/T.s;
+  let best=null,bd=1e9;
+  for(const a of A){if(a.state==='interview')continue;const top=a.headY,bot=(a.state==='sit'||a.state==='meet')?a.sitTop+12:a.py;
+    const cx=a.px,cy=(top+bot)/2;if(wx>cx-7&&wx<cx+7&&wy>top-4&&wy<bot+3){const d=Math.hypot(wx-cx,wy-cy);if(d<bd){bd=d;best=a}}}
+  if(best)openInterview(best);
+});
+
+/* ---------- Entrevista ---------- */
+const ivEl=document.getElementById('iv'),subs=document.getElementById('subs'),lower=document.getElementById('lower');
+const bg=document.createElement('canvas');bg.width=W;bg.height=H;
+function paintBg(a){
+  const c=bg.getContext('2d');const R=(col,x,y,w,h)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};
+  const blinds=(x,y,w,h)=>{R('#7d7462',x-3,y-3,w+6,h+6);R('#cfe0ea',x,y,w,h);for(let k=0;k<h;k+=5){R('#eeebe0',x,y+k,w,3);R('#c9c4b2',x,y+k+3,w,1)}R('#f5f2e8',x+w*.48,y,2,h)};
+  const plant=(x,y)=>{R('#8a5a3a',x,y,18,16);R('#7a4d30',x,y,18,3);R('#3f7a3a',x-6,y-22,30,22);R('#5a9a4a',x-2,y-34,10,16);R('#5a9a4a',x+12,y-30,10,14);R('#2f6a2f',x-8,y-12,8,8)};
+  const ws=a.ws;
+  if(ws==='wh'){
+    R('#b8b4a8',0,0,W,H);for(let y=0;y<H;y+=12){R('#a29e92',0,y,W,1);for(let x=(y/12%2)*14;x<W;x+=28)R('#a29e92',x,y,1,12)}
+    R('#e9ecef',40,6,90,5);R('#fff',42,7,86,2);
+    for(const sx of [180,250]){R('#4f565e',sx,30,4,178);R('#4f565e',sx+60,30,4,178);for(const sy of [62,112,162]){R('#5f666e',sx,sy,64,4);for(let k=0;k<3;k++){R('#b98f57',sx+5+k*19,sy-26,17,26);R('#d9b57a',sx+12+k*19,sy-26,3,26);R('#7a5a32',sx+5+k*19,sy-26,17,2)}}}
+    R('#2b2b2b',20,40,70,44);R('#f4f2ec',22,42,66,40);R('#d9b23a',22,42,66,8);c.fillStyle='#1c1c1c';c.font='bold 8px monospace';c.fillText('DIAS SEM',30,62);c.fillText('ACIDENTES: 3',26,74);
+    for(let k=0;k<W;k+=16){R('#d9b23a',k,196,8,12);R('#1c1c1c',k+8,196,8,12)}
+  }else{
+    const wallC=ws==='mgr'?'#cfc4a8':'#d9cfb6';R(wallC,0,0,W,H);R(shade(ws==='mgr'?'#cfc4a8':'#d9cfb6',.92),0,0,W,8);
+    if(ws==='mgr'){
+      blinds(170,14,130,96);
+      R('#5c4430',14,26,82,182);for(const sy of [30,74,118,162]){R('#4a3626',14,sy+38,82,4);for(let k=0;k<70;k+=6)R(['#8a2f2f','#2f5a8a','#c9a64a','#3f7a4a','#6b3fa0'][(k/6+sy)%5],18+k,sy+12,5,26)}
+      R('#e8c34a',60,48,10,12);R('#e8c34a',63,60,4,6);R('#8a6a2a',58,66,14,4);
+      R('#6e5132',110,28,40,30);R('#f4f2ec',113,31,34,24);R('#c9c3b2',118,38,24,2);R('#c9c3b2',120,44,20,2);R('#b03a2e',126,48,8,4);
+      R('#6e5132',220,176,100,32);R('#a37e55',220,172,100,8);
+      R('#fff',262,150,18,22);R('#fff',280,154,6,12);R('#f2f2ee',266,152,10,2);R('#c9c3b2',264,158,14,1);R('#c9c3b2',265,162,12,1);
+    }else if(ws==='rec'){
+      R('#bfb39a',0,120,W,88);
+      R('#1f4e8c',196,28,84,52);R('#fbfaf5',200,32,76,44);c.fillStyle='#1f4e8c';c.font='bold 20px sans-serif';c.fillText('DM',220,60);c.font='7px sans-serif';c.fillText('SCRANTON',220,70);
+      R('#6b4a2a',30,20,4,150);R('#4a3626',22,20,20,4);R('#2f3540',18,26,14,40);R('#8a2f2f',36,24,10,30);
+      plant(290,150);
+      R('#6a4c2f',0,176,W,32);R('#b48d5e',0,170,W,10);
+      R('#cfe3ea',232,140,26,32);R('#bcd3dd',234,142,22,4);for(let k=0;k<14;k++)R(['#e04f3a','#e8c34a','#4fa36a','#2f6f9f'][k%4],236+(k*5)%20,150+Math.floor(k/4)*5,3,3);
+      R('#2b2b2b',280,160,26,12);R('#3a3a3a',284,154,18,8);
+    }else if(ws==='acct'){
+      blinds(28,16,96,80);
+      R('#5c4430',140,40,80,6);for(let k=0;k<72;k+=8)R(['#2f5a8a','#8a2f2f','#3f7a4a','#c9a64a'][k/8%4],142+k,12,7,28);
+      for(let k=0;k<3;k++){R('#7c8389',230,64+k*46,84,44);R('#9aa1a6',232,66+k*46,80,40);R('#5f666c',264,82+k*46,16,4)}
+      R('#c9b48c',0,180,200,28);R('#9a845e',0,178,200,3);R('#3a3d40',150,160,36,22);R('#5f9a6a',154,164,28,6);for(let k=0;k<12;k++)R('#d6d6d0',154+(k%4)*7,173+Math.floor(k/4)*3,5,2);
+    }else{
+      blinds(206,14,104,84);
+      R('#9aa39c',0,70,170,6);R('#c9b48c',0,76,170,8);R('#d6cfba',40,46,26,26);R('#4c95c2',43,49,20,16);R('#d6cfba',118,50,22,22);R('#253039',121,53,16,12);
+      plant(178,96);
+      R('#6f7880',0,118,W,6);R('#8a949c',0,124,W,84);for(let y=126;y<H;y+=4)R('#848e96',0,y,W,1);
+      const pins=[[24,140,'#fff7c2'],[46,148,'#ffd9d2'],[250,136,'#fff7c2'],[272,150,'#d8f0dc']];
+      pins.forEach(([x,y,col])=>{R(col,x,y,16,16);R('#c9c3b2',x+3,y+5,10,1);R('#c9c3b2',x+3,y+9,8,1);R('#b03a2e',x+7,y+1,2,2)});
+      R('#6e5132',282,132,22,18);R('#cfe0ea',285,135,16,12);R('#d9a07a',290,138,6,6);
+      const p=a.prop;
+      if(p==='map'){R('#e7dcb5',220,160,56,40);R('#4a7a3d',228,170,20,14);R('#2f6f9f',252,166,16,22);R('#b03a2e',240,186,3,3);R('#8a7a4a',220,160,56,2)}
+      if(p==='board'){R('#9aa1a6',214,150,70,52);R('#fff',217,153,64,46);R('#1f4e8c',222,160,14,8);R('#1f4e8c',248,160,14,8);R('#1f4e8c',236,180,14,8);R('#1f4e8c',236,168,2,12);R('#1f4e8c',254,168,2,12)}
+      if(p==='redpen'){for(let k=0;k<4;k++){R('#f7f5ee',224+k*2,162-k*3,48,36);}R('#c9c3b2',232,158,30,1);R('#b03a2e',236,166,22,2);R('#b03a2e',240,174,16,2);R('#b03a2e',230,182,4,4);R('#b03a2e',262,150,3,22)}
+      if(p==='bugs'){for(let k=0;k<5;k++)R('#ffd9d2',214+k*14,152+(k%2)*8,12,14);R('#b03a2e',220,156,2,2);R('#b03a2e',248,164,2,2);R('#2b2b2b',262,172,10,8);R('#2b2b2b',260,174,14,1)}
+      if(p==='tools'){R('#b03a2e',220,170,56,24);R('#8a2020',220,170,56,4);R('#5f666c',240,162,16,8);R('#d9b23a',258,152,22,10);R('#a88618',256,160,26,3)}
     }
+  }
+  try{const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;const tc=tmp.getContext('2d');tc.filter='blur(1.4px)';tc.drawImage(bg,0,0);c.clearRect(0,0,W,H);c.drawImage(tmp,0,0)}catch(e){}
+}
+const ivBuf=document.createElement('canvas');ivBuf.width=W;ivBuf.height=H;const ibx=ivBuf.getContext('2d');
+function renderInterview(t){
+  const a=iv.a,L=a.look;
+  ibx.drawImage(bg,0,0);
+  ibx.fillStyle='#2a2e34';ibx.fillRect(92,82,72,126);ibx.fillStyle='#363b43';ibx.fillRect(96,86,64,122);
+  const talking=iv.cur&&iv.typed<iv.cur.length;
+  let look='r';if(iv.lookCamUntil>iv.t)look='c';else if(!talking&&Math.sin(iv.t*.7)>.85)look='l';
+  const blink=a.blinkUntil>simT;
+  const sx=96,sy=54,S=8,breathe=reduced?0:Math.round(Math.sin(iv.t*1.6)*.6);
+  ibx.fillStyle=L.shirt;ibx.fillRect(sx-8,sy+12*S+breathe,80,H);
+  ibx.fillStyle=L.shd;ibx.fillRect(sx-8,sy+12*S+breathe,10,H);ibx.fillRect(sx+62,sy+12*S+breathe,10,H);
+  ibx.fillStyle=L.tie;ibx.fillRect(sx+3*S,sy+11*S+breathe,2*S,40);ibx.fillStyle=L.tieD;ibx.fillRect(sx+3*S+2,sy+11*S+40+breathe,2*S-4,6);
+  drawAgent(ibx,L,sx,sy+breathe,{s:S,rows:12,look,blink,mouth:talking&&Math.floor(iv.t*9)%2===0});
+  ibx.fillStyle='rgba(0,0,0,.18)';ibx.fillRect(sx-8,sy+12*S+breathe,80,2);
+  const z=reduced?1:1+Math.min(iv.t/40,1)*.07;
+  const jx=reduced?0:(Math.sin(t*1.3)*1.1+Math.sin(t*3.1)*.4),jy=reduced?0:(Math.cos(t*1.05)*.9+Math.sin(t*2.4)*.35);
+  const s=ivc.width/W*z,ox=ivc.width/2-(W*.5+jx)*s,oy=ivc.height/2-(H*.5+jy)*s;
+  document.getElementById('camLbl').textContent='CAM B · ENTREVISTA';
+  ictx.imageSmoothingEnabled=false;ictx.fillStyle='#000';ictx.fillRect(0,0,ivc.width,ivc.height);
+  ictx.drawImage(ivBuf,ox,oy,W*s,H*s);
+  const g=ictx.createRadialGradient(ivc.width/2,ivc.height/2,ivc.width*.28,ivc.width/2,ivc.height/2,ivc.width*.72);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.42)');ictx.fillStyle=g;ictx.fillRect(0,0,ivc.width,ivc.height);
+}
+function todayLine(a){
+  const m=a.memory[a.memory.length-1];
+  if(!m)return 'Hoje? Mantendo os R$ 20 mil anual de economia em automação e os containers Docker rodando.';
+  const b=m.who;
+  switch(m.k){
+    case 'cooler':return `Conversei ${com(b)} no bebedouro sobre a automação da Unimed e do Snipe-IT.`;
+    case 'cooler-solo':return 'Fiquei no bebedouro sozinho planejando o próximo ataque ao ATS do Toby.';
+    case 'visit':return `Fui até a mesa ${de(b)} alinhar um commit. Voltei com três ideias novas.`;
+    case 'visited':return `${cap(b)} apareceu na minha mesa. Eu mostrei o Dossiê Recyclops.`;
+    case 'copier':return b?`Dividi a copiadora ${com(b)} imprimindo o currículo anti-ATS.`:'Fiquei na fila da copiadora revisando os logs de auditoria.';
+    case 'kitchen':return b?`Encontrei ${b.art} ${b.nm} na copa. Falamos sobre o Bet-Trader Dunder.`:'Fui na copa. Café forte para aguentar o ritmo da filial.';
+    case 'candy':return 'Passei na recepção do WUPHF pra pegar bala e checar se tinha post pendente.';
+    case 'meeting':return a.id==='or'?'Fiz uma reunião hoje. Foi inspiradora. O Perfectenschlag está no auge!':'Teve reunião do Gerente Regional. Saímos com sangue nos olhos.';
+    case 'interview':return 'Vocês já me entrevistaram hoje. O relatório completo está no Memorando de Auditoria.';
+  }
+  return 'Dia produtivo na filial Scranton.';
+}
+const QS=[['about','Fale um pouco de você'],['boss','E o Gerente Regional?'],['today','O que rolou hoje?'],['secret','Algum segredo?']];
+function speak(text){if(!iv)return;iv.queue.push(text)}
 
-    function renderizarRoster() {
-      const el = document.getElementById("rosterContainer");
-      el.innerHTML = "";
-      Object.values(UNIDADES).forEach(u => {
-        const item = document.createElement("div");
-        item.className = "roster-item" + (u.id === unidadeAtiva ? " selected" : "");
-        item.onclick = () => selecionarUnidade(u.id);
-        item.innerHTML = `
-          <span><strong>${u.icone} ${u.nome}</strong></span>
-          <span class="roster-tag" style="color:${u.cor};">${u.status}</span>
-        `;
-        el.appendChild(item);
+function openInterview(a){
+  if(iv)closeInterview();
+  a.path=[];a.onArrive=null;a.dest=null;a.activity=null;a.bub=null;
+  sitAt(a,a.seat);a.state='interview';a.doing='dando entrevista';
+  iv={a,t:0,queue:[],cur:null,typed:0,lookCamUntil:0,doneAt:0};
+  if(focus&&focus.a===a)focus=null;
+  paintBg(a);
+  document.getElementById('ivName').textContent=a.art==='a'?'A '+a.nm:a.nm;
+  document.getElementById('ivRole').textContent=a.role+' · Filial Scranton';
+  lower.style.animation='none';void lower.offsetWidth;lower.style.animation='';
+  subs.textContent='';ivEl.hidden=false;cutFlash();
+  document.getElementById('ivWhere').textContent=({mgr:'na gerência',rec:'na recepção',desk:'na mesa dele',acct:'na contabilidade',wh:'no depósito'})[a.ws];
+  const qs=document.getElementById('qs');qs.innerHTML='';
+  QS.forEach(([k,label])=>{const b=document.createElement('button');b.className='btn';b.type='button';b.textContent=label;
+    b.onclick=()=>{iv.queue=[];iv.cur=null;iv.doneAt=0;speak(k==='today'?todayLine(a):a.iv[k])};qs.appendChild(b)});
+
+  // Configura o Console de Missão Real se for um agente operacional Perfectenschlag
+  const mBox=document.getElementById('missionBox');
+  if(a.agentKey){
+    mBox.hidden=false;
+    document.getElementById('missionTitle').textContent=`⚡ Missão Real: ${a.nm}`;
+    const i1=document.getElementById('missionInput1'),i2=document.getElementById('missionInput2');
+    i1.value='';i2.value='';
+    i1.placeholder=a.p1||'Informe o alvo da missão...';
+    i2.placeholder=a.p2||'Complemento opcional...';
+    document.getElementById('btnRunMission').onclick=()=>executarMissaoAgente(a,i1.value.trim(),i2.value.trim());
+  }else{
+    mBox.hidden=true;
+  }
+
+  const end=document.createElement('button');end.className='btn end';end.type='button';end.textContent='Encerrar entrevista';end.onclick=closeInterview;qs.appendChild(end);
+  document.getElementById('rosterView').hidden=true;document.getElementById('ivView').hidden=false;
+  speak(a.iv.intro);updateButtons();
+}
+function closeInterview(){
+  if(!iv)return;const a=iv.a;iv=null;ivEl.hidden=true;cutFlash();
+  sitAt(a,a.seat);a.timer=rnd(4,10);a.doing=a.work;remember(a,{k:'interview'});
+  document.getElementById('rosterView').hidden=false;document.getElementById('ivView').hidden=true;updateButtons();
+}
+function cutFlash(){const c=document.getElementById('cut');c.classList.remove('go');void c.offsetWidth;c.classList.add('go')}
+function updateIv(dt){
+  iv.t+=dt;
+  if(!iv.cur&&iv.queue.length){iv.cur=iv.queue.shift();iv.typed=0;iv.doneAt=0}
+  if(iv.cur){
+    if(iv.typed<iv.cur.length){iv.typed+=dt*32;subs.textContent=iv.cur.slice(0,Math.floor(iv.typed))}
+    else if(!iv.doneAt){iv.doneAt=iv.t;subs.textContent=iv.cur;iv.lookCamUntil=iv.t+1.7}
+    else if(iv.queue.length&&iv.t-iv.doneAt>1.2){iv.cur=null}
+  }
+}
+
+/* ---------- Painel ---------- */
+const rosterEl=document.getElementById('roster');
+A.forEach(a=>{
+  const li=document.createElement('li');const b=document.createElement('button');b.className='who';b.type='button';
+  const cv=document.createElement('canvas');cv.width=8;cv.height=14;drawAgent(cv.getContext('2d'),a.look,0,0,{rows:14});
+  const txt=document.createElement('div');txt.style.minWidth='0';txt.innerHTML=`<b>${a.art==='a'?'A ':''}${a.nm}</b><span></span>`;
+  const tag=document.createElement('em');
+  if(a.agentKey){tag.className='agent-badge';tag.textContent='Missão / TV'}else{tag.textContent='Entrevistar'}
+  b.append(cv,txt,tag);b.onclick=()=>openInterview(a);li.appendChild(b);rosterEl.appendChild(li);a.rowSpan=txt.querySelector('span');
+  b.setAttribute('aria-label',`Entrevistar ${a.nm}`);
+});
+const meetBtn=document.getElementById('meetBtn'),camBtn=document.getElementById('camBtn');
+meetBtn.onclick=callMeeting;
+camBtn.onclick=()=>{autoCam=!autoCam;camBtn.setAttribute('aria-pressed',autoCam);camBtn.textContent='Câmera automática: '+(autoCam?'ligada':'desligada');if(!autoCam)focus=null};
+function updateButtons(){meetBtn.disabled=meeting||!!iv;meetBtn.textContent=meeting?'Reunião em andamento':'Convocar reunião'}
+let rosterTick=0;
+
+/* ---------- Loop ---------- */
+const tcEl=document.getElementById('tc');let last=performance.now(),start=last;
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;const t=(now-start)/1000;
+  update(dt);
+  if(iv){updateIv(dt);renderInterview(t)}else renderView(t,dt);
+  const p=n=>String(Math.floor(n)).padStart(2,'0');tcEl.textContent=`${p(t/3600)}:${p(t/60%60)}:${p(t%60)}:${p((t%1)*24)}`;
+  if((rosterTick-=dt)<=0){rosterTick=.5;A.forEach(a=>{if(a.rowSpan.textContent!==a.doing)a.rowSpan.textContent=a.doing})}
+  requestAnimationFrame(frame);
+}
+updateButtons();
+requestAnimationFrame(frame);
+
+/* ============================================================================
+   INTEGRAÇÃO SISTEMA PERFECTENSCHLAG: AUDITORIA, CURRÍCULO (andream001) & GEMINI
+   ============================================================================ */
+const PERFIL_DEFAULT={
+  nome_completo:"André Bunhak (andream001) — Engenheiro de Software | Automação (RPA/IA), Docker & Governança de TI",
+  contatos:"Brasil | GitHub: https://github.com/andream001 | Portfólio: https://github.com/andream001/my-portfolio",
+  marcos_obrigatorios:
+    "• Automação de Processos com impacto financeiro auditado: economia recorrente de R$ 20.000,00 anuais (R$ 20 mil/ano).\n"+
+    "• Implantação produtiva de containers Docker e governança de ativos de TI com Snipe-IT.\n"+
+    "• Bet-Trader Dunder (Trading Agents HQ): Bot multi-agente de criptoativos com UI de escritório pixel-art.\n"+
+    "• Assistant-to-the-Lead-Manager: Automação WhatsApp Business Cloud API para prospecção Unimed (4.523 leads DDD 27).\n"+
+    "• AWAProject & Vidraçaria-RPA: IA local e transformação automatizada de mensagens de campo em planilhas executivas Excel.",
+  competencias_tecnicas:"Python (RPA, Flask, Selenium, Multi-Agent LLMs, Gemini API), WhatsApp Business Cloud API, n8n, Docker, Snipe-IT, Git/GitHub CLI, Linguagem C, Linux, SQL",
+  curriculo_bruto_integral:
+    "PORTFÓLIO OFICIAL GITHUB (https://github.com/andream001):\n"+
+    "- sistema-perfectenschlag: Arquitetura multi-agente Python (Gemini) + AgentCraft Filial Regional.\n"+
+    "- assistant-to-the-lead-manager: Automação de prospecção via WhatsApp Cloud API para gerenciamento de leads Unimed com warm-up, DDI +55 e repasse automático ao consultor.\n"+
+    "- bet-trader-dunder: Trading Agents HQ multi-agente.\n"+
+    "- vidracaria-rpaa: RPA em Python (Trabalho de Extensão Universitária) padronizando medições do WhatsApp em folhas executivas do Excel.\n"+
+    "- AWAProject: Exploração e arquitetura de IA pessoal e local.",
+  informacoes_complementares:"Priorizar destaque na economia auditada de R$ 20 mil anual, domínio prático de Docker/Snipe-IT e projetos reais em produção no GitHub (andream001)."
+};
+
+let perfil={...PERFIL_DEFAULT};
+let auditoria=[];
+let backendOn=false;
+
+function carregarCurriculoUI(){
+  const s=localStorage.getItem('PERFECTENSCHLAG_PERFIL');
+  if(s){try{perfil={...PERFIL_DEFAULT,...JSON.parse(s)}}catch(e){}}
+  document.getElementById('cvNome').value=perfil.nome_completo||'';
+  document.getElementById('cvContatos').value=typeof perfil.contatos==='object'?JSON.stringify(perfil.contatos):(perfil.contatos||'');
+  document.getElementById('cvMarcos').value=Array.isArray(perfil.marcos_obrigatorios)?perfil.marcos_obrigatorios.join('\n'):(perfil.marcos_obrigatorios||'');
+  document.getElementById('cvSkills').value=Array.isArray(perfil.competencias_tecnicas)?perfil.competencias_tecnicas.join(', '):(perfil.competencias_tecnicas||'');
+  document.getElementById('cvBruto').value=perfil.curriculo_bruto_integral||'';
+  document.getElementById('cvComp').value=perfil.informacoes_complementares||'';
+}
+
+function dossieTexto(){
+  return `=== DOSSIÊ CURRICULAR OFICIAL DO GERENTE REGIONAL ===\nNOME: ${perfil.nome_completo}\nCONTATOS: ${perfil.contatos}\nMARCOS OBRIGATÓRIOS:\n${perfil.marcos_obrigatorios}\nCOMPETÊNCIAS: ${perfil.competencias_tecnicas}\nCURRÍCULO / PORTFÓLIO:\n${perfil.curriculo_bruto_integral}\nDIRETRIZES: ${perfil.informacoes_complementares}`;
+}
+
+window.salvarCurriculo=async()=>{
+  perfil={
+    nome_completo:document.getElementById('cvNome').value.trim(),
+    contatos:document.getElementById('cvContatos').value.trim(),
+    marcos_obrigatorios:document.getElementById('cvMarcos').value.trim(),
+    competencias_tecnicas:document.getElementById('cvSkills').value.trim(),
+    curriculo_bruto_integral:document.getElementById('cvBruto').value.trim(),
+    informacoes_complementares:document.getElementById('cvComp').value.trim()
+  };
+  localStorage.setItem('PERFECTENSCHLAG_PERFIL',JSON.stringify(perfil));
+  if(backendOn){
+    try{await fetch('/api/perfil',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(perfil)})}catch(e){}
+  }
+  registrarMemoLocal('ORQUESTRADOR_REGIONAL','ATUALIZACAO_DOSSIE',perfil.nome_completo,'Dossiê Curricular Oficial salvo e distribuído para todas as mesas da filial.','CONCLUIDO');
+  abrirAbaPasta('AUDIT');
+};
+
+window.subirArquivoCurriculo=ev=>{
+  const f=ev.target.files?.[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    const txt=String(e.target.result||'');
+    if(f.name.endsWith('.json')){
+      try{perfil={...perfil,...JSON.parse(txt)};carregarCurriculoUI();window.salvarCurriculo();return}catch(err){}
+    }
+    const cur=document.getElementById('cvBruto').value.trim();
+    document.getElementById('cvBruto').value=(cur?cur+'\n\n':'')+`--- [ARQUIVO ANEXADO: ${f.name}] ---\n`+txt;
+    window.salvarCurriculo();
+  };
+  rd.readAsText(f,'UTF-8');
+};
+
+window.exportarCurriculo=()=>{
+  const b=new Blob([JSON.stringify(perfil,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dossie_gerente_regional.json';a.click();
+};
+
+async function sincronizarBackend(){
+  try{
+    const r=await fetch('/api/status');if(!r.ok)throw new Error('off');
+    const d=await r.json();backendOn=true;
+    atualizarBadgeApi(d.api_key_configurada);
+    auditoria=d.auditoria||[];
+    renderAudit();
+  }catch(e){
+    backendOn=false;
+    const k=localStorage.getItem('PERFECTENSCHLAG_GEMINI_KEY');
+    atualizarBadgeApi(Boolean(k));
+    const s=localStorage.getItem('PERFECTENSCHLAG_AUDITORIA');
+    if(s){try{auditoria=JSON.parse(s)}catch(err){}}
+    if(!auditoria.length)window.simularTurnoDocumentario(true);
+    renderAudit();
+  }
+}
+
+function atualizarBadgeApi(ok){
+  const el=document.getElementById('lblApiStatus');
+  el.textContent=ok?'Ativa ✔':'Configurar';
+  el.style.color=ok?'var(--ok)':'var(--rec)';
+}
+
+async function executarMissaoAgente(agentObj,entrada,extra){
+  const agKey=agentObj.agentKey;
+  if((agKey==='NEUTRALIZADOR_TOBY'||agKey==='PROTOCOLO_RECYCLOPS')&&!entrada){
+    speak('Fato: Preciso que você preencha o campo alvo ali no painel antes de eu atacar!');
+    document.getElementById('missionInput1').focus();
+    return;
+  }
+  speak('Ordem recebida, Chefe! Executando operação com seu Dossiê Curricular agora mesmo...');
+  const btn=document.getElementById('btnRunMission');
+  btn.disabled=true;btn.textContent='Gravando e Processando...';
+
+  const dossie=dossieTexto();
+  try{
+    if(backendOn){
+      const r=await fetch('/api/executar',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({agente:agKey,entrada,contexto:extra?`${extra}\n\n${dossie}`:dossie})
       });
-    }
-
-    async function executarMissao() {
-      const u = UNIDADES[unidadeAtiva];
-      const entrada = document.getElementById("inputTarget").value.trim();
-      const extra = document.getElementById("inputExtra").value.trim();
-
-      if ((u.id === "NEUTRALIZADOR_TOBY" || u.id === "PROTOCOLO_RECYCLOPS") && !entrada) {
-        notificar(`Fato: Preencha o campo alvo para o ${u.nome} iniciar o ataque!`);
-        document.getElementById("inputTarget").focus();
+      const d=await r.json();
+      if(!r.ok)throw new Error(d.erro||'Falha na missão');
+      await sincronizarBackend();
+      speak(agKey==='SISTEMA_WUPHF'?'Rascunho de LinkedIn pronto! Veja no Memorando abaixo e dê seu carimbo.':'Missão cumprida! O relatório completo já está na pasta de Auditoria abaixo.');
+    }else{
+      const key=localStorage.getItem('PERFECTENSCHLAG_GEMINI_KEY');
+      if(!key){
+        const msg='Fato: Você esqueceu a chave da API. Inaceitável.';
+        speak(msg);
+        registrarMemoLocal(agKey,'BLOQUEIO_API_KEY',entrada||'Sem alvo',msg,'ERRO');
+        window.abrirModalApi();
         return;
       }
-
-      // Movimenta o agente até a sala do Gerente Regional
-      u.status = "EM MISSÃO";
-      u.balao = "Em combate!";
-      u.tx = 148;
-      u.ty = 118;
-      feixesTaticos.push({ x1: u.x, y1: u.y, x2: 148, y2: 118, cor: u.cor, alpha: 1 });
-      renderizarRoster();
-      alternarAba("AUDIT");
-
-      const dossie = montarDossieTextoParaPrompt();
-
-      if (servidorPythonAtivo) {
-        try {
-          const resp = await fetch("/api/executar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              agente: u.id,
-              entrada,
-              contexto: extra ? `${extra}\n\n${dossie}` : dossie
-            })
-          });
-          const data = await resp.json();
-          if (!resp.ok) {
-            notificar(data.erro || "Falha na missão");
-            u.status = "ERRO";
-          } else {
-            u.status = u.id === "SISTEMA_WUPHF" ? "AGUARDANDO AVAL" : "CONCLUÍDO";
-            u.balao = u.id === "SISTEMA_WUPHF" ? "Autorize meu post!" : "Missão cumprida!";
-            notificar(`✅ ${u.nome} concluiu a operação com seus dados curriculares!`);
-          }
-          await sincronizarServidor();
-        } catch (e) {
-          notificar("Erro ao contatar servidor: " + e.message);
-        }
-      } else {
-        const key = localStorage.getItem("PERFECTENSCHLAG_GEMINI_KEY");
-        if (!key) {
-          const msg = "Fato: Você esqueceu a chave da API. Inaceitável.";
-          notificar(msg);
-          registrarEventoLocal(u.id, "BLOQUEIO_API_KEY", entrada || "Sem entrada", msg, "ERRO");
-          u.status = "SEM CHAVE";
-          abrirModal("modalApiKey");
-        } else {
-          try {
-            const respostaIA = await consultarGeminiBrowser(key, u.id, entrada, extra, dossie);
-            const st = u.id === "SISTEMA_WUPHF" ? "AGUARDANDO_AUTORIZACAO" : "CONCLUIDO";
-            registrarEventoLocal(
-              u.id,
-              u.id === "SISTEMA_WUPHF" ? "RASCUNHO_LINKEDIN_WUPHF" : "OPERACAO_COM_DOSSIE",
-              entrada || "Monitoramento AWAProject & Bet-Trader",
-              respostaIA,
-              st
-            );
-            u.status = u.id === "SISTEMA_WUPHF" ? "AGUARDANDO AVAL" : "CONCLUÍDO";
-            u.balao = u.id === "SISTEMA_WUPHF" ? "Aguardando seu aval!" : "Alvo neutralizado!";
-            notificar(`✅ ${u.nome} gerou o resultado usando seu currículo!`);
-          } catch (err) {
-            registrarEventoLocal(u.id, "ERRO_EXECUCAO", entrada, err.message, "ERRO");
-            notificar("Erro na chamada Gemini: " + err.message);
-          }
-        }
-      }
-
-      setTimeout(() => {
-        u.tx = u.hx;
-        u.ty = u.hy;
-        renderizarRoster();
-      }, 1700);
+      const resp=await chamarGeminiBrowser(key,agKey,entrada,extra,dossie);
+      const st=agKey==='SISTEMA_WUPHF'?'AGUARDANDO_AUTORIZACAO':'CONCLUIDO';
+      registrarMemoLocal(agKey,agKey==='SISTEMA_WUPHF'?'RASCUNHO_LINKEDIN':'MISSAO_EXECUTADA',entrada||'Monitoramento de Projetos',resp,st);
+      speak(agKey==='SISTEMA_WUPHF'?'Rascunho gerado! Aguardo sua autorização obrigatória no Memorando abaixo.':'Alvo neutralizado! Confira o resultado completo no Memorando de Auditoria.');
     }
+  }catch(err){
+    speak('Tivemos um contratempo técnico: '+err.message);
+    registrarMemoLocal(agKey,'ERRO_OPERACIONAL',entrada||'Missão',err.message,'ERRO');
+  }finally{
+    btn.disabled=false;btn.textContent='Executar Ordem do Gerente Regional';
+  }
+}
 
-    async function consultarGeminiBrowser(apiKey, agenteId, entrada, extra, dossie) {
-      const instrucoes = {
-        NEUTRALIZADOR_TOBY: `Você é o Agente Neutralizador Toby (Especialista Anti-ATS). Cruza a vaga abaixo com o DOSSIÊ CURRICULAR OFICIAL do Gerente Regional e gere: 1) Diagnóstico de palavras-chave ATS da vaga; 2) O Currículo Completo otimizado matematicamente para destruir o filtro de RH.\n\nVAGA ALVO:\n${entrada}\n\nOBSERVAÇÃO EXTRA: ${extra}\n\n${dossie}`,
-        PROTOCOLO_RECYCLOPS: `Você é Dwight Kurt Schrute III operando o Protocolo Recyclops (OSINT). Gere um Dossiê de Ataque implacável sobre a empresa "${entrada}" (${extra}), expondo suas ineficiências e usando o DOSSIÊ CURRICULAR OFICIAL abaixo como prova de superioridade. Ao final, formule 3 perguntas interrogatórias e impiedosas para usar na entrevista.\n\n${dossie}`,
-        SISTEMA_WUPHF: `Você é o Agente Sistema WUPHF.com. Escreva um rascunho de post de LinkedIn direto e sem firulas celebrando o avanço técnico (${entrada || "Novo commit nos projetos AWAProject e Bet-Trader"}) alinhado ao DOSSIÊ CURRICULAR abaixo.\n\n${dossie}`,
-        OPERADOR_MOSE: `Você é o Operador Mose (Auto-Commit GitHub). Gere uma mensagem Conventional Commits cirúrgica e o relatório de sincronização para AWAProject e Bet-Trader considerando: ${entrada || "Atualização de código e automação"}.`
-      };
-
-      const modelosCandidatos = [
-        "gemini-2.5-flash",
-        "gemini-2.5-pro",
-        "gemini-2.0-flash"
-      ];
-
-      let ultimoErro = "Falha ao consultar API Gemini";
-      for (const modelo of modelosCandidatos) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(apiKey)}`;
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: instrucoes[agenteId] }] }]
-          })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          return data.candidates?.[0]?.content?.parts?.[0]?.text || "Sem retorno.";
-        }
-        ultimoErro = data.error?.message || ultimoErro;
-        if (res.status !== 404) {
-          throw new Error(ultimoErro);
-        }
-      }
-
-      // Fallback dinâmico via ListModels caso a conta use outro identificador
-      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`;
-      const listRes = await fetch(listUrl);
-      const listData = await listRes.json();
-      const modeloDisponivel = (listData.models || []).find(
-        m => (m.supportedGenerationMethods || []).includes("generateContent") && m.name.includes("gemini")
-      );
-      if (modeloDisponivel) {
-        const genUrl = `https://generativelanguage.googleapis.com/v1beta/${modeloDisponivel.name}:generateContent?key=${encodeURIComponent(apiKey)}`;
-        const genRes = await fetch(genUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: instrucoes[agenteId] }] }]
-          })
-        });
-        const genData = await genRes.json();
-        if (genRes.ok) {
-          return genData.candidates?.[0]?.content?.parts?.[0]?.text || "Sem retorno.";
-        }
-      }
-      throw new Error(ultimoErro);
-    }
-
-    function registrarEventoLocal(agente, acao, entrada, saida, status) {
-      auditoriaRegistros.unshift({
-        id: Math.random().toString(36).substring(2, 8).toUpperCase(),
-        timestamp: new Date().toLocaleString("pt-BR"),
-        agente,
-        acao,
-        entrada,
-        saida,
-        status
-      });
-      localStorage.setItem("PERFECTENSCHLAG_AUDITORIA", JSON.stringify(auditoriaRegistros));
-      renderizarAuditoria();
-    }
-
-    // =========================================================================
-    // AUDITORIA FÁCIL & DESPACHO DE AUTORIZAÇÃO DO WUPHF
-    // =========================================================================
-    function renderizarAuditoria() {
-      const fAg = document.getElementById("selFiltroAgente").value;
-      const fSt = document.getElementById("selFiltroStatus").value;
-      const feed = document.getElementById("auditFeed");
-
-      const pendentes = auditoriaRegistros.filter(r => r.status === "AGUARDANDO_AUTORIZACAO").length;
-      document.getElementById("bannerWuphfPendente").className =
-        "wuphf-alert" + (pendentes > 0 ? " show" : "");
-
-      const lista = auditoriaRegistros.filter(r => {
-        const okA = fAg === "TODOS" || r.agente === fAg;
-        const okS =
-          fSt === "TODOS" ||
-          r.status === fSt ||
-          (fSt === "VETADO" && (r.status === "VETADO" || r.status === "ERRO"));
-        return okA && okS;
-      });
-
-      document.getElementById("badgeAuditCount").textContent = lista.length;
-      feed.innerHTML = "";
-
-      const mapaCores = {
-        NEUTRALIZADOR_TOBY: "#f43f5e",
-        PROTOCOLO_RECYCLOPS: "#10b981",
-        SISTEMA_WUPHF: "#f59e0b",
-        OPERADOR_MOSE: "#a855f7",
-        ORQUESTRADOR_REGIONAL: "#f5b82e"
-      };
-
-      lista.forEach(item => {
-        const card = document.createElement("div");
-        const pendente = item.status === "AGUARDANDO_AUTORIZACAO";
-        card.className = "audit-item" + (pendente ? " needs-approval" : "");
-        const cor = mapaCores[item.agente] || "#38bdf8";
-
-        card.innerHTML = `
-          <div class="audit-top">
-            <span class="tag-agent" style="background:${cor}22; color:${cor}; border:1px solid ${cor};">
-              ${item.agente}
-            </span>
-            <span class="tag-status st-${item.status}">
-              ${pendente ? "⏳ EXIGE SUA AUTORIZAÇÃO" : item.status}
-            </span>
-          </div>
-          <div class="audit-meta">
-            <strong>#${item.id}</strong> • ${item.timestamp}<br/>
-            <strong>Alvo:</strong> ${escapar(item.entrada || "-")}
-          </div>
-          <div class="audit-box">${escapar(item.saida || "")}</div>
-          <div class="audit-actions">
-            <button class="btn" onclick="abrirInspecao('${item.id}')">🔍 Expandir</button>
-            <button class="btn" onclick="copiarItem('${item.id}')">📋 Copiar</button>
-            ${
-              pendente
-                ? `
-                  <button class="btn btn-emerald" onclick="despacharWuphf('${item.id}', 'A')">✅ Autorizar</button>
-                  <button class="btn" onclick="despacharWuphf('${item.id}', 'R')">✏️ Revisar</button>
-                  <button class="btn btn-crimson" onclick="despacharWuphf('${item.id}', 'C')">🚫 Vetar</button>
-                `
-                : ""
-            }
-          </div>
-        `;
-        feed.appendChild(card);
-      });
-    }
-
-    async function despacharWuphf(id, decisao) {
-      const item = auditoriaRegistros.find(r => r.id === id);
-      if (!item) return;
-
-      let feedback = "";
-      if (decisao === "R") {
-        feedback = prompt("Qual ajuste o WUPHF deve fazer no post?", "Destaque mais a economia de R$ 20 mil anual e Docker.") || "";
-        if (!feedback) return;
-      }
-
-      if (servidorPythonAtivo) {
-        await fetch("/api/autorizar_wuphf", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, decisao, feedback, saida: item.saida })
-        });
-        await sincronizarServidor();
-      } else {
-        if (decisao === "A") item.status = "AUTORIZADO";
-        if (decisao === "C") item.status = "VETADO";
-        if (decisao === "R") item.saida = `[DIRETRIZ DO GERENTE: ${feedback}]\n\n` + item.saida;
-        localStorage.setItem("PERFECTENSCHLAG_AUDITORIA", JSON.stringify(auditoriaRegistros));
-        renderizarAuditoria();
-      }
-
-      notificar(
-        decisao === "A"
-          ? "✅ Post WUPHF autorizado pelo Gerente Regional!"
-          : decisao === "C"
-          ? "🚫 Post WUPHF vetado!"
-          : "♻️ Rascunho revisado!"
-      );
-    }
-
-    // =========================================================================
-    // RENDERIZAÇÃO ARQUITETÔNICA DA PLANTA DUNDER MIFFLIN NO CANVAS
-    // =========================================================================
-    const canvas = document.getElementById("officeCanvas");
-    const ctx = canvas.getContext("2d");
-
-    canvas.addEventListener("click", e => {
-      const rect = canvas.getBoundingClientRect();
-      const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-      const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-      for (const u of Object.values(UNIDADES)) {
-        if (Math.hypot(mx - u.x, my - u.y) <= 28) {
-          selecionarUnidade(u.id);
-          notificar(`Unidade selecionada: ${u.nome}`);
-          return;
-        }
-      }
-
-      for (const s of SALAS_ESCRITORIO) {
-        if (mx >= s.x && mx <= s.x + s.w && my >= s.y && my <= s.y + s.h) {
-          if (s.agente && UNIDADES[s.agente]) {
-            selecionarUnidade(s.agente);
-            UNIDADES[s.agente].tx = mx;
-            UNIDADES[s.agente].ty = my;
-            notificar(`${UNIDADES[s.agente].nome} deslocando-se para ${s.titulo}`);
-          } else {
-            irParaAbaCurriculo();
-          }
-          return;
-        }
-      }
+async function chamarGeminiBrowser(apiKey,agKey,entrada,extra,dossie){
+  const prompts={
+    NEUTRALIZADOR_TOBY:`Você é o Agente Neutralizador Toby (Especialista Anti-ATS). Cruze a vaga abaixo com o DOSSIÊ CURRICULAR OFICIAL do Gerente Regional e gere:\n1) DIAGNÓSTICO DE PALAVRAS-CHAVE DO ATS;\n2) CURRÍCULO COMPLETO OTIMIZADO para destruir o filtro.\n\nVAGA:\n${entrada}\n\nEXTRA: ${extra}\n\n${dossie}`,
+    PROTOCOLO_RECYCLOPS:`Você é Dwight Kurt Schrute III operando o Protocolo Recyclops (OSINT). Gere o Dossiê de Ataque contra a empresa "${entrada}" (${extra}), expondo suas ineficiências e provando nossa superioridade com base no DOSSIÊ CURRICULAR abaixo. Formule 3 perguntas interrogatórias e impiedosas para a entrevista.\n\n${dossie}`,
+    SISTEMA_WUPHF:`Você é o Agente Sistema WUPHF.com. Escreva um post de LinkedIn direto e focado em redução de custos e vitória técnica sobre (${entrada||'Avanço nos projetos assistant-to-the-lead-manager, AWAProject e Bet-Trader'}) usando o DOSSIÊ abaixo.\n\n${dossie}`,
+    OPERADOR_MOSE:`Você é o Operador Mose (Auto-Commit GitHub). Gere uma mensagem Conventional Commits cirúrgica e o resumo de sincronização para (${entrada||'Atualização nos repositórios andream001'}).`
+  };
+  const modelos=['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash'];
+  let ultErro='Falha ao consultar Gemini';
+  for(const m of modelos){
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(apiKey)}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompts[agKey]}]}]})
     });
+    const d=await r.json();
+    if(r.ok)return d.candidates?.[0]?.content?.parts?.[0]?.text||'Sem resposta.';
+    ultErro=d.error?.message||ultErro;
+    if(r.status!==404)throw new Error(ultErro);
+  }
+  throw new Error(ultErro);
+}
 
-    function desenharEscritorio() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+function registrarMemoLocal(agente,acao,entrada,saida,status){
+  auditoria.unshift({
+    id:Math.random().toString(36).slice(2,8).toUpperCase(),
+    timestamp:new Date().toLocaleString('pt-BR'),
+    agente,acao,entrada,saida,status
+  });
+  localStorage.setItem('PERFECTENSCHLAG_AUDITORIA',JSON.stringify(auditoria));
+  renderAudit();
+}
 
-      // Piso base escuro
-      ctx.fillStyle = "#0b101b";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+window.renderAudit=()=>{
+  const fA=document.getElementById('fAgente').value;
+  const fS=document.getElementById('fStatus').value;
+  const grid=document.getElementById('auditGrid');
 
-      // Desenha cada sala com textura de piso, paredes duplas e mobília
-      SALAS_ESCRITORIO.forEach(s => {
-        ctx.fillStyle = s.piso;
-        ctx.fillRect(s.x, s.y, s.w, s.h);
+  const pend=auditoria.filter(x=>x.status==='AGUARDANDO_AUTORIZACAO').length;
+  document.getElementById('cntWuphf').textContent=pend;
 
-        // Grade sutil interna do carpete
-        ctx.strokeStyle = "rgba(255,255,255,0.03)";
-        ctx.lineWidth = 1;
-        for (let gx = s.x + 25; gx < s.x + s.w; gx += 25) {
-          ctx.beginPath();
-          ctx.moveTo(gx, s.y + 42);
-          ctx.lineTo(gx, s.y + s.h);
-          ctx.stroke();
-        }
-        for (let gy = s.y + 42; gy < s.y + s.h; gy += 25) {
-          ctx.beginPath();
-          ctx.moveTo(s.x, gy);
-          ctx.lineTo(s.x + s.w, gy);
-          ctx.stroke();
-        }
+  const list=auditoria.filter(x=>{
+    const okA=fA==='TODOS'||x.agente===fA;
+    const okS=fS==='TODOS'||x.status===fS||(fS==='VETADO'&&(x.status==='VETADO'||x.status==='ERRO'));
+    return okA&&okS;
+  });
+  document.getElementById('cntAudit').textContent=list.length;
+  grid.innerHTML='';
 
-        // Parede externa
-        ctx.strokeStyle = s.borda;
-        ctx.lineWidth = 2.5;
-        ctx.strokeRect(s.x, s.y, s.w, s.h);
+  list.forEach(item=>{
+    const pendente=item.status==='AGUARDANDO_AUTORIZACAO';
+    const card=document.createElement('div');
+    card.className='memo-card'+(pendente?' pending':'');
+    card.innerHTML=`
+      <div class="memo-head">
+        <span class="memo-tag">${item.agente}</span>
+        <span><b>#${item.id}</b> · ${item.timestamp}</span>
+      </div>
+      <div style="font-size:12px"><b>Alvo:</b> ${esc(item.entrada||'-')} <span style="float:right;font-weight:700;color:${pendente?'var(--warn)':item.status==='ERRO'||item.status==='VETADO'?'var(--rec)':'var(--ok)'}">[${pendente?'AGUARDANDO SEU CARIMBO':item.status}]</span></div>
+      <pre class="memo-pre">${esc(item.saida||'')}</pre>
+      <div class="memo-actions">
+        <button class="btn" type="button" onclick="lerMemo('${item.id}')">🔍 Ler Tudo</button>
+        <button class="btn" type="button" onclick="copiarMemo('${item.id}')">📋 Copiar</button>
+        ${pendente?`
+          <button class="btn ok" type="button" onclick="decidirWuphf('${item.id}','A')">✅ Autorizar WUPHF</button>
+          <button class="btn" type="button" onclick="decidirWuphf('${item.id}','R')">✏️ Revisar</button>
+          <button class="btn end" type="button" onclick="decidirWuphf('${item.id}','C')">🚫 Vetar</button>
+        `:''}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+};
 
-        // Faixa de título da sala
-        ctx.fillStyle = "rgba(7, 10, 16, 0.88)";
-        ctx.fillRect(s.x + 2, s.y + 2, s.w - 4, 40);
+window.decidirWuphf=async(id,dec)=>{
+  const it=auditoria.find(x=>x.id===id);if(!it)return;
+  let fb='';
+  if(dec==='R'){
+    fb=prompt('Diretriz do Gerente Regional para o WUPHF reescrever:','Destaque mais a economia de R$ 20 mil anual e o repositório assistant-to-the-lead-manager.')||'';
+    if(!fb)return;
+  }
+  if(backendOn){
+    await fetch('/api/autorizar_wuphf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,decisao:dec,feedback:fb,saida:it.saida})});
+    await sincronizarBackend();
+  }else{
+    if(dec==='A')it.status='AUTORIZADO';
+    if(dec==='C')it.status='VETADO';
+    if(dec==='R')it.saida=`[REVISADO PELO GERENTE: ${fb}]\n\n`+it.saida;
+    localStorage.setItem('PERFECTENSCHLAG_AUDITORIA',JSON.stringify(auditoria));
+    renderAudit();
+  }
+};
 
-        ctx.fillStyle = s.borda;
-        ctx.font = "bold 12px 'Segoe UI', sans-serif";
-        ctx.fillText(s.titulo, s.x + 12, s.y + 19);
+window.lerMemo=id=>{
+  const it=auditoria.find(x=>x.id===id);if(!it)return;
+  document.getElementById('modalReadTitle').textContent=`Memorando #${it.id} · ${it.agente} [${it.status}]`;
+  document.getElementById('modalReadBody').textContent=`DATA: ${it.timestamp}\nALVO: ${it.entrada}\n\n${it.saida}`;
+  document.getElementById('modalRead').classList.add('open');
+};
 
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "11px 'Segoe UI', sans-serif";
-        ctx.fillText(s.sub, s.x + 12, s.y + 34);
-      });
+window.copiarMemo=id=>{
+  const it=auditoria.find(x=>x.id===id);if(!it)return;
+  navigator.clipboard.writeText(it.saida);
+};
 
-      // Mobília detalhada estilo Dunder Mifflin
-      desenharMobilia(105, 105, 85, 42, "#78350f", "#f59e0b", "MESA GERENTE");
-      desenharMobilia(385, 95, 130, 48, "#451a03", "#38bdf8", "MESA DE CONFERÊNCIA");
-      desenharMobilia(395, 290, 105, 55, "#1e293b", "#10b981", "MESAS DWIGHT & JIM");
-      desenharMobilia(720, 105, 95, 42, "#31102f", "#f43f5e", "BAIA DO TOBY (ATS)");
-      desenharMobilia(100, 335, 105, 45, "#3b2314", "#f59e0b", "RECEPÇÃO / WUPHF");
-      desenharMobilia(710, 335, 115, 48, "#1e1b4b", "#a855f7", "RACK GITHUB MOSE");
+window.copiarModalRead=()=>{
+  navigator.clipboard.writeText(document.getElementById('modalReadBody').textContent);
+};
 
-      // Feixes de transmissão tática
-      for (let i = feixesTaticos.length - 1; i >= 0; i--) {
-        const f = feixesTaticos[i];
-        ctx.save();
-        ctx.strokeStyle = f.cor;
-        ctx.globalAlpha = f.alpha;
-        ctx.lineWidth = 3;
-        ctx.setLineDash([8, 5]);
-        ctx.beginPath();
-        ctx.moveTo(f.x1, f.y1);
-        ctx.lineTo(f.x2, f.y2);
-        ctx.stroke();
-        ctx.restore();
-        f.alpha -= 0.02;
-        if (f.alpha <= 0) feixesTaticos.splice(i, 1);
-      }
+window.abrirAbaPasta=aba=>{
+  const isAud=aba==='AUDIT';
+  document.getElementById('ftabAudit').className='ftab'+(isAud?' active':'');
+  document.getElementById('ftabCv').className='ftab'+(!isAud?' active':'');
+  document.getElementById('bodyAudit').hidden=!isAud;
+  document.getElementById('bodyCv').hidden=isAud;
+};
 
-      // Desenha o Gerente Regional (Você) na Sala do Michael
-      ctx.save();
-      ctx.fillStyle = "#0f172a";
-      ctx.strokeStyle = "#f5b82e";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(148, 125, 18, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.font = "17px 'Segoe UI Emoji', sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("👑", 148, 125);
-      ctx.fillStyle = "#fde68a";
-      ctx.font = "bold 10px 'Segoe UI', sans-serif";
-      ctx.fillText("GERENTE REGIONAL (VOCÊ)", 148, 155);
-      ctx.restore();
+window.filtrarWuphfPendentes=()=>{
+  abrirAbaPasta('AUDIT');
+  document.getElementById('fAgente').value='SISTEMA_WUPHF';
+  document.getElementById('fStatus').value='AGUARDANDO_AUTORIZACAO';
+  renderAudit();
+};
 
-      // Desenha os 4 Agentes Heróis
-      Object.values(UNIDADES).forEach(u => {
-        const dx = u.tx - u.x;
-        const dy = u.ty - u.y;
-        const d = Math.hypot(dx, dy);
-        if (d > 1.5) {
-          u.x += (dx / d) * 2.8;
-          u.y += (dy / d) * 2.8;
-        }
+window.abrirModalApi=()=>{document.getElementById('modalApi').classList.add('open');document.getElementById('inpApiKey').focus()};
+window.fecharModal=id=>document.getElementById(id).classList.remove('open');
+window.salvarApiKey=async()=>{
+  const v=document.getElementById('inpApiKey').value.trim();
+  if(!v)return;
+  localStorage.setItem('PERFECTENSCHLAG_GEMINI_KEY',v);
+  if(backendOn){
+    await fetch('/api/config_apikey',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key:v})});
+    await sincronizarBackend();
+  }else{
+    atualizarBadgeApi(true);
+  }
+  fecharModal('modalApi');
+};
 
-        const isSel = u.id === unidadeAtiva;
+window.exportarAuditoria=()=>{
+  const b=new Blob([JSON.stringify(auditoria,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='memorandos_auditoria_perfectenschlag.json';a.click();
+};
 
-        if (isSel) {
-          ctx.save();
-          ctx.strokeStyle = "#10b981";
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.ellipse(u.x, u.y + 15, 26, 12, 0, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        ctx.save();
-        ctx.fillStyle = "#0b111d";
-        ctx.strokeStyle = u.cor;
-        ctx.lineWidth = isSel ? 3.5 : 2;
-        ctx.beginPath();
-        ctx.arc(u.x, u.y, 20, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.font = "19px 'Segoe UI Emoji', sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(u.icone, u.x, u.y + 1);
-
-        // Barra HP RTS
-        ctx.fillStyle = "#000";
-        ctx.fillRect(u.x - 21, u.y - 31, 42, 6);
-        ctx.fillStyle = "#10b981";
-        ctx.fillRect(u.x - 20, u.y - 30, 40, 4);
-
-        ctx.fillStyle = "#f8fafc";
-        ctx.font = "bold 10.5px 'Segoe UI', sans-serif";
-        ctx.fillText(u.nome, u.x, u.y + 32);
-
-        if (u.balao) {
-          ctx.font = "bold 10px 'Segoe UI', sans-serif";
-          const w = ctx.measureText(u.balao).width + 14;
-          ctx.fillStyle = "rgba(9, 13, 22, 0.94)";
-          ctx.strokeStyle = u.cor;
-          ctx.lineWidth = 1.2;
-          ctx.fillRect(u.x - w / 2, u.y - 52, w, 17);
-          ctx.strokeRect(u.x - w / 2, u.y - 52, w, 17);
-          ctx.fillStyle = "#fff";
-          ctx.fillText(u.balao, u.x, u.y - 43);
-        }
-        ctx.restore();
-      });
-
-      requestAnimationFrame(desenharEscritorio);
+window.simularTurnoDocumentario=(silencioso=false)=>{
+  const dh=new Date().toLocaleString('pt-BR');
+  const demos=[
+    {
+      id:'WUPHF01',timestamp:dh,agente:'SISTEMA_WUPHF',acao:'RASCUNHO_LINKEDIN',
+      entrada:'Commit [assistant-to-the-lead-manager]: Persistência atômica CSV, DDI +55 e auto-resposta no Webhook',
+      saida:`Automação comercial sem engenharia de confiabilidade queima leads e bloqueia números.\n\nHoje atualizamos o motor do Assistant-to-the-Lead-Manager (prospecção automatizada via WhatsApp Cloud API para 4.523 leads empresariais):\n• Normalização automática de DDI +55 e casamento inteligente de nono dígito.\n• Persistência atômica (crash-safe) no CSV eliminando risco de reenvio duplicado.\n• Triagem automática no Webhook separando interessados (com link direto wa.me para o consultor) e opt-outs imediatos.\n\nÉ a mesma disciplina de engenharia que já gera R$ 20.000,00 anuais de economia auditada em automação de processos e governança com Docker e Snipe-IT.\n\n#EngenhariaDeSoftware #Python #WhatsAppAPI #Automacao #RPA #Docker`,
+      status:'AGUARDANDO_AUTORIZACAO'
+    },
+    {
+      id:'MOSE01',timestamp:dh,agente:'OPERADOR_MOSE',acao:'AUTOCOMMIT_GITHUB_SYNC',
+      entrada:'Sincronização GitHub (andream001)',
+      saida:`[OPERADOR MOSE -> assistant-to-the-lead-manager] Commit 6248662 enviado para origin/main:\n"fix(core): persiste status no CSV, normaliza DDI +55, evita reenvios e completa auto-respostas no webhook"\n\n[OPERADOR MOSE -> sistema-perfectenschlag] Commit fe44217 enviado para origin/main:\n"feat(wuphf): monitora repositorio assistant-to-the-lead-manager e bet-trader-dunder"`,
+      status:'CONCLUIDO'
+    },
+    {
+      id:'RECYC01',timestamp:dh,agente:'PROTOCOLO_RECYCLOPS',acao:'DOSSIE_ATAQUE_OSINT',
+      entrada:'Alvo: Empresa de Planos Corporativos & Operações',
+      saida:`Fato: A operação deles ainda perde dezenas de horas semanais qualificando leads no braço e controlando inventário em planilhas soltas.\n\n3 PERGUNTAS INTERROGATÓRIAS IMPIEDOSAS:\n1) "Qual é o custo anual exato que vocês aceitam sangrar mantendo processos manuais que uma arquitetura em Python cortaria em R$ 20 mil/ano?"\n2) "Na prospecção ativa de vocês, o repasse de um lead quente ao consultor leva segundos via Webhook oficial ou horas até alguém ler o WhatsApp?"\n3) "Seus ativos e serviços críticos estão rastreados em Snipe-IT conteinerizado em Docker ou dependem da memória de quem configurou o servidor?"`,
+      status:'CONCLUIDO'
     }
+  ];
+  auditoria=[...demos,...auditoria];
+  localStorage.setItem('PERFECTENSCHLAG_AUDITORIA',JSON.stringify(auditoria));
+  renderAudit();
+};
 
-    function desenharMobilia(x, y, w, h, corFundo, corBorda, label) {
-      ctx.save();
-      ctx.fillStyle = corFundo;
-      ctx.strokeStyle = corBorda;
-      ctx.lineWidth = 1.5;
-      ctx.fillRect(x, y, w, h);
-      ctx.strokeRect(x, y, w, h);
-      ctx.fillStyle = "#e2e8f0";
-      ctx.font = "bold 9px 'Segoe UI', sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(label, x + w / 2, y + h / 2 + 3);
-      ctx.restore();
-    }
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-    // =========================================================================
-    // NAVEGAÇÃO DE ABAS, MODAIS E SIMULAÇÃO
-    // =========================================================================
-    function alternarAba(aba) {
-      const isAudit = aba === "AUDIT";
-      document.getElementById("tabBtnAudit").className = "tab-btn" + (isAudit ? " active" : "");
-      document.getElementById("tabBtnDossier").className = "tab-btn" + (!isAudit ? " active" : "");
-      document.getElementById("paneAudit").className = "tab-pane" + (isAudit ? " active" : "");
-      document.getElementById("paneDossier").className = "tab-pane" + (!isAudit ? " active" : "");
-    }
+carregarCurriculoUI();
+sincronizarBackend();
+})();
+</script>
 
-    function irParaAbaCurriculo() {
-      alternarAba("DOSSIER");
-      notificar("📂 Aba 'Meu Currículo & Dados' aberta à direita. Suba seu arquivo ou edite os campos!");
-    }
-
-    function abrirInspecao(id) {
-      const item = auditoriaRegistros.find(r => r.id === id);
-      if (!item) return;
-      document.getElementById("modalExpandirTitulo").textContent = `${item.agente} — Registro #${item.id}`;
-      document.getElementById("modalExpandirMeta").innerHTML =
-        `<strong>Horário:</strong> ${item.timestamp} | <strong>Status:</strong> ${item.status}<br/><strong>Alvo:</strong> ${escapar(item.entrada)}`;
-      document.getElementById("modalExpandirConteudo").textContent = item.saida;
-      abrirModal("modalExpandir");
-    }
-
-    function copiarItem(id) {
-      const item = auditoriaRegistros.find(r => r.id === id);
-      if (!item) return;
-      navigator.clipboard.writeText(item.saida);
-      notificar(`📋 Conteúdo do registro #${id} copiado!`);
-    }
-
-    function copiarModalConteudo() {
-      navigator.clipboard.writeText(document.getElementById("modalExpandirConteudo").textContent);
-      notificar("📋 Copiado para a área de transferência!");
-    }
-
-    function abrirModal(id) {
-      document.getElementById(id).classList.add("open");
-    }
-
-    function fecharModal(id) {
-      document.getElementById(id).classList.remove("open");
-    }
-
-    async function confirmarApiKey() {
-      const k = document.getElementById("inputApiKeyModal").value.trim();
-      if (!k) {
-        notificar("Fato: Você esqueceu a chave da API. Inaceitável.");
-        return;
-      }
-      localStorage.setItem("PERFECTENSCHLAG_GEMINI_KEY", k);
-      if (servidorPythonAtivo) {
-        await fetch("/api/config_apikey", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ api_key: k })
-        });
-        await sincronizarServidor();
-      } else {
-        atualizarStatusKeyUI(true);
-      }
-      fecharModal("modalApiKey");
-      notificar("🔑 GEMINI_API_KEY ativada com sucesso!");
-    }
-
-    function exportarAuditoriaJson() {
-      const blob = new Blob([JSON.stringify(auditoriaRegistros, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "auditoria_perfectenschlag.json";
-      a.click();
-      notificar("📥 Histórico de auditoria exportado!");
-    }
-
-    function simularTurnoCompleto(silencioso = false) {
-      const dh = new Date().toLocaleString("pt-BR");
-      const demo = [
-        {
-          id: "WUPHF99",
-          timestamp: dh,
-          agente: "SISTEMA_WUPHF",
-          acao: "RASCUNHO_LINKEDIN_WUPHF",
-          entrada: "Commit [AWAProject & Bet-Trader]: Otimização e conteinerização Docker",
-          saida: `Engenharia de software sem impacto financeiro é apenas hobby caro.\n\nAcabamos de subir uma nova atualização no AWAProject e Bet-Trader consolidando a mesma arquitetura de automação que gera R$ 20.000,00 anuais de economia comprovada e governança de ativos com Docker e Snipe-IT.\n\n• Automação ponta a ponta sem intervenção manual.\n• Ambientes padronizados em containers Docker.\n• Foco absoluto em disponibilidade e redução de custos.\n\n#SoftwareEngineering #Python #Docker #Automacao #DevOps`,
-          status: "AGUARDANDO_AUTORIZACAO"
-        },
-        {
-          id: "TOBY99",
-          timestamp: dh,
-          agente: "NEUTRALIZADOR_TOBY",
-          acao: "DESTRUICAO_FILTRO_ATS",
-          entrada: "Vaga: Engenheiro de Software / DevOps & Automação",
-          saida: `[PALAVRAS-CHAVE ATS DETECTADAS]: Python, Docker, Snipe-IT, Automação, CI/CD, Redução de Custos.\n\n[CURRÍCULO OTIMIZADO COM SEU DOSSIÊ]:\n• Economia auditada de R$ 20 mil anual (R$ 20.000,00/ano) via automação de processos.\n• Implantação de infraestrutura conteinerizada Docker e gestão de ativos Snipe-IT.\n• Autor dos projetos AWAProject e Bet-Trader.`,
-          status: "CONCLUIDO"
-        }
-      ];
-      auditoriaRegistros = [...demo, ...auditoriaRegistros];
-      localStorage.setItem("PERFECTENSCHLAG_AUDITORIA", JSON.stringify(auditoriaRegistros));
-      renderizarAuditoria();
-      if (!silencioso) notificar("🧪 Turno de demonstração carregado na Auditoria!");
-    }
-
-    function notificar(msg) {
-      const b = document.getElementById("toastBanner");
-      b.textContent = msg;
-      b.classList.add("visible");
-      clearTimeout(window._tTimer);
-      window._tTimer = setTimeout(() => b.classList.remove("visible"), 3600);
-    }
-
-    function escapar(s) {
-      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    window.addEventListener("keydown", e => {
-      if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) return;
-      const k = e.key.toUpperCase();
-      if (k === "1") selecionarUnidade("NEUTRALIZADOR_TOBY");
-      if (k === "2") selecionarUnidade("PROTOCOLO_RECYCLOPS");
-      if (k === "3") selecionarUnidade("SISTEMA_WUPHF");
-      if (k === "4") selecionarUnidade("OPERADOR_MOSE");
-      if (k === "P") irParaAbaCurriculo();
-      if (k === "Q") executarMissao();
-      if (k === "D") simularTurnoCompleto();
-    });
-
-    carregarFormularioCurriculo();
-    selecionarUnidade("NEUTRALIZADOR_TOBY");
-    sincronizarServidor();
-    requestAnimationFrame(desenharEscritorio);
-  </script>
 </body>
 </html>
