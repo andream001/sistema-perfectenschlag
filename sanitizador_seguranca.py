@@ -33,3 +33,4 @@ def censurar_dados_sensiveis(texto: str) -> str:
     resultado = re.sub(r"\bSG Sistemas\b", "[EMPRESA_ERP_CONFIDENCIAL]", resultado, flags=re.IGNORECASE)
 
     return resultado
+

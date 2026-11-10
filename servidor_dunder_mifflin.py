@@ -22,6 +22,12 @@ from agentes.sistema_wuphf import (
 )
 from agentes.operador_mose import executar_operador_mose
 from agentes.estudio_scarn_youtube import executar_estudio_youtube
+from agentes.esteira_golden_ticket import (
+    carregar_candidaturas,
+    criar_pacote_candidatura,
+    decidir_envio_candidatura,
+    verificar_status_vaga_E_email,
+)
 
 DIRETORIO_BASE = Path(__file__).resolve().parent
 ARQUIVO_FRONTEND = DIRETORIO_BASE / "frontend" / "index.html"
@@ -73,6 +79,7 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
                 "wuphf_pendentes": len(pendentes_wuphf),
                 "auditoria": historico,
                 "perfil": carregar_perfil_gerente(),
+                "candidaturas": carregar_candidaturas(),
             })
             return
 
@@ -85,6 +92,48 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
             payload = json.loads(corpo_raw)
         except Exception:
             payload = {}
+
+        if self.path == "/api/nova_candidatura":
+            if not os.environ.get("GEMINI_API_KEY"):
+                self._enviar_json(
+                    {"erro": "Fato: Você esqueceu a chave da API. Inaceitável."},
+                    status_code=403,
+                )
+                return
+            cargo_empresa = str(payload.get("cargo_empresa", "")).strip()
+            link_ou_email = str(payload.get("link_ou_email", "")).strip()
+            descricao_vaga = str(payload.get("descricao_vaga", "")).strip()
+            observacoes = str(payload.get("observacoes", "")).strip()
+            pacote = criar_pacote_candidatura(
+                cargo_empresa=cargo_empresa,
+                link_ou_email=link_ou_email,
+                descricao_vaga=descricao_vaga,
+                observacoes_extras=observacoes,
+            )
+            registrar_evento_auditoria(
+                agente="GOLDEN_TICKET",
+                acao="CURRICULO_MOLDADO_E_TREINO_ENTREVISTA",
+                entrada=f"{cargo_empresa} ({link_ou_email})",
+                saida=pacote.get("curriculo_moldado", ""),
+                status="AGUARDANDO_AUTORIZACAO",
+                requer_autorizacao=True,
+            )
+            self._enviar_json({"ok": True, "candidatura": pacote})
+            return
+
+        if self.path == "/api/decidir_candidatura":
+            cid = str(payload.get("id", "")).strip()
+            decisao = str(payload.get("decisao", "")).strip()
+            cv_editado = payload.get("curriculo_moldado")
+            atualizada = decidir_envio_candidatura(cid, decisao, cv_editado)
+            self._enviar_json({"ok": True, "candidatura": atualizada})
+            return
+
+        if self.path == "/api/monitorar_candidatura":
+            cid = str(payload.get("id", "")).strip()
+            atualizada = verificar_status_vaga_E_email(cid)
+            self._enviar_json({"ok": True, "candidatura": atualizada})
+            return
 
         if self.path == "/api/perfil":
             perfil_salvo = salvar_perfil_gerente(payload)

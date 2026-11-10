@@ -187,11 +187,14 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
   <!-- BARRA RÁPIDA DE INTEGRAÇÃO COM AS REDES E ESTÚDIO YOUTUBE -->
   <nav class="net-bar" aria-label="Integrações de Redes e Setor de Vídeo">
     <span class="net-bar-title">📡 Central Omnichannel:</span>
+    <button class="net-btn" type="button" onclick="abrirAbaPasta('VAGAS')" style="border-color:var(--brand);background:var(--brand);color:#fff">
+      🎯 Inserir Vaga & Distribuir Currículo (Golden Ticket)
+    </button>
     <button class="net-btn yt" type="button" onclick="acionarSetorVideoYoutube()">
-      <span class="net-dot" style="background:#c4302b"></span> ▶️ YouTube & Setor de Edição de Vídeo
+      <span class="net-dot" style="background:#c4302b"></span> ▶️ YouTube & Vídeo
     </button>
     <button class="net-btn sh" type="button" onclick="acionarSetorShortsReels()">
-      🎬 Gerar Corte Shorts / Reels / TikTok
+      🎬 Corte Shorts / Reels
     </button>
     <button class="net-btn in" type="button" onclick="acionarRedeLinkedin()">
       <span class="net-dot"></span> 💼 LinkedIn (WUPHF)
@@ -200,10 +203,7 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
       <span class="net-dot"></span> 🐙 GitHub (andream001)
     </a>
     <button class="net-btn wa" type="button" onclick="abrirAbaPasta('NET')">
-      <span class="net-dot"></span> 💬 WhatsApp Cloud API (Leads B2B)
-    </button>
-    <button class="net-btn" type="button" onclick="abrirAbaPasta('NET')" style="margin-left:auto">
-      ⚙️ Configurar Redes & Webhooks (n8n / YouTube / LinkedIn)
+      <span class="net-dot"></span> 💬 WhatsApp Cloud API
     </button>
   </nav>
 
@@ -252,20 +252,66 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
 
   <!-- PASTA DE ARQUIVOS DO GERENTE REGIONAL: AUDITORIA FÁCIL + CURRÍCULO OFICIAL -->
   <section class="desk-folders">
-    <div class="folder-tabs">
-      <button class="ftab active" id="ftabAudit" type="button" onclick="abrirAbaPasta('AUDIT')">
+    <div class="folder-tabs" style="flex-wrap:wrap">
+      <button class="ftab active" id="ftabVagas" type="button" onclick="abrirAbaPasta('VAGAS')">
+        🎯 Esteira de Vagas & Distribuição de Currículos (<span id="cntVagas">0</span>)
+      </button>
+      <button class="ftab" id="ftabAudit" type="button" onclick="abrirAbaPasta('AUDIT')">
         📋 Memorando de Auditoria & Aprovação (<span id="cntAudit">0</span>)
       </button>
       <button class="ftab" id="ftabNet" type="button" onclick="abrirAbaPasta('NET')">
-        🎬 Estúdio de Vídeo YouTube & Integrações de Redes
+        🎬 Estúdio YouTube & Redes
       </button>
       <button class="ftab" id="ftabCv" type="button" onclick="abrirAbaPasta('CV')">
-        📂 Dossiê Curricular & Dados (andream001)
+        📂 Dossiê Curricular Base
       </button>
     </div>
 
+    <!-- ABA 0: ESTEIRA DE VAGAS, MOLDAGEM DE CURRÍCULO, MONITORAMENTO E ENTREVISTA -->
+    <div class="folder-body" id="bodyVagas">
+      <div style="background:#f3f6fa;border:2px solid var(--brand);padding:14px;margin-bottom:16px;display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <strong style="font-family:var(--f-display);font-size:16px;letter-spacing:1px;text-transform:uppercase;color:var(--brand)">
+              🎯 Operação Golden Ticket — Distribuição de Currículos, Monitoramento e Preparação de Entrevista
+            </strong>
+            <div style="font-size:12px;color:var(--muted)">
+              1) <b>Neutralizador Toby</b> molda o currículo e e-mail • 2) <b>Recyclops & Michael</b> preparam suas respostas de entrevista • 3) <b>Vigia</b> monitora e-mail/plataforma • <b>Nada sai sem o seu carimbo!</b>
+            </div>
+          </div>
+          <span class="memo-tag" style="background:#fff;border-color:var(--rec);color:var(--rec)">Trava de Autorização Ativa</span>
+        </div>
+
+        <div class="cv-grid">
+          <div class="cv-field">
+            <label>1. Cargo & Nome da Empresa Alvo</label>
+            <input class="memo-input" id="vgCargoEmpresa" placeholder="Ex: Engenheiro de Software / Automação Python — Empresa X" />
+          </div>
+          <div class="cv-field">
+            <label>2. E-mail do Recrutador ou Link da Vaga (Gupy / LinkedIn / Portal)</label>
+            <input class="memo-input" id="vgLinkEmail" placeholder="Ex: recrutamento@empresa.com.br ou https://..." />
+          </div>
+          <div class="cv-field full">
+            <label>3. Cole Aqui os Requisitos / Descrição da Vaga</label>
+            <textarea class="cv-textarea" id="vgDescricao" rows="4" placeholder="Cole a descrição completa da vaga aqui. Os agentes vão extrair as palavras-chave exatas, moldar seu currículo com os R$ 20 mil/ano + Docker/Snipe-IT, criar o roteiro completo da sua entrevista e configurar a vigia da vaga..."></textarea>
+          </div>
+          <div class="cv-field full" style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <span style="font-family:var(--f-memo);font-size:11.5px;color:var(--muted)" id="vgFeedbackStatus">
+              Pronto para processar nova vaga com seu Dossiê Curricular Oficial.
+            </span>
+            <button class="btn action" type="button" id="btnCriarCandidatura" onclick="iniciarFluxoGoldenTicket()">
+              🚀 Moldar Currículo + Preparar Entrevista + Iniciar Monitoramento (Para Minha Aprovação)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTA DE CANDIDATURAS ATIVAS NA ESTEIRA -->
+      <div id="vagasContainer" style="display:grid;gap:14px"></div>
+    </div>
+
     <!-- ABA 1: AUDITORIA FÁCIL -->
-    <div class="folder-body" id="bodyAudit">
+    <div class="folder-body" id="bodyAudit" hidden>
       <div class="audit-toolbar">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <strong style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:1px">Filtrar Memorandos:</strong>
@@ -1283,13 +1329,334 @@ window.copiarModalRead=()=>{
 };
 
 window.abrirAbaPasta=aba=>{
+  document.getElementById('ftabVagas').className='ftab'+(aba==='VAGAS'?' active':'');
   document.getElementById('ftabAudit').className='ftab'+(aba==='AUDIT'?' active':'');
   document.getElementById('ftabNet').className='ftab'+(aba==='NET'?' active':'');
   document.getElementById('ftabCv').className='ftab'+(aba==='CV'?' active':'');
+  document.getElementById('bodyVagas').hidden=(aba!=='VAGAS');
   document.getElementById('bodyAudit').hidden=(aba!=='AUDIT');
   document.getElementById('bodyNet').hidden=(aba!=='NET');
   document.getElementById('bodyCv').hidden=(aba!=='CV');
 };
+
+/* ============================================================================
+   ESTEIRA DE VAGAS & DISTRIBUIÇÃO DE CURRÍCULOS (OPERAÇÃO GOLDEN TICKET)
+   ============================================================================ */
+let candidaturas=[];
+
+function carregarCandidaturasIniciais(){
+  const s=localStorage.getItem('PERFECTENSCHLAG_CANDIDATURAS');
+  if(s){try{candidaturas=JSON.parse(s)}catch(e){}}
+  if(!candidaturas.length){
+    candidaturas=[
+      {
+        id:'VAGA01',
+        criado_em:new Date().toLocaleString('pt-BR'),
+        cargo_empresa:'Engenheiro de Software / Automação Python & DevOps — [EMPRESA ALVO S/A]',
+        link_ou_email:'recrutamento@empresa-alvo.com.br',
+        status:'AGUARDANDO_AUTORIZACAO_ENVIO',
+        abaAtiva:'CV',
+        curriculo_moldado:`[DIAGNÓSTICO DE PALAVRAS-CHAVE ATS EXTRAÍDAS DA VAGA]:\nPython, Automação de Processos, RPA, Integração de APIs, Docker, Governança de TI, Redução de Custos Operacionais, Git/CI-CD.\n\n==========================================================\nCURRÍCULO MOLDADO SOB MEDIDA (PRONTO PARA ENVIO)\n==========================================================\nCANDIDATO: André — Engenheiro de Software | Automação (RPA/IA) & Infraestrutura Docker\nPORTFÓLIO GITHUB: https://github.com/andream001\n\nRESUMO EXECUTIVO DIRECIONADO PARA A VAGA:\nEngenheiro de Software e Especialista em Automação e Infraestrutura com histórico auditado de redução de custos operacionais em R$ 20.000,00 anuais (R$ 20 mil/ano) por meio de automação ponta a ponta em Python, RPA e orquestração de agentes de IA.\n\nEXPERIÊNCIA E RESULTADOS COMPROVADOS:\n• Economia Direta de R$ 20 mil/ano: Concepção e deploy de arquiteturas de automação em Python que eliminaram gargalos braçais e geram economia recorrente auditada.\n• Infraestrutura Conteinerizada & Governança (Docker + Snipe-IT): Implantação produtiva de containers Docker e administração completa de ativos de TI com Snipe-IT.\n• Engenharia de Sistemas Reais (GitHub andream001):\n  - Sistema Perfectenschlag: Arquitetura multi-agente autônoma com Google Gemini API.\n  - Assistant-to-the-Lead-Manager: Automação comercial via WhatsApp Cloud API com persistência atômica e warm-up.\n  - Bet-Trader Dunder & Vidraçaria-RPA: Motores analíticos e transformação automatizada de dados em planilhas executivas.\n\n==========================================================\nMENSAGEM / E-MAIL DE ABORDAGEM AO RECRUTADOR\n==========================================================\nAssunto: Candidatura — Engenheiro de Software / Automação Python (Economia comprovada de R$ 20k/ano + Docker)\n\nOlá, equipe de recrutamento,\n\nVi a vaga de Engenheiro de Software / Automação e gostaria de submeter meu currículo moldado especificamente para os desafios de vocês. Em minha atuação recente, implementei automações em Python que geram R$ 20 mil anuais de economia direta, além de estruturar toda a governança de containers Docker e Snipe-IT.\n\nSegue meu currículo adaptado e meu portfólio ativo no GitHub (https://github.com/andream001). Fico à disposição para uma conversa técnica!`,
+        preparacao_entrevista:`==========================================================\nKIT DE GUERRA PARA ENTREVISTA (RECYCLOPS + MICHAEL SCOTT)\n==========================================================\n1. SEU PITCH DE ABERTURA (60 SEGUNDOS):\n"Eu não escrevo código apenas para cumprir tabela; eu construo sistemas que cortam custos reais. Nos meus últimos projetos, implantei automações em Python que economizam R$ 20 mil por ano de forma auditada, subi toda a governança de ativos com Docker e Snipe-IT e mantenho sistemas multi-agentes e pipelines RPA em produção no GitHub."\n\n2. AS 4 PERGUNTAS QUE O ENTREVISTADOR VAI FAZER (+ SUAS RESPOSTAS STAR):\n• Pergunta 1: "Fale sobre uma automação complexa que você construiu do zero."\n  -> Sua Resposta: Cite a arquitetura que gerou R$ 20 mil/ano de economia + o motor de qualificação de leads via WhatsApp Cloud API com persistência atômica (.tmp -> CSV) e proteção anti-bloqueio.\n• Pergunta 2: "Como você lida com padronização de ambiente e infraestrutura?"\n  -> Sua Resposta: Explique a implantação prática de containers Docker combinada com rastreabilidade total de ativos de TI no Snipe-IT.\n• Pergunta 3: "Você tem experiência prática com IA Generativa e Agentes?"\n  -> Sua Resposta: Mostre o Sistema Perfectenschlag e o Bet-Trader Dunder orquestrando múltiplos agentes especializados via API Gemini.\n\n3. AS 3 PERGUNTAS INTERROGATÓRIAS IMPIEDOSAS (PARA VOCÊ FAZER NO FINAL):\n1) "Hoje, qual é o processo manual dentro da operação de vocês que mais drena horas da equipe e que eu poderia automatizar já nos primeiros 30 dias para gerar um ROI similar aos R$ 20 mil/ano que gerei?"\n2) "Como está estruturada hoje a rastreabilidade de ativos e containers Docker de vocês quando ocorre um incidente em produção?"\n3) "Qual é o maior gargalo técnico que impediu a equipe de vocês de entregar o roadmap do último trimestre?"`,
+        plano_monitoramento:`==========================================================\nRADAR DE MONITORAMENTO ATIVO (VIGIA DE E-MAIL E PLATAFORMA)\n==========================================================\n• Canal Monitorado: recrutamento@empresa-alvo.com.br\n• Palavras-Chave de Alerta na Inbox: "Entrevista", "Processo Seletivo", "Engenheiro", "Teste Técnico", "Agenda".\n• Cronograma de Follow-up Automático:\n  - Dia 0: Aguardando sua autorização para disparo inicial.\n  - Dia +4: Caso não haja resposta no e-mail/plataforma, o Agente Vigia avisa você para autorizar o e-mail curto de follow-up.\n  - Dia +7: Alerta de abordagem direta via LinkedIn ao gestor técnico da vaga.`,
+        ultimo_check_monitoramento:'Aguardando sua autorização de envio para iniciar varredura de retorno.',
+        alertas_monitoramento:[
+          'Currículo moldado pelo Neutralizador Toby.',
+          'Kit de entrevista preparado pelo Protocolo Recyclops.',
+          'Trava de segurança ativa: aguardando seu clique em [Autorizar & Enviar].'
+        ]
+      }
+    ];
+    salvarCandidaturasLocal();
+  }
+  renderCandidaturas();
+}
+
+function salvarCandidaturasLocal(){
+  localStorage.setItem('PERFECTENSCHLAG_CANDIDATURAS',JSON.stringify(candidaturas));
+  renderCandidaturas();
+}
+
+window.iniciarFluxoGoldenTicket=async()=>{
+  const cargoEmpresa=document.getElementById('vgCargoEmpresa').value.trim();
+  const linkEmail=document.getElementById('vgLinkEmail').value.trim();
+  const descricao=document.getElementById('vgDescricao').value.trim();
+
+  if(!cargoEmpresa||!descricao){
+    alert('Fato: Informe o Cargo/Empresa e cole a Descrição da Vaga para os agentes trabalharem!');
+    return;
+  }
+
+  const btn=document.getElementById('btnCriarCandidatura');
+  const statusEl=document.getElementById('vgFeedbackStatus');
+  btn.disabled=true;
+  btn.textContent='⏳ Agentes trabalhando (Moldando CV + Preparando Entrevista + Configurando Vigia)...';
+  statusEl.textContent='Neutralizador Toby, Recyclops e Vigia estão processando a vaga...';
+
+  try{
+    if(backendOn){
+      const r=await fetch('/api/nova_candidatura',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({cargo_empresa:cargoEmpresa,link_ou_email:linkEmail,descricao_vaga:descricao})
+      });
+      const d=await r.json();
+      if(!r.ok)throw new Error(d.erro||'Falha ao processar vaga');
+      d.candidatura.abaAtiva='CV';
+      candidaturas.unshift(d.candidatura);
+      salvarCandidaturasLocal();
+      await sincronizarBackend();
+    }else{
+      const key=localStorage.getItem('PERFECTENSCHLAG_GEMINI_KEY');
+      if(!key){
+        window.abrirModalApi();
+        throw new Error('Fato: Você esqueceu a chave da API. Inaceitável.');
+      }
+      const dossie=dossieTexto();
+      const promptUnificado=`Você é o Comitê da Operação Golden Ticket da Filial Scranton.\nAnalise a vaga abaixo e o Dossiê do Gerente Regional e gere o pacote completo dividido EXATAMENTE com estes 3 separadores:\n===SECAO_CURRICULO_MOLDADO===\n(1. Palavras-chave ATS extraídas da vaga; 2. Currículo Completo moldado sob medida para esta vaga destacando os R$ 20 mil/ano de economia em automação, Docker/Snipe-IT e os projetos do GitHub andream001; 3. E-mail/Mensagem de abordagem pronta para enviar ao recrutador)\n\n===SECAO_PREPARACAO_ENTREVISTA===\n(1. Pitch de apresentação de 60 segundos; 2. As 4 perguntas mais prováveis que o entrevistador fará nesta vaga + Respostas exatas no método STAR; 3. As 3 Perguntas Interrogatórias Impiedosas do Dwight para fazer ao recrutador)\n\n===SECAO_PLANO_MONITORAMENTO===\n(Regras de monitoramento de e-mail e plataforma para esta vaga, termos de busca na inbox e cronograma de follow-up)\n\nCARGO / EMPRESA: ${cargoEmpresa}\nLINK OU E-MAIL: ${linkEmail}\nDESCRIÇÃO DA VAGA:\n${descricao}\n\n${dossie}`;
+
+      const modelos=['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash'];
+      let textoIA='';
+      let ultErro='Erro na API Gemini';
+      for(const m of modelos){
+        const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({contents:[{parts:[{text:promptUnificado}]}]})
+        });
+        const dj=await res.json();
+        if(res.ok){
+          textoIA=dj.candidates?.[0]?.content?.parts?.[0]?.text||'';
+          break;
+        }
+        ultErro=dj.error?.message||ultErro;
+      }
+      if(!textoIA)throw new Error(ultErro);
+
+      let cvMoldado=textoIA,prepEntrevista='Ver seção principal.',planoMon='Monitoramento ativo.';
+      if(textoIA.includes('===SECAO_CURRICULO_MOLDADO===')){
+        const p1=textoIA.split('===SECAO_CURRICULO_MOLDADO===')[1];
+        if(p1.includes('===SECAO_PREPARACAO_ENTREVISTA===')){
+          const pts=p1.split('===SECAO_PREPARACAO_ENTREVISTA===');
+          cvMoldado=pts[0].trim();
+          if(pts[1].includes('===SECAO_PLANO_MONITORAMENTO===')){
+            const pts2=pts[1].split('===SECAO_PLANO_MONITORAMENTO===');
+            prepEntrevista=pts2[0].trim();
+            planoMon=pts2[1].trim();
+          }else{
+            prepEntrevista=pts[1].trim();
+          }
+        }else{
+          cvMoldado=p1.trim();
+        }
+      }
+
+      const nova={
+        id:Math.random().toString(36).slice(2,8).toUpperCase(),
+        criado_em:new Date().toLocaleString('pt-BR'),
+        cargo_empresa:censurarTexto(cargoEmpresa),
+        link_ou_email:linkEmail,
+        status:'AGUARDANDO_AUTORIZACAO_ENVIO',
+        abaAtiva:'CV',
+        curriculo_moldado:censurarTexto(cvMoldado),
+        preparacao_entrevista:censurarTexto(prepEntrevista),
+        plano_monitoramento:censurarTexto(planoMon),
+        ultimo_check_monitoramento:'Aguardando sua autorização para iniciar vigia.',
+        alertas_monitoramento:[
+          `[${new Date().toLocaleTimeString('pt-BR')}] Currículo moldado sob medida e Kit de Entrevista gerados.`,
+          `[${new Date().toLocaleTimeString('pt-BR')}] Trava ativa: revise abaixo e clique em Autorizar & Enviar.`
+        ]
+      };
+      candidaturas.unshift(nova);
+      salvarCandidaturasLocal();
+      registrarMemoLocal('NEUTRALIZADOR_TOBY','CURRICULO_MOLDADO_GOLDEN_TICKET',cargoEmpresa,cvMoldado,'AGUARDANDO_AUTORIZACAO');
+    }
+    statusEl.textContent='✅ Pacote completo gerado! Revise o currículo moldado e o treino de entrevista no card abaixo.';
+    document.getElementById('vgCargoEmpresa').value='';
+    document.getElementById('vgLinkEmail').value='';
+    document.getElementById('vgDescricao').value='';
+  }catch(err){
+    statusEl.textContent='❌ Erro: '+err.message;
+  }finally{
+    btn.disabled=false;
+    btn.textContent='🚀 Moldar Currículo + Preparar Entrevista + Iniciar Monitoramento (Para Minha Aprovação)';
+  }
+};
+
+window.trocarSubAbaVaga=(id,aba)=>{
+  const c=candidaturas.find(x=>x.id===id);
+  if(!c)return;
+  c.abaAtiva=aba;
+  renderCandidaturas();
+};
+
+window.salvarEdicaoCvVaga=id=>{
+  const c=candidaturas.find(x=>x.id===id);
+  const ta=document.getElementById(`taCv_${id}`);
+  if(!c||!ta)return;
+  c.curriculo_moldado=ta.value;
+  salvarCandidaturasLocal();
+  alert('💾 Alterações no currículo moldado salvas com sucesso!');
+};
+
+window.baixarCurriculoMoldado=id=>{
+  const c=candidaturas.find(x=>x.id===id);if(!c)return;
+  const blob=new Blob([c.curriculo_moldado],{type:'text/markdown;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Curriculo_Andre_${c.id}.md`;
+  a.click();
+};
+
+window.autorizarEEnviarCandidatura=async id=>{
+  const c=candidaturas.find(x=>x.id===id);if(!c)return;
+  const ta=document.getElementById(`taCv_${id}`);
+  if(ta)c.curriculo_moldado=ta.value;
+
+  // Copia o currículo moldado automaticamente para a área de transferência
+  try{await navigator.clipboard.writeText(c.curriculo_moldado)}catch(e){}
+
+  c.status='AUTORIZADO_EM_MONITORAMENTO';
+  const agora=new Date().toLocaleString('pt-BR');
+  c.ultimo_check_monitoramento=agora;
+  c.alertas_monitoramento=c.alertas_monitoramento||[];
+  c.alertas_monitoramento.unshift(`[${agora}] ✅ AUTORIZADO PELO GERENTE REGIONAL! Currículo copiado e monitoramento de e-mail/plataforma ativado.`);
+  salvarCandidaturasLocal();
+
+  if(backendOn){
+    try{await fetch('/api/decidir_candidatura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,decisao:'AUTORIZAR',curriculo_moldado:c.curriculo_moldado})})}catch(e){}
+  }
+
+  // Se for um e-mail, abre o cliente de e-mail já preenchido; se for link da plataforma, abre a página da vaga com o CV já no Ctrl+V!
+  const dest=(c.link_ou_email||'').trim();
+  if(dest.includes('@')&&!dest.startsWith('http')){
+    const assunto=encodeURIComponent(`Candidatura: ${c.cargo_empresa}`);
+    const corpo=encodeURIComponent(c.curriculo_moldado.slice(0,1800));
+    window.open(`mailto:${dest}?subject=${assunto}&body=${corpo}`,'_blank');
+  }else if(dest.startsWith('http')){
+    window.open(dest,'_blank');
+  }
+};
+
+window.checarMonitoramentoVaga=async id=>{
+  const c=candidaturas.find(x=>x.id===id);if(!c)return;
+  const agora=new Date().toLocaleString('pt-BR');
+  if(backendOn){
+    try{
+      const r=await fetch('/api/monitorar_candidatura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+      const d=await r.json();
+      if(d.candidatura){
+        Object.assign(c,d.candidatura);
+        c.abaAtiva='MON';
+        salvarCandidaturasLocal();
+        return;
+      }
+    }catch(e){}
+  }
+  c.ultimo_check_monitoramento=agora;
+  c.alertas_monitoramento=c.alertas_monitoramento||[];
+  c.alertas_monitoramento.unshift(
+    `[${agora}] 📡 Varredura executada pelo Agente Vigia em '${c.link_ou_email||'canal da vaga'}': Vaga ativa. Monitorando respostas na caixa de entrada.`
+  );
+  c.abaAtiva='MON';
+  salvarCandidaturasLocal();
+};
+
+window.marcarEntrevistaVaga=id=>{
+  const c=candidaturas.find(x=>x.id===id);if(!c)return;
+  c.status='ENTREVISTA_CONVOCADA';
+  c.abaAtiva='PREP';
+  c.alertas_monitoramento=c.alertas_monitoramento||[];
+  c.alertas_monitoramento.unshift(`[${new Date().toLocaleString('pt-BR')}] 🎯 ENTREVISTA AGENDADA! Kit de Guerra Recyclops aberto para estudo.`);
+  salvarCandidaturasLocal();
+};
+
+window.vetarCandidatura=id=>{
+  const c=candidaturas.find(x=>x.id===id);if(!c)return;
+  c.status='VETADO';
+  salvarCandidaturasLocal();
+};
+
+function renderCandidaturas(){
+  const cont=document.getElementById('vagasContainer');
+  if(!cont)return;
+  document.getElementById('cntVagas').textContent=candidaturas.length;
+  cont.innerHTML='';
+
+  candidaturas.forEach(c=>{
+    const aba=c.abaAtiva||'CV';
+    const aguardando=c.status==='AGUARDANDO_AUTORIZACAO_ENVIO';
+    const monitorando=c.status==='AUTORIZADO_EM_MONITORAMENTO';
+    const entrevista=c.status==='ENTREVISTA_CONVOCADA';
+    const corBorda=aguardando?'var(--warn)':entrevista?'var(--brand)':monitorando?'var(--ok)':'var(--muted)';
+
+    const card=document.createElement('div');
+    card.className='memo-card';
+    card.style.border=`2px solid ${corBorda}`;
+    card.innerHTML=`
+      <div class="memo-head" style="font-size:12px">
+        <div>
+          <span class="memo-tag" style="border-color:${corBorda};color:${corBorda}">${c.status}</span>
+          <strong style="margin-left:8px;font-size:14px">${esc(c.cargo_empresa)}</strong>
+        </div>
+        <span><b>#${c.id}</b> · Canal: <code>${esc(c.link_ou_email||'Não informado')}</code> · ${c.criado_em}</span>
+      </div>
+
+      <!-- SUB-ABAS DA VAGA -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;border-bottom:1.5px solid var(--ink);padding-bottom:6px">
+        <button class="btn ${aba==='CV'?'action':''}" type="button" style="font-size:11.5px;padding:5px 10px" onclick="trocarSubAbaVaga('${c.id}','CV')">
+          📄 1. Currículo Moldado & E-mail (Neutralizador Toby)
+        </button>
+        <button class="btn ${aba==='PREP'?'action':''}" type="button" style="font-size:11.5px;padding:5px 10px" onclick="trocarSubAbaVaga('${c.id}','PREP')">
+          🎙️ 2. Preparação p/ Entrevista (Recyclops + Michael)
+        </button>
+        <button class="btn ${aba==='MON'?'action':''}" type="button" style="font-size:11.5px;padding:5px 10px" onclick="trocarSubAbaVaga('${c.id}','MON')">
+          📡 3. Vigia da Vaga & E-mail (${(c.alertas_monitoramento||[]).length})
+        </button>
+      </div>
+
+      <!-- CONTEÚDO DA SUB-ABA SELECIONADA -->
+      ${aba==='CV'?`
+        <div style="display:grid;gap:6px">
+          <div style="font-size:11.5px;color:var(--muted)">
+            Você pode editar qualquer linha do currículo ou do e-mail abaixo antes de autorizar o envio:
+          </div>
+          <textarea class="cv-textarea" id="taCv_${c.id}" rows="10">${esc(c.curriculo_moldado)}</textarea>
+        </div>
+      `:aba==='PREP'?`
+        <pre class="memo-pre" style="max-height:260px">${esc(c.preparacao_entrevista)}</pre>
+      `:`
+        <div style="display:grid;gap:8px">
+          <div style="font-family:var(--f-memo);font-size:11.5px;background:#f3f6fa;padding:8px;border:1px solid var(--brand)">
+            <b>Última verificação do Agente Vigia:</b> ${esc(c.ultimo_check_monitoramento||'-')}
+          </div>
+          <pre class="memo-pre" style="max-height:140px">${esc(c.plano_monitoramento)}</pre>
+          <div style="font-family:var(--f-memo);font-size:11px;background:#fff;border:1px solid #d6d1c2;padding:8px;max-height:110px;overflow-y:auto">
+            <b>Log de Monitoramento (E-mail / Plataforma):</b><br>
+            ${(c.alertas_monitoramento||[]).map(a=>`• ${esc(a)}`).join('<br>')}
+          </div>
+        </div>
+      `}
+
+      <!-- BARRA DE COMANDO E APROVAÇÃO DO GERENTE REGIONAL -->
+      <div class="memo-actions" style="border-top:1px dashed #cfc8b6;padding-top:8px;justify-content:space-between">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn" type="button" onclick="salvarEdicaoCvVaga('${c.id}')">💾 Salvar Edição</button>
+          <button class="btn" type="button" onclick="baixarCurriculoMoldado('${c.id}')">📥 Baixar CV (.md)</button>
+          <button class="btn" type="button" onclick="checarMonitoramentoVaga('${c.id}')">🔄 Checar Vaga / E-mail Agora</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn ok" type="button" onclick="autorizarEEnviarCandidatura('${c.id}')">
+            ${aguardando?'✅ Autorizar & Enviar Candidatura (Copia CV + Abre Canal)':'🚀 Reenviar / Abrir Canal da Vaga'}
+          </button>
+          <button class="btn action" type="button" onclick="marcarEntrevistaVaga('${c.id}')">
+            🎙️ Fui Chamado p/ Entrevista! (Abrir Kit)
+          </button>
+          <button class="btn end" type="button" onclick="vetarCandidatura('${c.id}')">🚫 Vetar</button>
+        </div>
+      </div>
+    `;
+    cont.appendChild(card);
+  });
+}
 
 window.acionarSetorVideoYoutube=()=>{
   const scarn=byId.rv;
@@ -1422,6 +1789,7 @@ window.simularTurnoDocumentario=(silencioso=false)=>{
 function esc(s){return censurarTexto(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 carregarCurriculoUI();
+carregarCandidaturasIniciais();
 sincronizarBackend();
 })();
 </script>
