@@ -72,3 +72,4 @@ if __name__ == "__main__":
     pacote = executar_estudio_youtube(tema, formato)
     print("\n" + "=" * 72)
     print(pacote)
+

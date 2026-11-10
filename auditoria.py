@@ -4,6 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from sanitizador_seguranca import censurar_dados_sensiveis
+
 ARQUIVO_AUDITORIA = Path(__file__).resolve().parent / "auditoria_perfectenschlag.json"
 
 
@@ -39,8 +41,8 @@ def registrar_evento_auditoria(
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "agente": agente,
         "acao": acao,
-        "entrada": entrada,
-        "saida": saida,
+        "entrada": censurar_dados_sensiveis(entrada),
+        "saida": censurar_dados_sensiveis(saida),
         "status": status,  # CONCLUIDO | AGUARDANDO_AUTORIZACAO | AUTORIZADO | VETADO | ERRO
         "requer_autorizacao": requer_autorizacao,
         "metadados": metadados or {},

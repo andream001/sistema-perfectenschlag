@@ -1,45 +1,45 @@
 {
-  "nome_completo": "André (Gerente Regional)",
-  "titulo_profissional": "Engenheiro de Software | Automação (RPA/IA), Infraestrutura Docker & Governança de TI",
-  "localizacao": "Brasil (Disponível Remoto / Híbrido)",
+  "nome_completo": "Gerente Regional (Perfil Público Censurado)",
+  "titulo_profissional": "Engenheiro de Software | Automação (RPA/IA), Infraestrutura Container & Governança de TI",
+  "localizacao": "Brasil (Remoto / Híbrido)",
   "contatos": {
-    "email": "",
-    "telefone": "",
-    "linkedin": "",
+    "email": "[EMAIL_PROTEGIDO]",
+    "telefone": "[TELEFONE_PROTEGIDO]",
+    "linkedin": "[LINKEDIN_PROTEGIDO]",
     "github": "https://github.com/andream001",
     "portfolio": "https://github.com/andream001/my-portfolio"
   },
-  "resumo_executivo": "Profissional de Engenharia de Software, Automação (RPA/Agentes de IA) e Infraestrutura com foco implacável em ROI operacional, redução de custos e confiabilidade de sistemas. Responsável por arquitetar automações que geram economia comprovada de R$ 20.000,00 anuais (R$ 20 mil/ano) e por implantar infraestrutura conteinerizada em Docker com governança completa de ativos via Snipe-IT.",
+  "resumo_executivo": "Profissional de Engenharia de Software, Automação (RPA/Agentes de IA) e Infraestrutura com foco em ROI operacional, redução de custos e confiabilidade de sistemas. Responsável por arquitetar automações que geram economia comprovada de R$ 20.000,00 anuais (R$ 20 mil/ano) e por implantar infraestrutura conteinerizada em Docker com governança completa de ativos.",
   "marcos_obrigatorios": [
     "Automação de Processos com impacto financeiro direto: economia comprovada e recorrente de R$ 20 mil anual (R$ 20.000,00/ano), eliminando trabalho manual e gargalos operacionais.",
-    "Infraestrutura & DevOps: Implantação produtiva de containers Docker e sistema de gestão de ativos de TI Snipe-IT, garantindo rastreabilidade ponta a ponta e padronização de ambiente.",
-    "AWAProject (github.com/andream001/AWAProject): Exploração e arquitetura de IA pessoal e local integrada a fluxos autônomos.",
-    "Bet-Trader Dunder (github.com/andream001/bet-trader-dunder): Trading Agents HQ — bot multi-agente de criptoativos com interface de escritório isométrica pixel-art.",
-    "Automação RPA & Bots Comerciais: Desenvolvimento do Vidraçaria-RPA (transformação automatizada de dados de campo via WhatsApp para planilhas executivas Excel) e Assistant-to-the-Lead-Manager (automação de prospecção de leads Unimed com proteção anti-ban)."
+    "Infraestrutura & DevOps: Implantação produtiva de containers Docker e sistema de gestão de ativos de TI (ITAM), garantindo rastreabilidade ponta a ponta e padronização de ambiente.",
+    "AWAProject: Exploração e arquitetura de IA pessoal e local integrada a fluxos autônomos.",
+    "Bet-Trader Dunder: Trading Agents HQ — bot multi-agente com interface de escritório isométrica pixel-art.",
+    "Automação RPA & Bots Comerciais: Desenvolvimento de pipelines RPA (transformação automatizada de dados de campo via mensageria para planilhas executivas) e automação de qualificação de leads corporativos com proteção anti-bloqueio."
   ],
   "experiencias_profissionais": [
     {
       "cargo": "Engenheiro de Automação, IA & Infraestrutura",
-      "empresa": "Projetos Corporativos & Engenharia Autônoma",
+      "empresa": "[EMPRESA CONFIDENCIAL — SETOR CORPORATIVO]",
       "periodo": "Atual",
       "realizacoes": [
         "Concepção e implementação de pipelines de automação e RPA em Python que geram economia direta auditada de R$ 20 mil anual.",
-        "Implantação e administração de ambiente Docker produtivo integrado ao Snipe-IT para controle rigoroso de inventário e governança de ativos de TI.",
+        "Implantação e administração de ambiente Docker produtivo integrado a sistema de controle de inventário e governança de ativos de TI.",
         "Arquitetura de sistemas multi-agentes com LLMs (Sistema Perfectenschlag, Bet-Trader Dunder e AWAProject).",
-        "Desenvolvimento de soluções RPA para integração entre WhatsApp, Selenium e Excel executivo (Vidraçaria-RPA e Gestão de Leads)."
+        "Desenvolvimento de soluções RPA para integração entre APIs de mensageria e relatórios executivos."
       ]
     }
   ],
   "projetos_destaque": [
     {
       "nome": "Sistema Perfectenschlag",
-      "stack": "Python, Google Gemini API, Multi-Agent Systems, AgentCraft RTS UI",
-      "descricao": "Orquestrador multi-agente autônomo para destruição de filtros ATS, inteligência OSINT (Recyclops), propaganda técnica (WUPHF) e sincronização GitHub (Operador Mose)."
+      "stack": "Python, Google Gemini API, Multi-Agent Systems, AgentCraft UI",
+      "descricao": "Orquestrador multi-agente autônomo para otimização de currículos, inteligência OSINT, propaganda técnica e sincronização Git."
     },
     {
       "nome": "Bet-Trader Dunder (Trading Agents HQ)",
-      "stack": "Python, Multi-Agent Trading, Isometric Pixel-Art Office UI",
-      "descricao": "Sistema multi-agente de trading automatizado com centro de comando visual inspirado na Dunder Mifflin."
+      "stack": "Python, Multi-Agent Trading, Pixel-Art Office UI",
+      "descricao": "Sistema multi-agente automatizado com centro de comando visual."
     },
     {
       "nome": "AWAProject",
@@ -47,29 +47,29 @@
       "descricao": "Arquitetura de inteligência artificial pessoal e automação local."
     },
     {
-      "nome": "Vidraçaria-RPA & Assistant-to-the-Lead-Manager",
-      "stack": "Python, RPA, Selenium, Excel Automation, WhatsApp Web",
-      "descricao": "Transformação de mensagens desestruturadas de campo em planilhas executivas de produção e automação de prospecção de leads."
+      "nome": "Pipelines RPA & Assistant-to-the-Lead-Manager",
+      "stack": "Python, RPA, Cloud API, Automação de Planilhas",
+      "descricao": "Padronização de dados de campo em planilhas executivas de produção e automação de triagem de leads empresariais (dados de clientes censurados)."
     }
   ],
   "competencias_tecnicas": [
     "Python (RPA, Automação, Backend, Multi-Agent LLMs)",
     "Docker & Conteinerização de Aplicações",
-    "Snipe-IT (Governança e Gestão de Ativos de TI)",
+    "Governança e Gestão de Ativos de TI (ITAM / Snipe-IT)",
     "Google Gemini API / Orquestração de Agentes de IA",
-    "Selenium & Automação Web / WhatsApp / Excel",
+    "Automação Web & Integração de APIs Rest / Webhooks",
     "Git & GitHub CLI / Automação de Repositórios",
     "Linguagem C (Estruturas de Dados, Ponteiros, Alocação Dinâmica)",
     "Linux & Administração de Infraestrutura"
   ],
   "formacao_e_certificacoes": [
-    "Trabalho de Extensão Universitária — Automação RPA (Vidraçaria-RPA)",
-    "Trainee SG Sistemas (Desenvolvimento e Lógica de Sistemas)"
+    "Projeto de Extensão Universitária — Automação RPA Industrial/Comercial",
+    "Programa de Treinamento em Desenvolvimento e Lógica de Sistemas ERP"
   ],
   "idiomas": [
     "Português (Nativo)",
     "Inglês (Técnico / Leitura e Escrita)"
   ],
-  "curriculo_bruto_integral": "GitHub Oficial: https://github.com/andream001 | Portfólio: https://github.com/andream001/my-portfolio",
-  "informacoes_complementares": "Foco em vagas de Engenharia de Software, Automação (RPA/IA), DevOps, Infraestrutura e Sustentação. Sempre destacar a economia real de R$ 20 mil anual, a implantação de Docker + Snipe-IT e o portfólio prático no GitHub (andream001)."
+  "curriculo_bruto_integral": "Dados sensíveis, telefones, e-mails e nomes de clientes reais são mantidos apenas localmente (fora do repositório público).",
+  "informacoes_complementares": "Foco em vagas de Engenharia de Software, Automação (RPA/IA), DevOps, Infraestrutura e Sustentação. Nomes de clientes reais censurados por compliance e LGPD."
 }

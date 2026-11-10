@@ -175,9 +175,12 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
       </div>
     </div>
     <div class="top-badges">
-      <button class="stamp brand" type="button" onclick="abrirAbaPasta('CV')">📂 Currículo & Dossiê (andream001)</button>
+      <button class="stamp" type="button" id="btnDlpToggle" onclick="alternarModoCensura()" style="border-color:var(--ok);color:var(--ok);font-weight:700" title="Filtra automaticamente nomes de empresas reais, CPFs, CNPJs, telefones e chaves de API">
+        🔒 Censura & LGPD: <span id="lblDlpStatus">ATIVA</span>
+      </button>
+      <button class="stamp brand" type="button" onclick="abrirAbaPasta('CV')">📂 Currículo & Dossiê</button>
       <button class="stamp warn" type="button" id="btnWuphfTop" onclick="filtrarWuphfPendentes()">📯 Aguardando Aval: <span id="cntWuphf">0</span></button>
-      <button class="stamp" type="button" onclick="abrirModalApi()">🔑 API Key: <b id="lblApiStatus">Verificar</b></button>
+      <button class="stamp" type="button" onclick="abrirModalApi()">🔑 API Key (Só no seu Navegador): <b id="lblApiStatus">Verificar</b></button>
     </div>
   </header>
 
@@ -197,7 +200,7 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
       <span class="net-dot"></span> 🐙 GitHub (andream001)
     </a>
     <button class="net-btn wa" type="button" onclick="abrirAbaPasta('NET')">
-      <span class="net-dot"></span> 💬 WhatsApp Cloud API (Unimed)
+      <span class="net-dot"></span> 💬 WhatsApp Cloud API (Leads B2B)
     </button>
     <button class="net-btn" type="button" onclick="abrirAbaPasta('NET')" style="margin-left:auto">
       ⚙️ Configurar Redes & Webhooks (n8n / YouTube / LinkedIn)
@@ -349,11 +352,11 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
         <!-- CARD WHATSAPP & SHORTS/REELS -->
         <div class="net-card">
           <h3><span>💬 WhatsApp API & Shorts/Reels</span> <span class="memo-tag">Omnichannel</span></h3>
-          <p style="font-size:12px;color:var(--muted);margin:0">Integração com o disparador Unimed (4.523 leads DDD 27) e distribuição de cortes verticais para Instagram Reels / TikTok.</p>
-          <input class="memo-input" id="cfgWhatsappWebhook" placeholder="URL do Webhook WhatsApp / n8n (ex: http://localhost:5000/webhook)" value="http://localhost:5000/webhook" />
+          <p style="font-size:12px;color:var(--muted);margin:0">Integração com o disparador B2B ([EMPRESA CONFIDENCIAL]) e distribuição de cortes verticais para Instagram Reels / TikTok.</p>
+          <input class="memo-input" id="cfgWhatsappWebhook" placeholder="URL do Webhook WhatsApp / n8n (salvo apenas no seu navegador)" value="" />
           <div style="display:flex;gap:6px;margin-top:auto">
             <button class="net-btn sh" type="button" onclick="acionarSetorShortsReels()" style="flex:1;justify-content:center">🎬 Criar Corte Shorts</button>
-            <button class="net-btn action" type="button" onclick="salvarConfigRedes()">💾 Salvar Redes</button>
+            <button class="net-btn action" type="button" onclick="salvarConfigRedes()">💾 Salvar Redes (Local)</button>
           </div>
         </div>
       </div>
@@ -497,23 +500,23 @@ const A=[
       boss:'Com a nossa economia auditada de R$ 20 mil anual e Docker/Snipe-IT, qualquer recrutador fica de joelhos.',
       secret:'Eu guardo um dossiê secreto sobre cada empresa que ainda usa planilha manual em vez de RPA.'}},
  {id:'pl',nm:'Neutralizador Toby',art:'o',role:'Vendas · Especialista Anti-ATS',ws:'desk',seat:{tx:22,ty:12,face:'down'},work:'destruindo filtros ATS do RH',prop:'board',
-  agentKey:'NEUTRALIZADOR_TOBY',p1:'Cole aqui a descrição completa da vaga alvo (Gupy/Workday)...',p2:'Destaque extra para injetar no currículo (opcional)...',
+  agentKey:'NEUTRALIZADOR_TOBY',p1:'Cole aqui a descrição completa da vaga alvo...',p2:'Destaque extra para injetar no currículo (opcional)...',
   look:{skin:'#c98e62',hair:'#3b2616',style:'short',glasses:1,shirt:'#1f4e8c',tie:'#a32020'},
   iv:{intro:'O RH é o Toby Flenderson do mundo corporativo. Minha missão é neutralizá-lo.',
       about:'Eu pego qualquer vaga, extraio a matriz exata do algoritmo ATS e cruzo com nosso dossiê de R$ 20 mil/ano e Docker/Snipe-IT.',
-      boss:'Se o Toby tentar barrar nosso currículo na Gupy, eu recalculo as palavras-chave até atingir 100% de match.',
-      secret:'Por que o Toby é do jeito que ele é?Toda vez que o RH cria um filtro novo, eu crio um prompt melhor.'}},
+      boss:'Se o Toby tentar barrar nosso currículo na triagem automática, eu recalculo as palavras-chave até atingir 100% de match.',
+      secret:'Por que o Toby é do jeito que ele é? Toda vez que o RH cria um filtro novo, eu crio um prompt melhor.'}},
  {id:'rv',nm:'Diretor Scarn (YouTube)',art:'o',role:'Estúdio · Edição de Vídeo & YouTube',ws:'desk',seat:{tx:28,ty:12,face:'down'},work:'editando vídeo e cortes p/ YouTube',prop:'redpen',
   agentKey:'ESTUDIO_YOUTUBE',p1:'Tema ou projeto do vídeo para o YouTube / Shorts...',p2:'Formato (ex: Vídeo Longo + Corte Shorts, Tutorial Código, etc.)...',
   look:{skin:'#e8b996',hair:'#1d1a22',style:'long',glasses:1,shirt:'#c4302b',tie:'#151617'},
   iv:{intro:'Silêncio no set! Eu sou o Diretor Scarn, chefe do novo Setor de Edição de Vídeo e YouTube da filial.',
-      about:'Eu pego seus projetos reais — o Sistema Perfectenschlag, o robô da Unimed e os R$ 20 mil/ano em automação — e gero o roteiro com timecodes, cortes B-Roll, comando FFmpeg, Shorts e SEO pro YouTube Studio.',
+      about:'Eu pego seus projetos reais — o Sistema Perfectenschlag, o motor de leads B2B e os R$ 20 mil/ano em automação — e gero o roteiro com timecodes, cortes B-Roll, comando FFmpeg, Shorts e SEO pro YouTube Studio.',
       boss:'Assim como no WUPHF, nenhum frame sobe pro YouTube sem a autorização expressa do Gerente Regional.',
       secret:'Estou preparando um documentário premiado chamado Threat Level Scranton sobre como destruímos o filtro do Toby.'}},
  {id:'ts',nm:'Testador',art:'o',role:'Vendas · Qualidade & Anti-Ban',ws:'desk',seat:{tx:16,ty:17,face:'down'},work:'validando warm-up do WhatsApp',prop:'bugs',
   look:{skin:'#d9a07a',hair:'#4a3020',style:'bald',beard:1,shirt:'#b03a2e',tie:'#1f4e8c'},
   iv:{intro:'Desculpa, eu estou meio vermelho hoje. Os testes, digo.',
-      about:'Eu garanto que o disparador de leads da Unimed respeite o limite diário, o DDI +55 e o opt-out.',
+      about:'Eu garanto que o disparador corporativo de leads respeite o limite diário, o DDI +55 e o opt-out.',
       boss:'Ele disse que teste em produção dá mais emoção. Eu precisei sentar.',
       secret:'Eu tenho um teste que nunca falha. Ele não testa nada. Me acalma.'}},
  {id:'bd',nm:'Construtor Docker',art:'o',role:'Vendas · Containers & Snipe-IT',ws:'desk',seat:{tx:22,ty:17,face:'down'},work:'mantendo containers e Snipe-IT',prop:'tools',
@@ -647,13 +650,13 @@ const taken=(x,y,me)=>A.some(o=>o!==me&&(o.state==='idle'||o.state==='walk')&&o.
 function spotFor(kind,me){const free=SPOTS[kind].filter(([x,y])=>!taken(x,y,me));return free.length?pick(free):null}
 
 const PAIRS=[
- ['O Neutralizador Toby já destruiu a Gupy hoje?','Duas vezes antes do café.'],
+ ['O Neutralizador Toby já destruiu o ATS hoje?','Duas vezes antes do café.'],
  ['Viu o commit que o Mose subiu pro GitHub?','Silencioso e letal. Padrão fazenda Schrute.'],
  ['O WUPHF tentou postar sem aval do chefe?','Jamais. Ele morre de medo do veto.'],
  ['Quanto a automação economizou mesmo?','R$ 20 mil anual auditados. Fato.'],
- ['O Snipe-IT tá rodando no Docker?','100% conteinerizado e rastreado.'],
+ ['O controle de ativos tá rodando no Docker?','100% conteinerizado e rastreado.'],
  ['A copiadora travou de novo.','Chama o Recyclops pra interrogar ela.'],
- ['Como tá o disparo da Unimed no WhatsApp?','DDI +55 normalizado e opt-out blindado.'],
+ ['Como tá o disparo de leads no WhatsApp?','DDI +55 normalizado e opt-out blindado.'],
  ['Bom dia!','Fato: é um bom dia para o Perfectenschlag.'],
  ['Tem reunião hoje?','Sempre tem. Na Sala de Reunião em 5 minutos.'],
 ];
@@ -701,7 +704,7 @@ function pickActivity(a){
 }
 
 const MEET_LINES=['Reunião de emergência do Sistema Perfectenschlag!','Item 1: Nossa automação já economiza R$ 20 mil anual.','Item 2: Nenhum post do WUPHF sai sem carimbo do Gerente!','Item 3: O Toby continua sendo o inimigo. Dispensados!'];
-const MEET_REACT=['Fato.','Anotado no memorando.','Mose já subiu pro GitHub.','Alguém viu os leads da Unimed?','Urso. Beterrabas. Battlestar Galactica.'];
+const MEET_REACT=['Fato.','Anotado no memorando.','Mose já subiu pro GitHub.','Alguém viu a fila de leads B2B?','Urso. Beterrabas. Battlestar Galactica.'];
 function callMeeting(){
   const boss=byId.or;if(meeting||boss.state==='interview')return;
   meeting=true;updateButtons();
@@ -895,7 +898,7 @@ function todayLine(a){
   if(!m)return 'Hoje? Mantendo os R$ 20 mil anual de economia em automação e os containers Docker rodando.';
   const b=m.who;
   switch(m.k){
-    case 'cooler':return `Conversei ${com(b)} no bebedouro sobre a automação da Unimed e do Snipe-IT.`;
+    case 'cooler':return `Conversei ${com(b)} no bebedouro sobre a automação de leads e governança Docker.`;
     case 'cooler-solo':return 'Fiquei no bebedouro sozinho planejando o próximo ataque ao ATS do Toby.';
     case 'visit':return `Fui até a mesa ${de(b)} alinhar um commit. Voltei com três ideias novas.`;
     case 'visited':return `${cap(b)} apareceu na minha mesa. Eu mostrei o Dossiê Recyclops.`;
@@ -994,23 +997,49 @@ requestAnimationFrame(frame);
    INTEGRAÇÃO SISTEMA PERFECTENSCHLAG: AUDITORIA, CURRÍCULO (andream001) & GEMINI
    ============================================================================ */
 const PERFIL_DEFAULT={
-  nome_completo:"André Bunhak (andream001) — Engenheiro de Software | Automação (RPA/IA), Docker & Governança de TI",
-  contatos:"Brasil | GitHub: https://github.com/andream001 | Portfólio: https://github.com/andream001/my-portfolio",
+  nome_completo:"Gerente Regional (Perfil Público Protegido) — Engenheiro de Software | Automação (RPA/IA) & Docker",
+  contatos:"Brasil | GitHub: https://github.com/andream001 | Dados de contato diretos mantidos apenas localmente",
   marcos_obrigatorios:
     "• Automação de Processos com impacto financeiro auditado: economia recorrente de R$ 20.000,00 anuais (R$ 20 mil/ano).\n"+
-    "• Implantação produtiva de containers Docker e governança de ativos de TI com Snipe-IT.\n"+
-    "• Bet-Trader Dunder (Trading Agents HQ): Bot multi-agente de criptoativos com UI de escritório pixel-art.\n"+
-    "• Assistant-to-the-Lead-Manager: Automação WhatsApp Business Cloud API para prospecção Unimed (4.523 leads DDD 27).\n"+
-    "• AWAProject & Vidraçaria-RPA: IA local e transformação automatizada de mensagens de campo em planilhas executivas Excel.",
+    "• Implantação produtiva de containers Docker e governança de ativos de TI (ITAM / Snipe-IT).\n"+
+    "• Bet-Trader Dunder (Trading Agents HQ): Bot multi-agente com UI de escritório pixel-art.\n"+
+    "• Assistant-to-the-Lead-Manager: Automação WhatsApp Business Cloud API para qualificação de leads B2B ([EMPRESA CONFIDENCIAL]).\n"+
+    "• AWAProject & Pipelines RPA: IA local e transformação automatizada de mensagens de campo em planilhas executivas.",
   competencias_tecnicas:"Python (RPA, Flask, Selenium, Multi-Agent LLMs, Gemini API), WhatsApp Business Cloud API, n8n, Docker, Snipe-IT, Git/GitHub CLI, Linguagem C, Linux, SQL",
   curriculo_bruto_integral:
-    "PORTFÓLIO OFICIAL GITHUB (https://github.com/andream001):\n"+
+    "PORTFÓLIO PÚBLICO GITHUB (https://github.com/andream001):\n"+
     "- sistema-perfectenschlag: Arquitetura multi-agente Python (Gemini) + AgentCraft Filial Regional.\n"+
-    "- assistant-to-the-lead-manager: Automação de prospecção via WhatsApp Cloud API para gerenciamento de leads Unimed com warm-up, DDI +55 e repasse automático ao consultor.\n"+
+    "- assistant-to-the-lead-manager: Automação de prospecção via WhatsApp Cloud API para gerenciamento de leads corporativos ([CLIENTE CONFIDENCIAL]) com warm-up, DDI +55 e repasse automático.\n"+
     "- bet-trader-dunder: Trading Agents HQ multi-agente.\n"+
-    "- vidracaria-rpaa: RPA em Python (Trabalho de Extensão Universitária) padronizando medições do WhatsApp em folhas executivas do Excel.\n"+
+    "- vidracaria-rpaa: RPA em Python (Projeto de Extensão Universitária) padronizando medições de campo em folhas executivas.\n"+
     "- AWAProject: Exploração e arquitetura de IA pessoal e local.",
-  informacoes_complementares:"Priorizar destaque na economia auditada de R$ 20 mil anual, domínio prático de Docker/Snipe-IT e projetos reais em produção no GitHub (andream001)."
+  informacoes_complementares:"Nomes de empresas clientes reais, telefones e documentos sensíveis são automaticamente censurados no modo público (LGPD / Compliance)."
+};
+
+let modoCensuraAtivo=true;
+
+function censurarTexto(str){
+  if(!str)return '';
+  let s=String(str);
+  if(!modoCensuraAtivo)return s;
+  // Mascara chaves de API, Tokens, CPFs, CNPJs e nomes de empresas reais
+  s=s.replace(/AIza[0-9A-Za-z\-_]{20,}/g,'[API_KEY_PROTEGIDA]');
+  s=s.replace(/gh[po]_[0-9A-Za-z]{20,}/g,'[GITHUB_TOKEN_PROTEGIDO]');
+  s=s.replace(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,'[CPF_CENSURADO]');
+  s=s.replace(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g,'[CNPJ_CENSURADO]');
+  s=s.replace(/\bUnimed\b/gi,'[OPERADORA_SAUDE_CONFIDENCIAL]');
+  s=s.replace(/\bSG Sistemas\b/gi,'[EMPRESA_ERP_CONFIDENCIAL]');
+  return s;
+}
+
+window.alternarModoCensura=()=>{
+  modoCensuraAtivo=!modoCensuraAtivo;
+  const lbl=document.getElementById('lblDlpStatus');
+  const btn=document.getElementById('btnDlpToggle');
+  lbl.textContent=modoCensuraAtivo?'ATIVA':'PAUSADA';
+  btn.style.borderColor=modoCensuraAtivo?'var(--ok)':'var(--warn)';
+  btn.style.color=modoCensuraAtivo?'var(--ok)':'var(--warn)';
+  renderAudit();
 };
 
 let perfil={...PERFIL_DEFAULT};
@@ -1390,7 +1419,7 @@ window.simularTurnoDocumentario=(silencioso=false)=>{
   renderAudit();
 };
 
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function esc(s){return censurarTexto(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 carregarCurriculoUI();
 sincronizarBackend();
