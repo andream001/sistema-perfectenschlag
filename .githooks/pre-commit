@@ -1,0 +1,12 @@
+#!/bin/sh
+# ============================================================================
+# SISTEMA PERFECTENSCHLAG - HOOK PRE-COMMIT (GUARDIÃO DLP & LGPD)
+# Bloqueia commits contendo chaves de API reais (AIza..., ghp_...) no diff
+# ============================================================================
+DIFF_CONTENT=$(git diff --cached --unified=0)
+if echo "$DIFF_CONTENT" | grep -Eq 'AIza[0-9A-Za-z_-]{25,}|gh[po]_[0-9A-Za-z]{25,}'; then
+    echo "[BLOQUEIO DLP PERFECTENSCHLAG] Fato: Chave de API ou Token detectado no commit!"
+    echo "Remova a credencial exposta ou mova para o arquivo .env antes de commitar."
+    exit 1
+fi
+exit 0

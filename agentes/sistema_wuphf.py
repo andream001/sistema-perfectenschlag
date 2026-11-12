@@ -4,10 +4,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-import google.generativeai as genai
-
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from base_conhecimento import formatar_dossie_para_prompt
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    from base_conhecimento import genai_compat as genai
 
 SYSTEM_PROMPT = """Você é o Agente SISTEMA WUPHF.COM (Unidade de Propaganda Técnica e Dominância de Rede).
 Inspirado na onipresença implacável do WUPHF, mas refinado com precisão militar e zero firulas corporativas.
@@ -31,6 +34,7 @@ PROJETOS_MONITORADOS = [
     "Bet-Trader",
     "bet-trader-dunder",
     "assistant-to-the-lead-manager",
+    "sistema-perfectenschlag",
     "sistema_perfectenschlag",
 ]
 
@@ -65,10 +69,14 @@ def localizar_repositorios(diretorio_base: Optional[str] = None) -> Dict[str, Pa
         raizes_busca.append(Path(env_dir))
 
     home = Path.home()
+    raiz_projeto = Path(__file__).resolve().parent.parent
     raizes_busca.extend([
+        raiz_projeto.parent,
         Path.cwd(),
         Path.cwd().parent,
         home,
+        home / "OneDrive" / "Documentos",
+        home / "OneDrive" / "Documents",
         home / "Projects",
         home / "Projetos",
         home / "repos",

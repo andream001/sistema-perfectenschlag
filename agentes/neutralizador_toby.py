@@ -1,10 +1,13 @@
 import os
 import sys
 from pathlib import Path
-import google.generativeai as genai
-
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from base_conhecimento import formatar_dossie_para_prompt
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    from base_conhecimento import genai_compat as genai
 
 SYSTEM_PROMPT = """Você é o Agente Neutralizador Toby (Especialista Anti-ATS de Elite da Filial Schrute).
 Fato: O RH corporativo é o Toby Flenderson do mundo real — uma entidade burocrática, ineficiente, projetada exclusivamente para destruir sonhos, atrasar processos e filtrar talentos superiores usando algoritmos medíocres de triagem automatizada (ATS).

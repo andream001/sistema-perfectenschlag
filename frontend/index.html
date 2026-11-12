@@ -178,9 +178,12 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
       <button class="stamp" type="button" id="btnDlpToggle" onclick="alternarModoCensura()" style="border-color:var(--ok);color:var(--ok);font-weight:700" title="Filtra automaticamente nomes de empresas reais, CPFs, CNPJs, telefones e chaves de API">
         🔒 Censura & LGPD: <span id="lblDlpStatus">ATIVA</span>
       </button>
+      <button class="stamp brand" type="button" onclick="abrirModalAutoconfig()" title="Configura automaticamente Git Hooks (pre-commit DLP e post-commit WUPHF), Webhooks locais/externos e credenciais (.env)">
+        ⚙️ Ganchos, Webhooks & Credenciais: <b id="lblHooksStatus">Autoconfigurar</b>
+      </button>
       <button class="stamp brand" type="button" onclick="abrirAbaPasta('CV')">📂 Currículo & Dossiê</button>
       <button class="stamp warn" type="button" id="btnWuphfTop" onclick="filtrarWuphfPendentes()">📯 Aguardando Aval: <span id="cntWuphf">0</span></button>
-      <button class="stamp" type="button" onclick="abrirModalApi()">🔑 API Key (Só no seu Navegador): <b id="lblApiStatus">Verificar</b></button>
+      <button class="stamp" type="button" onclick="abrirModalApi()">🔑 API Key: <b id="lblApiStatus">Verificar</b></button>
     </div>
   </header>
 
@@ -300,6 +303,9 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
               Pronto para processar nova vaga com seu Dossiê Curricular Oficial.
             </span>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn" type="button" onclick="abrirModalAutoconfig()">
+                ⚙️ Central Completa (.env + Git Hooks + IMAP/SMTP)
+              </button>
               <button class="btn" type="button" onclick="document.getElementById('boxWebhookVagas').hidden=!document.getElementById('boxWebhookVagas').hidden">
                 🔌 Configurar Webhooks (Gmail / n8n / WhatsApp)
               </button>
@@ -437,6 +443,18 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
             <button class="net-btn action" type="button" onclick="salvarConfigRedes()">💾 Salvar Redes (Local)</button>
           </div>
         </div>
+
+        <!-- CARD N8N AUTOMATION HUB -->
+        <div class="net-card" style="border-color:var(--brand);background:#f3f6fa">
+          <h3><span>🔄 n8n Automation Hub (Scranton)</span> <span class="memo-tag" id="badgeN8nCard" style="color:var(--brand);border-color:var(--brand)">Pronto ✔</span></h3>
+          <p style="font-size:12px;color:var(--muted);margin:0">Docker Compose + 3 Workflows nativos prontos (Golden Ticket, WUPHF LinkedIn/YouTube e Ponte WhatsApp Cloud API).</p>
+          <input class="memo-input" id="cfgN8nBaseUrl" value="http://localhost:5678" placeholder="http://localhost:5678" />
+          <div style="display:flex;gap:6px;margin-top:auto;flex-wrap:wrap">
+            <button class="net-btn action" type="button" onclick="provisionarN8nUI(true)" style="flex:1;justify-content:center">🐳 Subir n8n + Importar</button>
+            <button class="net-btn" type="button" onclick="baixarWorkflowsN8n()" style="flex:1;justify-content:center">📥 Workflows (.json)</button>
+            <a class="net-btn" href="http://localhost:5678" target="_blank" rel="noopener" style="flex:1;justify-content:center">🌐 Abrir :5678</a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -512,6 +530,139 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
     <div style="padding:10px 14px;border-top:1px solid #d6d1c2;display:flex;justify-content:flex-end;gap:8px">
       <button class="btn" type="button" onclick="copiarModalRead()">📋 Copiar Texto</button>
       <button class="btn action" type="button" onclick="fecharModal('modalRead')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CENTRAL DE AUTOCONFIGURAÇÃO (GANCHOS GIT, WEBHOOKS & CREDENCIAIS .ENV) -->
+<div class="modal-bg" id="modalAutoconfig">
+  <div class="modal-paper" style="max-width:860px">
+    <div class="modal-top">
+      <span>⚙️ Central de Autoconfiguração: Ganchos Git, Webhooks & Credenciais (.env)</span>
+      <button class="btn" type="button" onclick="fecharModal('modalAutoconfig')">✕</button>
+    </div>
+    <div class="modal-content" style="white-space:normal;display:grid;gap:14px">
+      <div style="background:#f3f6fa;border:1.5px solid var(--brand);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <strong style="font-family:var(--f-display);font-size:14px;color:var(--brand);text-transform:uppercase">Status dos Ganchos Git & Arquivo .env Local</strong>
+          <div id="acStatusResumo" style="font-size:12px;color:var(--muted)">Verificando ganchos pre-commit (DLP/LGPD) e post-commit (Gatilho WUPHF/Mose)...</div>
+        </div>
+        <button class="btn ok" type="button" id="btnExecAutoconfig" onclick="executarAutoconfigCompletaUI()">
+          ⚡ Autoconfigurar Tudo & Salvar .env
+        </button>
+      </div>
+
+      <!-- 1. CREDENCIAIS .ENV -->
+      <div style="border:1.5px solid var(--ink);padding:12px;background:#fff;display:grid;gap:10px">
+        <strong style="font-family:var(--f-display);font-size:13.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink)">
+          1. Credenciais de IA & E-mail (Persistidas localmente em <code>.env</code> — Ignoradas pelo Git)
+        </strong>
+        <div class="cv-grid">
+          <div class="cv-field full">
+            <label>🔑 Chave Google Gemini API (GEMINI_API_KEY)</label>
+            <input type="password" class="memo-input" id="acGeminiKey" placeholder="AIzaSy... (Deixe em branco para manter a chave atual já salva)" />
+          </div>
+          <div class="cv-field">
+            <label>📬 E-mail IMAP — Vigia de Respostas (IMAP_USER)</label>
+            <input class="memo-input" id="acImapUser" placeholder="Ex: seuemail@gmail.com" />
+          </div>
+          <div class="cv-field">
+            <label>🔒 Senha de App IMAP (IMAP_APP_PASSWORD)</label>
+            <input type="password" class="memo-input" id="acImapPass" placeholder="Senha de App de 16 dígitos do Gmail" />
+          </div>
+          <div class="cv-field">
+            <label>📧 E-mail SMTP — Envio Automático após Aprovação (SMTP_USER)</label>
+            <input class="memo-input" id="acSmtpUser" placeholder="Ex: seuemail@gmail.com" />
+          </div>
+          <div class="cv-field">
+            <label>🔒 Senha de App SMTP (SMTP_APP_PASSWORD)</label>
+            <input type="password" class="memo-input" id="acSmtpPass" placeholder="Senha de App de 16 dígitos do Gmail" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. WEBHOOKS DE SAÍDA & TOKENS -->
+      <div style="border:1.5px solid var(--ink);padding:12px;background:#fff;display:grid;gap:10px">
+        <strong style="font-family:var(--f-display);font-size:13.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink)">
+          2. Webhooks de Disparo Externo & Tokens de Segurança
+        </strong>
+        <div class="cv-grid">
+          <div class="cv-field">
+            <label>🎯 Webhook Golden Ticket (Apps Script / n8n / Make)</label>
+            <input class="memo-input" id="acWhGolden" placeholder="https://script.google.com/macros/s/.../exec" />
+          </div>
+          <div class="cv-field">
+            <label>💼 Webhook LinkedIn (Auto-Post WUPHF Autorizado)</label>
+            <input class="memo-input" id="acWhLinkedin" placeholder="https://..." />
+          </div>
+          <div class="cv-field">
+            <label>▶️ Webhook YouTube Studio (Diretor Scarn)</label>
+            <input class="memo-input" id="acWhYoutube" placeholder="https://..." />
+          </div>
+          <div class="cv-field">
+            <label>💬 Webhook WhatsApp Cloud API / Evolution</label>
+            <input class="memo-input" id="acWhWhatsapp" placeholder="https://..." />
+          </div>
+          <div class="cv-field">
+            <label>🛡️ Token Secreto dos Webhooks (WEBHOOK_SECRET_TOKEN)</label>
+            <input class="memo-input" id="acWhToken" readonly />
+          </div>
+          <div class="cv-field">
+            <label>✅ Verify Token Meta WhatsApp (WHATSAPP_VERIFY_TOKEN)</label>
+            <input class="memo-input" id="acWaVerifyToken" placeholder="dunder_mifflin_scranton_verify" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. CENTRAL N8N (DOCKER COMPOSE + WORKFLOWS PRONTOS) -->
+      <div style="border:1.5px solid var(--brand);padding:12px;background:#f3f6fa;display:grid;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <strong style="font-family:var(--f-display);font-size:13.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--brand)">
+            4. Central n8n (Docker Compose + 3 Workflows Prontos & Pré-Conectados)
+          </strong>
+          <span id="acN8nStatusBadge" class="memo-tag" style="background:#fff;border-color:var(--brand);color:var(--brand)">Pronto para Uso</span>
+        </div>
+        <div id="acN8nDetails" style="font-family:var(--f-memo);font-size:11.5px;display:grid;gap:4px">
+          <div>• <b>docker-compose.n8n.yml:</b> Configurado na porta <code>5678</code> com ponte <code>host.docker.internal:8080</code></div>
+          <div>• <b>Workflows em <code>n8n/workflows/</code>:</b> Golden Ticket (CV/Gmail), WUPHF/Scarn (LinkedIn/YouTube) e Ponte WhatsApp Cloud API</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+          <button class="btn ok" type="button" style="font-size:11px;padding:5px 10px" id="btnProvisionarN8n" onclick="provisionarN8nUI(true)">
+            🐳 Subir Container n8n (Docker) & Auto-Importar Workflows
+          </button>
+          <button class="btn action" type="button" style="font-size:11px;padding:5px 10px" onclick="provisionarN8nUI(false)">
+            🔗 Conectar Webhooks ao n8n (localhost:5678)
+          </button>
+          <button class="btn" type="button" style="font-size:11px;padding:5px 10px" onclick="baixarWorkflowsN8n()">
+            📥 Baixar Pacote de Workflows n8n (.json)
+          </button>
+          <a class="btn" href="http://localhost:5678" target="_blank" rel="noopener" style="font-size:11px;padding:5px 10px;text-decoration:none">
+            🌐 Abrir Painel n8n (:5678)
+          </a>
+        </div>
+      </div>
+
+      <!-- 3. GANCHOS GIT & ENDPOINTS LOCAIS ATIVOS -->
+      <div style="border:1.5px solid var(--ink);padding:12px;background:#f7f4ea;display:grid;gap:8px">
+        <strong style="font-family:var(--f-display);font-size:13.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink)">
+          3. Webhooks Receptores da Filial & Ganchos Git Instalados
+        </strong>
+        <div id="acHooksList" style="font-family:var(--f-memo);font-size:11.5px;display:grid;gap:4px"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+          <button class="btn" type="button" style="font-size:11px;padding:4px 8px" onclick="testarWebhookLocal('GIT')">🧪 Testar Gancho Git Commit</button>
+          <button class="btn" type="button" style="font-size:11px;padding:4px 8px" onclick="testarWebhookLocal('VAGA')">🧪 Testar Webhook Nova Vaga</button>
+          <button class="btn" type="button" style="font-size:11px;padding:4px 8px" onclick="testarWebhookLocal('RECRUTADOR')">🧪 Testar Webhook Retorno Recrutador</button>
+          <button class="btn" type="button" style="font-size:11px;padding:4px 8px" onclick="testarWebhookLocal('WHATSAPP')">🧪 Testar Webhook Lead WhatsApp</button>
+          <button class="btn" type="button" style="font-size:11px;padding:4px 8px" onclick="copiarScriptGoogleApps()">📋 Copiar Script Ponte Gmail Grátis</button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;border-top:1px solid #d6d1c2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span id="acFeedbackMsg" style="font-family:var(--f-memo);font-size:11.5px;color:var(--ok)"></span>
+      <div style="display:flex;gap:8px">
+        <button class="btn" type="button" onclick="fecharModal('modalAutoconfig')">Fechar</button>
+        <button class="btn action" type="button" onclick="executarAutoconfigCompletaUI()">💾 Salvar Credenciais & Reinstalar Ganchos</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1176,12 +1327,241 @@ window.exportarCurriculo=()=>{
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dossie_gerente_regional.json';a.click();
 };
 
+let configAtual=null;
+
+function atualizarPainelAutoconfig(cfg){
+  if(!cfg)return;
+  configAtual=cfg;
+  const hooks=cfg.git_hooks||[];
+  const hooksAtivos=hooks.filter(h=>h.pre_commit_dlp&&h.post_commit_wuphf).length;
+  const lblH=document.getElementById('lblHooksStatus');
+  if(lblH){
+    lblH.textContent=hooksAtivos>0?`${hooksAtivos} Repo(s) ✔`:'Autoconfigurar';
+    lblH.style.color=hooksAtivos>0?'var(--ok)':'var(--brand)';
+  }
+  const cred=cfg.credenciais||{};
+  const whOut=cfg.webhooks_saida||{};
+  const whIn=cfg.webhooks_entrada_locais||{};
+
+  const resumoEl=document.getElementById('acStatusResumo');
+  if(resumoEl){
+    resumoEl.innerHTML=`Arquivo <code>.env</code>: <b>${cfg.env_arquivo_existe?'ATIVO ✔':'Pendente'}</b> · Gemini Key: <b>${cred.gemini_api_key_ativa?'Configurada ('+cred.gemini_api_key_mascarada+')':'Não definida'}</b> · Git Hooks ativos em <b>${hooksAtivos}/${hooks.length}</b> repositório(s).`;
+  }
+
+  const setVal=(id,v)=>{const el=document.getElementById(id);if(el&&v!==undefined)el.value=v};
+  if(cred.gemini_api_key_mascarada){
+    const gk=document.getElementById('acGeminiKey');
+    if(gk)gk.placeholder=`Chave ativa (${cred.gemini_api_key_mascarada}) — digite nova chave apenas se quiser trocar`;
+  }
+  setVal('acImapUser',cred.imap_user||'');
+  setVal('acSmtpUser',cred.smtp_user||'');
+  setVal('acWhGolden',whOut.golden_ticket_webhook_url||localStorage.getItem('PERFECTENSCHLAG_GOLDEN_WEBHOOK')||'');
+  setVal('acWhLinkedin',whOut.linkedin_webhook_url||'');
+  setVal('acWhYoutube',whOut.youtube_webhook_url||'');
+  setVal('acWhWhatsapp',whOut.whatsapp_webhook_url||'');
+  setVal('acWhToken',cred.webhook_secret_token||'');
+  setVal('acWaVerifyToken',cred.whatsapp_verify_token||'dunder_mifflin_scranton_verify');
+
+  if(whOut.golden_ticket_webhook_url){
+    localStorage.setItem('PERFECTENSCHLAG_GOLDEN_WEBHOOK',whOut.golden_ticket_webhook_url);
+    setVal('cfgGoldenWebhook',whOut.golden_ticket_webhook_url);
+  }
+  setVal('cfgLinkedinWebhook',whOut.linkedin_webhook_url||'');
+  setVal('cfgYoutubeWebhook',whOut.youtube_webhook_url||'');
+  setVal('cfgWhatsappWebhook',whOut.whatsapp_webhook_url||'');
+
+  const n8nInfo=cfg.n8n||{};
+  const bN8n=document.getElementById('acN8nStatusBadge');
+  const bN8nCard=document.getElementById('badgeN8nCard');
+  if(bN8n){
+    bN8n.textContent=n8nInfo.online?'ONLINE (:5678) ✔':'PRONTO (DOCKER / NPX)';
+    bN8n.style.color=n8nInfo.online?'var(--ok)':'var(--brand)';
+    bN8n.style.borderColor=n8nInfo.online?'var(--ok)':'var(--brand)';
+  }
+  if(bN8nCard){
+    bN8nCard.textContent=n8nInfo.online?'Online :5678 ✔':'Pronto ✔';
+    bN8nCard.style.color=n8nInfo.online?'var(--ok)':'var(--brand)';
+    bN8nCard.style.borderColor=n8nInfo.online?'var(--ok)':'var(--brand)';
+  }
+  const n8nDet=document.getElementById('acN8nDetails');
+  if(n8nDet&&n8nInfo.workflows_prontos){
+    n8nDet.innerHTML=`
+      <div>• <b>Status do Servidor n8n (${esc(n8nInfo.url_painel||'http://localhost:5678')}):</b> <b style="color:${n8nInfo.online?'var(--ok)':'var(--brand)'}">${n8nInfo.online?'ONLINE E RESPONDENDO ✔':'Pronto para subir via Docker Compose ou npx n8n'}</b></div>
+      <div>• <b>Workflows Nativos Prontos (${n8nInfo.workflows_prontos.length}):</b> <code>${n8nInfo.workflows_prontos.join('</code>, <code>')}</code></div>
+      <div>• <b>Comando Rápido Docker:</b> <code>${esc(n8nInfo.comandos?.subir_docker||'docker compose -f docker-compose.n8n.yml up -d')}</code></div>
+    `;
+  }
+
+  const listEl=document.getElementById('acHooksList');
+  if(listEl){
+    const linhasHooks=hooks.map(h=>`<div>• Repositório <b>${esc(h.repositorio)}</b>: pre-commit (DLP/LGPD): <b style="color:${h.pre_commit_dlp?'var(--ok)':'var(--rec)'}">${h.pre_commit_dlp?'ATIVO ✔':'PENDENTE'}</b> | post-commit (WUPHF/Mose): <b style="color:${h.post_commit_wuphf?'var(--ok)':'var(--rec)'}">${h.post_commit_wuphf?'ATIVO ✔':'PENDENTE'}</b></div>`).join('');
+    const linhasWh=`
+      <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cfc8b6">
+        <div>🔌 <b>Webhook Nova Vaga:</b> <code>POST ${whIn.nova_vaga||'http://localhost:8080/webhook/vaga'}</code></div>
+        <div>🔌 <b>Webhook Retorno Recrutador:</b> <code>POST ${whIn.retorno_recrutador||'http://localhost:8080/webhook/retorno-recrutador'}</code></div>
+        <div>🔌 <b>Webhook WhatsApp Cloud API:</b> <code>GET/POST ${whIn.whatsapp_lead||'http://localhost:8080/webhook/whatsapp-lead'}</code></div>
+        <div>🔌 <b>Webhook Git Commit (Automático):</b> <code>POST ${whIn.git_commit||'http://localhost:8080/webhook/git-commit'}</code></div>
+      </div>`;
+    listEl.innerHTML=linhasHooks+linhasWh;
+  }
+}
+
+window.abrirModalAutoconfig=async()=>{
+  document.getElementById('modalAutoconfig').classList.add('open');
+  if(backendOn){
+    try{
+      const r=await fetch('/api/config_completa');
+      if(r.ok){
+        const d=await r.json();
+        atualizarPainelAutoconfig(d);
+      }
+    }catch(e){}
+  }
+};
+
+window.executarAutoconfigCompletaUI=async()=>{
+  const btn=document.getElementById('btnExecAutoconfig');
+  const fb=document.getElementById('acFeedbackMsg');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Instalando Ganchos & Salvando .env...'}
+  const payload={
+    GEMINI_API_KEY:document.getElementById('acGeminiKey').value.trim(),
+    IMAP_USER:document.getElementById('acImapUser').value.trim(),
+    IMAP_APP_PASSWORD:document.getElementById('acImapPass').value.trim(),
+    SMTP_USER:document.getElementById('acSmtpUser').value.trim(),
+    SMTP_APP_PASSWORD:document.getElementById('acSmtpPass').value.trim(),
+    GOLDEN_TICKET_WEBHOOK_URL:document.getElementById('acWhGolden').value.trim(),
+    LINKEDIN_WEBHOOK_URL:document.getElementById('acWhLinkedin').value.trim(),
+    YOUTUBE_WEBHOOK_URL:document.getElementById('acWhYoutube').value.trim(),
+    WHATSAPP_WEBHOOK_URL:document.getElementById('acWhWhatsapp').value.trim(),
+    WHATSAPP_VERIFY_TOKEN:document.getElementById('acWaVerifyToken').value.trim()
+  };
+  if(payload.GEMINI_API_KEY){
+    localStorage.setItem('PERFECTENSCHLAG_GEMINI_KEY',payload.GEMINI_API_KEY);
+  }
+  if(payload.GOLDEN_TICKET_WEBHOOK_URL){
+    localStorage.setItem('PERFECTENSCHLAG_GOLDEN_WEBHOOK',payload.GOLDEN_TICKET_WEBHOOK_URL);
+    const elWh=document.getElementById('cfgGoldenWebhook');
+    if(elWh)elWh.value=payload.GOLDEN_TICKET_WEBHOOK_URL;
+  }
+  localStorage.setItem('PERFECTENSCHLAG_REDES',JSON.stringify({
+    linkedinWebhook:payload.LINKEDIN_WEBHOOK_URL,
+    youtubeWebhook:payload.YOUTUBE_WEBHOOK_URL,
+    whatsappWebhook:payload.WHATSAPP_WEBHOOK_URL
+  }));
+
+  try{
+    if(backendOn){
+      const r=await fetch('/api/autoconfigurar',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      });
+      const d=await r.json();
+      if(d.configuracao){
+        atualizarPainelAutoconfig(d.configuracao);
+      }
+      document.getElementById('acGeminiKey').value='';
+      document.getElementById('acImapPass').value='';
+      document.getElementById('acSmtpPass').value='';
+      await sincronizarBackend();
+      if(fb)fb.textContent='✅ Autoconfiguração concluída! Arquivo .env salvo e Git Hooks instalados.';
+    }else{
+      atualizarBadgeApi(Boolean(localStorage.getItem('PERFECTENSCHLAG_GEMINI_KEY')));
+      if(fb)fb.textContent='✅ Credenciais e Webhooks salvos no navegador!';
+    }
+  }catch(e){
+    if(fb)fb.textContent='⚠️ Erro ao autoconfigurar: '+e.message;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='⚡ Autoconfigurar Tudo & Salvar .env'}
+  }
+};
+
+window.provisionarN8nUI=async(iniciarDocker=true)=>{
+  const fb=document.getElementById('acFeedbackMsg');
+  const btn=document.getElementById('btnProvisionarN8n');
+  const baseInput=document.getElementById('cfgN8nBaseUrl');
+  const base=(baseInput&&baseInput.value.trim())||'http://localhost:5678';
+  if(btn&&iniciarDocker){btn.disabled=true;btn.textContent='⏳ Subindo Container n8n e Importando Workflows...'}
+  try{
+    if(backendOn){
+      const r=await fetch('/api/n8n/provisionar',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({iniciar_container:iniciarDocker,n8n_base_url:base})
+      });
+      const d=await r.json();
+      if(d.configuracao)atualizarPainelAutoconfig(d.configuracao);
+      await sincronizarBackend();
+      const logs=(d.n8n?.logs_provisionamento||[]).join(' | ');
+      if(fb)fb.textContent=`✅ n8n configurado (${base})! ${logs||'Webhooks conectados ao .env.'}`;
+    }else{
+      localStorage.setItem('PERFECTENSCHLAG_GOLDEN_WEBHOOK',`${base}/webhook/perfectenschlag-golden-ticket`);
+      if(fb)fb.textContent=`✅ URLs de Webhook do n8n (${base}) configuradas no navegador!`;
+    }
+  }catch(e){
+    if(fb)fb.textContent='⚠️ Aviso ao provisionar n8n: '+e.message;
+  }finally{
+    if(btn&&iniciarDocker){btn.disabled=false;btn.textContent='🐳 Subir Container n8n (Docker) & Auto-Importar Workflows'}
+  }
+};
+
+window.baixarWorkflowsN8n=async()=>{
+  try{
+    if(backendOn){
+      const r=await fetch('/api/n8n/workflows');
+      const d=await r.json();
+      const blob=new Blob([JSON.stringify(d.workflows||[],null,2)],{type:'application/json;charset=utf-8'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='workflows_n8n_perfectenschlag.json';
+      a.click();
+      return;
+    }
+  }catch(e){}
+  alert('Os 3 workflows estão salvos na pasta n8n/workflows/ do projeto!');
+};
+
+window.testarWebhookLocal=async tipo=>{
+  const fb=document.getElementById('acFeedbackMsg');
+  if(!backendOn){
+    if(fb)fb.textContent='⚠️ Inicie o servidor_dunder_mifflin.py para testar os webhooks locais.';
+    return;
+  }
+  try{
+    if(tipo==='GIT'){
+      await fetch('/webhook/git-commit',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({projeto:'sistema-perfectenschlag',hash:'AUTO777',autor:'Gerente Regional',mensagem:'feat(hooks): autoconfiguracao de ganchos git e webhooks da filial'})
+      });
+    }else if(tipo==='RECRUTADOR'){
+      await fetch('/webhook/retorno-recrutador',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({empresa_ou_id:'VAGA01',remetente:'tech-recruiter@empresa.com',assunto:'Convite para Entrevista Técnica',mensagem:'Olá! Vimos sua automação com economia de R$ 20 mil/ano e Docker. Vamos agendar entrevista?'})
+      });
+    }else if(tipo==='WHATSAPP'){
+      await fetch('/webhook/whatsapp-lead',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({nome:'Lead Corporativo B2B',telefone:'+5511999990000',mensagem:'Tenho interesse na consultoria de automação!',status:'interessado'})
+      });
+    }else if(tipo==='VAGA'){
+      simularRetornoWebhookRecrutador();
+    }
+    await sincronizarBackend();
+    if(fb)fb.textContent=`✅ Webhook [${tipo}] disparado e registrado no Memorando de Auditoria!`;
+  }catch(e){
+    if(fb)fb.textContent='⚠️ Falha no teste de webhook: '+e.message;
+  }
+};
+
 async function sincronizarBackend(){
   try{
     const r=await fetch('/api/status');if(!r.ok)throw new Error('off');
     const d=await r.json();backendOn=true;
     atualizarBadgeApi(d.api_key_configurada);
     auditoria=d.auditoria||[];
+    if(d.configuracao)atualizarPainelAutoconfig(d.configuracao);
+    if(Array.isArray(d.candidaturas)&&d.candidaturas.length){
+      candidaturas=d.candidaturas;
+      renderCandidaturas();
+    }
     renderAudit();
   }catch(e){
     backendOn=false;

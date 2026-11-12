@@ -1,6 +1,71 @@
 import json
+import os
+import urllib.request
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+try:
+    from autoconfigurador_scranton import carregar_env_local
+    carregar_env_local()
+except Exception:
+    pass
+
+
+class _CompatResponse:
+    def __init__(self, text: str) -> None:
+        self.text = text
+
+
+class _CompatGenerativeModel:
+    def __init__(
+        self,
+        model_name: str = "gemini-2.5-flash",
+        system_instruction: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
+        self.model_name = model_name
+        self.system_instruction = system_instruction
+
+    def generate_content(self, prompt: str, **kwargs: Any) -> _CompatResponse:
+        api_key = _CompatGenAI._api_key or os.environ.get("GEMINI_API_KEY", "")
+        url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{self.model_name}:generateContent?key={api_key}"
+        )
+        payload: Dict[str, Any] = {
+            "contents": [{"parts": [{"text": str(prompt)}]}],
+        }
+        if self.system_instruction:
+            payload["systemInstruction"] = {
+                "parts": [{"text": str(self.system_instruction)}]
+            }
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            dados = json.loads(resp.read().decode("utf-8"))
+        candidatos = dados.get("candidates", [])
+        if candidatos:
+            partes = candidatos[0].get("content", {}).get("parts", [])
+            texto = "".join(p.get("text", "") for p in partes)
+            return _CompatResponse(texto)
+        return _CompatResponse("")
+
+
+class _CompatGenAI:
+    _api_key: str = ""
+    GenerativeModel = _CompatGenerativeModel
+
+    @classmethod
+    def configure(cls, api_key: str = "", **kwargs: Any) -> None:
+        cls._api_key = api_key
+
+
+genai_compat = _CompatGenAI()
+
 
 ARQUIVO_PERFIL = Path(__file__).resolve().parent / "perfil_gerente.json"
 

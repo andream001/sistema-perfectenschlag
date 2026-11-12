@@ -1,0 +1,109 @@
+{
+  "name": "Perfectenschlag 01 — Golden Ticket (Envio CV Aprovado & Vigia Gmail)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "perfectenschlag-golden-ticket",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Webhook Golden Ticket",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "perfectenschlag-golden-ticket"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-enviar-cv",
+              "leftValue": "={{ $json.body ? $json.body.acao : $json.acao }}",
+              "rightValue": "ENVIAR_CANDIDATURA_APROVADA",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000002",
+      "name": "É Disparo Aprovado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/webhook/retorno-recrutador",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"empresa_ou_id\": \"{{ $json.body ? $json.body.id : $json.id }}\",\n  \"remetente\": \"n8n-golden-ticket@scranton.local\",\n  \"assunto\": \"Candidatura processada pelo n8n ({{ $json.body ? $json.body.cargo_empresa : $json.cargo_empresa }})\",\n  \"mensagem\": \"Currículo aprovado pelo Gerente Regional recebido no n8n e encaminhado para o canal {{ $json.body ? $json.body.destinatario : $json.destinatario }}.\"\n}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000003",
+      "name": "Confirmar Envio na Filial Scranton",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    ok: true,\n    origem: 'n8n_golden_ticket',\n    mensagens: []\n  }\n}];"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000004",
+      "name": "Retornar Status Inbox Vigia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 420]
+    }
+  ],
+  "connections": {
+    "Webhook Golden Ticket": {
+      "main": [
+        [
+          {
+            "node": "É Disparo Aprovado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É Disparo Aprovado?": {
+      "main": [
+        [
+          {
+            "node": "Confirmar Envio na Filial Scranton",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Retornar Status Inbox Vigia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
+

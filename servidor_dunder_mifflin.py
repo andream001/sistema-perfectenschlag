@@ -6,7 +6,17 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Dict
+from urllib.parse import parse_qs, urlparse
 
+from autoconfigurador_scranton import (
+    carregar_env_local,
+    carregar_pacote_workflows_n8n,
+    executar_autoconfiguracao_completa,
+    obter_diagnostico_configuracao,
+    obter_status_n8n,
+    provisionar_n8n_docker,
+    salvar_credenciais_env,
+)
 from auditoria import (
     atualizar_status_auditoria,
     listar_auditoria,
@@ -64,8 +74,41 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
             self.wfile.write(conteudo)
             return
 
+        if self.path.startswith("/webhook/whatsapp-lead"):
+            parsed = urlparse(self.path)
+            qs = parse_qs(parsed.query)
+            mode = (qs.get("hub.mode") or [""])[0]
+            token = (qs.get("hub.verify_token") or [""])[0]
+            challenge = (qs.get("hub.challenge") or [""])[0]
+            expected = os.environ.get("WHATSAPP_VERIFY_TOKEN", "dunder_mifflin_scranton_verify")
+            if mode == "subscribe" and token == expected:
+                corpo_ch = challenge.encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.send_header("Content-Length", str(len(corpo_ch)))
+                self.end_headers()
+                self.wfile.write(corpo_ch)
+                return
+            self._enviar_json({"ok": True, "webhook": "WhatsApp Cloud API Receiver Online"})
+            return
+
+        if self.path.startswith("/api/n8n/workflows"):
+            self._enviar_json({
+                "ok": True,
+                "status_n8n": obter_status_n8n(),
+                "workflows": carregar_pacote_workflows_n8n(),
+            })
+            return
+
+        if self.path.startswith("/api/config_completa"):
+            repos_obj = localizar_repositorios()
+            self._enviar_json(obter_diagnostico_configuracao(repos_obj))
+            return
+
         if self.path.startswith("/api/status"):
-            repos = {k: str(v) for k, v in localizar_repositorios().items()}
+            carregar_env_local()
+            repos_obj = localizar_repositorios()
+            repos = {k: str(v) for k, v in repos_obj.items()}
             historico = listar_auditoria()
             pendentes_wuphf = [
                 r for r in historico if r.get("status") == "AGUARDANDO_AUTORIZACAO"
@@ -81,6 +124,7 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
                 "auditoria": historico,
                 "perfil": carregar_perfil_gerente(),
                 "candidaturas": carregar_candidaturas(),
+                "configuracao": obter_diagnostico_configuracao(repos_obj),
             })
             return
 
@@ -194,6 +238,81 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
             self._enviar_json({"ok": True, "evento": evento})
             return
 
+        if self.path == "/webhook/git-commit":
+            projeto = str(payload.get("projeto", "Repositorio Local")).strip()
+            commit_hash = str(payload.get("hash", "")).strip()
+            autor = str(payload.get("autor", "Gerente Regional")).strip()
+            mensagem = str(payload.get("mensagem", "")).strip()
+            evento_mose = registrar_evento_auditoria(
+                agente="OPERADOR_MOSE",
+                acao="GIT_HOOK_POST_COMMIT",
+                entrada=f"{projeto} [{commit_hash}] por {autor}",
+                saida=f"Commit detectado automaticamente pelo Git Hook da Filial:\n{mensagem}",
+                status="CONCLUIDO",
+            )
+            evento_wuphf = None
+            if os.environ.get("GEMINI_API_KEY") and mensagem:
+                try:
+                    rascunho = executar_sistema_wuphf(
+                        commit_manual=f"[{commit_hash}] {mensagem}",
+                        projeto_manual=projeto,
+                    )
+                    evento_wuphf = registrar_evento_auditoria(
+                        agente="SISTEMA_WUPHF",
+                        acao="AUTO_RASCUNHO_POR_GIT_HOOK",
+                        entrada=f"{projeto}: {mensagem}",
+                        saida=rascunho,
+                        status="AGUARDANDO_AUTORIZACAO",
+                        requer_autorizacao=True,
+                    )
+                except Exception:
+                    pass
+            self._enviar_json({"ok": True, "evento_mose": evento_mose, "evento_wuphf": evento_wuphf})
+            return
+
+        if self.path == "/api/autoconfigurar":
+            repos_obj = localizar_repositorios()
+            diagnostico = executar_autoconfiguracao_completa(
+                novas_credenciais=payload,
+                repositorios_detectados=repos_obj,
+            )
+            hooks_ok = sum(1 for h in diagnostico.get("git_hooks", []) if h.get("pre_commit_dlp") and h.get("post_commit_wuphf"))
+            registrar_evento_auditoria(
+                agente="ORQUESTRADOR_REGIONAL",
+                acao="AUTOCONFIGURACAO_GANCHOS_WEBHOOKS_CREDENCIAIS",
+                entrada="Autoconfiguração de .env, Webhooks e Git Hooks da Filial Scranton",
+                saida=(
+                    f"Arquivo .env persistido | Gemini API Key: {'ATIVA' if diagnostico['credenciais']['gemini_api_key_ativa'] else 'PENDENTE'} | "
+                    f"IMAP/SMTP: {'CONFIGURADO' if diagnostico['credenciais']['imap_user'] or diagnostico['credenciais']['smtp_user'] else 'OPCIONAL'} | "
+                    f"Git Hooks (pre-commit DLP + post-commit WUPHF) ativos em {hooks_ok} repositório(s)."
+                ),
+                status="CONCLUIDO",
+            )
+            self._enviar_json({"ok": True, "configuracao": diagnostico})
+            return
+
+        if self.path == "/api/n8n/provisionar":
+            iniciar_docker = bool(payload.get("iniciar_container", True))
+            n8n_url = str(payload.get("n8n_base_url", "http://localhost:5678")).strip()
+            res_n8n = provisionar_n8n_docker(
+                iniciar_container=iniciar_docker,
+                n8n_base_url=n8n_url,
+            )
+            diagnostico = obter_diagnostico_configuracao(localizar_repositorios())
+            registrar_evento_auditoria(
+                agente="ORQUESTRADOR_REGIONAL",
+                acao="PROVISIONAMENTO_N8N_FILIAL",
+                entrada=f"n8n Base URL: {n8n_url} | Subir Docker: {iniciar_docker}",
+                saida=(
+                    f"Webhooks n8n pré-conectados no .env ({n8n_url}/webhook/perfectenschlag-*) | "
+                    f"Workflows prontos: {', '.join(res_n8n.get('workflows_prontos', []))} | "
+                    f"Logs: {'; '.join(res_n8n.get('logs_provisionamento', ['URLs salvas']))}"
+                ),
+                status="CONCLUIDO",
+            )
+            self._enviar_json({"ok": True, "n8n": res_n8n, "configuracao": diagnostico})
+            return
+
         if self.path == "/api/perfil":
             perfil_salvo = salvar_perfil_gerente(payload)
             registrar_evento_auditoria(
@@ -214,15 +333,15 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
                     status_code=400,
                 )
                 return
-            os.environ["GEMINI_API_KEY"] = chave
+            salvar_credenciais_env({"GEMINI_API_KEY": chave})
             registrar_evento_auditoria(
                 agente="ORQUESTRADOR_REGIONAL",
                 acao="CONFIGURACAO_API_KEY",
-                entrada="GEMINI_API_KEY injetada via HUD AgentCraft",
-                saida="Chave de API validada e ativa na sessão da filial.",
+                entrada="GEMINI_API_KEY injetada e persistida no .env via HUD AgentCraft",
+                saida="Chave de API validada, salva em .env e ativa na sessão da filial.",
                 status="CONCLUIDO",
             )
-            self._enviar_json({"ok": True, "mensagem": "GEMINI_API_KEY ativada com sucesso."})
+            self._enviar_json({"ok": True, "mensagem": "GEMINI_API_KEY salva no .env e ativada com sucesso."})
             return
 
         if self.path == "/api/executar":
@@ -380,6 +499,13 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
 
 
 def iniciar_servidor_agentcraft(porta: int = 8080, abrir_navegador: bool = True) -> None:
+    try:
+        executar_autoconfiguracao_completa(
+            repositorios_detectados=localizar_repositorios(),
+            porta=porta,
+        )
+    except Exception:
+        pass
     endereco = ("127.0.0.1", porta)
     httpd = HTTPServer(endereco, DunderMifflinRTSHandler)
     url = f"http://localhost:{porta}"

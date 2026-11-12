@@ -1,0 +1,30 @@
+#!/bin/sh
+# ============================================================================
+# SISTEMA PERFECTENSCHLAG - HOOK POST-COMMIT (GATILHO AUTOMÁTICO WUPHF & MOSE)
+# Envia telemetria do commit recém-criado para a Filial Scranton (porta 8080)
+# ============================================================================
+REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null)
+COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an' 2>/dev/null)
+COMMIT_MSG=$(git log -1 --pretty=format:'%s' 2>/dev/null)
+
+python -c "
+import json, urllib.request
+payload = {
+    'projeto': '''$REPO_NAME''',
+    'hash': '''$COMMIT_HASH''',
+    'autor': '''$COMMIT_AUTHOR''',
+    'mensagem': '''$COMMIT_MSG'''
+}
+try:
+    req = urllib.request.Request(
+        'http://127.0.0.1:8080/webhook/git-commit',
+        data=json.dumps(payload).encode('utf-8'),
+        headers={'Content-Type': 'application/json'},
+        method='POST'
+    )
+    urllib.request.urlopen(req, timeout=2)
+except Exception:
+    pass
+" >/dev/null 2>&1 &
+exit 0

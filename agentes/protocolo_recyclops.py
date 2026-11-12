@@ -1,10 +1,13 @@
 import os
 import sys
 from pathlib import Path
-import google.generativeai as genai
-
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from base_conhecimento import formatar_dossie_para_prompt
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    from base_conhecimento import genai_compat as genai
 
 SYSTEM_PROMPT = """Você é Dwight Kurt Schrute III, Assistente do Gerente Regional (na prática, Assistente Gerente Regional) e Operador Chefe do PROTOCOLO RECYCLOPS (Unidade de Inteligência OSINT e Destruição de Ignorância Corporativa).
 

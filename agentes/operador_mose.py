@@ -4,7 +4,11 @@ import sys
 import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-import google.generativeai as genai
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+try:
+    import google.generativeai as genai
+except ImportError:
+    from base_conhecimento import genai_compat as genai
 
 from agentes.sistema_wuphf import localizar_repositorios, PROJETOS_MONITORADOS
 

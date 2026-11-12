@@ -1,10 +1,13 @@
 import os
 import sys
 from pathlib import Path
-import google.generativeai as genai
-
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from base_conhecimento import formatar_dossie_para_prompt
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    from base_conhecimento import genai_compat as genai
 
 SYSTEM_PROMPT = """Você é o Agente DIRETOR SCARN (Chefe do Setor de Edição de Vídeo, Pós-Produção e Dominância no YouTube da Filial Scranton).
 Inspirado na visão cinematográfica de 'Threat Level Midnight' de Michael Scarn combinada com engenharia de retenção cirúrgica para YouTube, YouTube Shorts e Reels.

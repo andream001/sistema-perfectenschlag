@@ -1,12 +1,16 @@
 import os
 import sys
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+except ImportError:
+    from base_conhecimento import genai_compat as genai
 
 from agentes.neutralizador_toby import executar_neutralizador_toby
 from agentes.protocolo_recyclops import executar_protocolo_recyclops
-from agentes.sistema_wuphf import executar_sistema_wuphf, solicitar_autorizacao_gerente
+from agentes.sistema_wuphf import executar_sistema_wuphf, localizar_repositorios, solicitar_autorizacao_gerente
 from agentes.operador_mose import executar_operador_mose
 from agentes.estudio_scarn_youtube import executar_estudio_youtube
+from autoconfigurador_scranton import executar_autoconfiguracao_completa
 from servidor_dunder_mifflin import iniciar_servidor_agentcraft
 
 SYSTEM_PROMPT_ORQUESTRADOR = """Você é o Orquestrador Regional do Sistema Perfectenschlag.
@@ -36,6 +40,7 @@ def exibir_banner() -> None:
     print(" [5] ESTÚDIO YOUTUBE      -> Edição de Vídeo, Roteiro, Shorts & Postagem (EXIGE AVAL)")
     print(" [6] BRIEFING DO GERENTE  -> Despacho Direto do Orquestrador Regional")
     print(" [7] FRONT-END AGENTCRAFT -> Abrir Escritório Dunder Mifflin + Redes & Auditoria")
+    print(" [8] AUTOCONFIGURAR       -> Configurar Ganchos Git, Webhooks & Credenciais (.env)")
     print(" [0] ENCERRAR EXPEDIENTE  -> Fechar a filial com eficiência máxima")
     print("=" * 76)
 
@@ -150,6 +155,29 @@ def menu_principal() -> None:
         elif escolha == "7":
             print("\n--- [INICIANDO INTERFACE RTS AGENTCRAFT: DUNDER MIFFLIN SCRANTON] ---")
             iniciar_servidor_agentcraft(porta=8080, abrir_navegador=True)
+
+        elif escolha == "8":
+            print("\n--- [AUTOCONFIGURADOR DE GANCHOS, WEBHOOKS & CREDENCIAIS (.ENV)] ---")
+            g_key = input("GEMINI_API_KEY (Enter para manter atual): ").strip()
+            imap_u = input("IMAP_USER / Gmail para Vigia de Vagas (Enter para pular): ").strip()
+            imap_p = input("IMAP_APP_PASSWORD (Enter para pular): ").strip()
+            wh_gold = input("URL Webhook Golden Ticket / Apps Script / n8n (Enter para pular): ").strip()
+            diag = executar_autoconfiguracao_completa(
+                novas_credenciais={
+                    "GEMINI_API_KEY": g_key,
+                    "IMAP_USER": imap_u,
+                    "IMAP_APP_PASSWORD": imap_p,
+                    "SMTP_USER": imap_u,
+                    "SMTP_APP_PASSWORD": imap_p,
+                    "GOLDEN_TICKET_WEBHOOK_URL": wh_gold,
+                },
+                repositorios_detectados=localizar_repositorios(),
+            )
+            print("\n[AUTOCONFIGURAÇÃO CONCLUÍDA COM SUCESSO]")
+            print(f" - Arquivo .env: {diag['caminho_env']}")
+            print(f" - Token Secreto Webhook: {diag['credenciais']['webhook_secret_token']}")
+            for h in diag.get("git_hooks", []):
+                print(f" - Git Hooks ({h['repositorio']}): pre-commit={h['pre_commit_dlp']} | post-commit={h['post_commit_wuphf']}")
 
         elif escolha == "0":
             print("\nFato: O Perfectenschlag foi alcançado. Filial trancada. Urso, beterrabas, Battlestar Galactica.")

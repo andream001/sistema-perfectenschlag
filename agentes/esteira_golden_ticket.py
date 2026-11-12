@@ -11,11 +11,14 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-import google.generativeai as genai
-
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from base_conhecimento import formatar_dossie_para_prompt
 from sanitizador_seguranca import censurar_dados_sensiveis
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    from base_conhecimento import genai_compat as genai
 
 ARQUIVO_CANDIDATURAS = Path(__file__).resolve().parent.parent / "candidaturas_golden_ticket.json"
 
@@ -215,6 +218,57 @@ def decidir_envio_candidatura(
                 c.setdefault("alertas_monitoramento", []).append(
                     f"[{c['autorizado_em']}] ✅ ENVIO AUTORIZADO PELO GERENTE REGIONAL. Monitoramento contínuo iniciado."
                 )
+
+                destinatario = str(c.get("link_ou_email", "")).strip()
+                smtp_user = os.environ.get("SMTP_USER", "").strip()
+                smtp_pass = os.environ.get("SMTP_APP_PASSWORD", "").strip()
+                smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
+                smtp_port = int(os.environ.get("SMTP_PORT", "587") or 587)
+
+                if smtp_user and smtp_pass and "@" in destinatario and not destinatario.startswith("http"):
+                    try:
+                        msg = MIMEMultipart()
+                        msg["From"] = smtp_user
+                        msg["To"] = destinatario
+                        msg["Subject"] = f"Candidatura: {c.get('cargo_empresa', 'Vaga Técnica')}"
+                        msg.attach(MIMEText(c.get("curriculo_moldado", ""), "plain", "utf-8"))
+                        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as srv:
+                            srv.starttls()
+                            srv.login(smtp_user, smtp_pass)
+                            srv.send_message(msg)
+                        c["alertas_monitoramento"].append(
+                            f"[{c['autorizado_em']}] 📧 E-mail enviado automaticamente via SMTP ({smtp_user} -> {destinatario})."
+                        )
+                    except Exception as exc_smtp:
+                        c["alertas_monitoramento"].append(
+                            f"[{c['autorizado_em']}] ⚠️ Aviso SMTP ({smtp_host}): {exc_smtp}"
+                        )
+
+                wh_url = os.environ.get("GOLDEN_TICKET_WEBHOOK_URL", "").strip()
+                if wh_url:
+                    try:
+                        payload_wh = json.dumps({
+                            "acao": "ENVIAR_CANDIDATURA_APROVADA",
+                            "id": c.get("id"),
+                            "cargo_empresa": c.get("cargo_empresa"),
+                            "destinatario": destinatario,
+                            "curriculo_moldado": c.get("curriculo_moldado"),
+                            "autorizado_em": c["autorizado_em"],
+                        }).encode("utf-8")
+                        req_wh = urllib.request.Request(
+                            wh_url,
+                            data=payload_wh,
+                            headers={"Content-Type": "application/json; charset=utf-8"},
+                            method="POST",
+                        )
+                        urllib.request.urlopen(req_wh, timeout=10)
+                        c["alertas_monitoramento"].append(
+                            f"[{c['autorizado_em']}] 🔌 Webhook Golden Ticket disparado pelo servidor ({wh_url[:45]})."
+                        )
+                    except Exception as exc_wh:
+                        c["alertas_monitoramento"].append(
+                            f"[{c['autorizado_em']}] ⚠️ Aviso no Webhook de saída: {exc_wh}"
+                        )
             elif dec == "VETAR":
                 c["status"] = "VETADO"
             elif dec == "ENTREVISTA":
