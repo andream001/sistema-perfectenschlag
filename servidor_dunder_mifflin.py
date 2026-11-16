@@ -39,9 +39,21 @@ from agentes.esteira_golden_ticket import (
     registrar_retorno_webhook,
     verificar_status_vaga_E_email,
 )
+from agentes.assistant_lead_manager import (
+    adicionar_ou_importar_leads,
+    atualizar_status_lead_manual,
+    calcular_metricas_leads,
+    carregar_config_lead_manager,
+    carregar_leads_csv,
+    disparar_lote_campanha,
+    gerar_script_abordagem_ia,
+    processar_mensagem_webhook_lead,
+    salvar_config_lead_manager,
+)
 
 DIRETORIO_BASE = Path(__file__).resolve().parent
 ARQUIVO_FRONTEND = DIRETORIO_BASE / "frontend" / "index.html"
+ARQUIVO_LEAD_MANAGER = DIRETORIO_BASE / "frontend" / "lead_manager.html"
 
 
 class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
@@ -72,6 +84,28 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(conteudo)))
             self.end_headers()
             self.wfile.write(conteudo)
+            return
+
+        if self.path.startswith("/lead-manager") or self.path.startswith("/lead_manager.html"):
+            if not ARQUIVO_LEAD_MANAGER.exists():
+                self.send_error(404, "Frontend Lead Manager nao encontrado.")
+                return
+            conteudo = ARQUIVO_LEAD_MANAGER.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(conteudo)))
+            self.end_headers()
+            self.wfile.write(conteudo)
+            return
+
+        if self.path.startswith("/api/leads/status"):
+            leads = carregar_leads_csv()
+            self._enviar_json({
+                "ok": True,
+                "leads": leads,
+                "metricas": calcular_metricas_leads(leads),
+                "config": carregar_config_lead_manager(),
+            })
             return
 
         if self.path.startswith("/webhook/whatsapp-lead"):
@@ -227,15 +261,72 @@ class DunderMifflinRTSHandler(BaseHTTPRequestHandler):
             telefone = str(payload.get("phone", payload.get("telefone", ""))).strip()
             nome = str(payload.get("name", payload.get("nome", "Lead WhatsApp"))).strip()
             msg = str(payload.get("text", payload.get("mensagem", ""))).strip()
-            status_lead = str(payload.get("status", "respondeu")).strip()
+            triagem = processar_mensagem_webhook_lead(telefone=telefone, mensagem=msg, nome_remetente=nome)
+            classif = triagem.get("classificacao", "RESPONDEU")
             evento = registrar_evento_auditoria(
-                agente="SISTEMA_WUPHF",
-                acao=f"WEBHOOK_WHATSAPP_LEAD_{status_lead.upper()}",
-                entrada=f"{nome} ({telefone})",
-                saida=f"Mensagem recebida no WhatsApp: {msg}",
+                agente="ASSISTANT_LEAD_MANAGER",
+                acao=f"WEBHOOK_WHATSAPP_LEAD_{classif}",
+                entrada=f"{nome} ({triagem['lead'].get('telefone_normalizado', telefone)})",
+                saida=f"Mensagem do Lead: {msg}\nClassificação: {classif}\nAuto-Resposta: {triagem.get('auto_resposta', '')}",
                 status="CONCLUIDO",
             )
-            self._enviar_json({"ok": True, "evento": evento})
+            self._enviar_json({"ok": True, "evento": evento, "triagem": triagem})
+            return
+
+        if self.path == "/api/leads/importar":
+            res = adicionar_ou_importar_leads(
+                novos_leads=payload.get("leads"),
+                csv_texto=payload.get("csv_texto"),
+            )
+            registrar_evento_auditoria(
+                agente="ASSISTANT_LEAD_MANAGER",
+                acao="IMPORTACAO_BASE_LEADS_CSV",
+                entrada=f"Adicionados: {res['adicionados']} | Duplicados ignorados: {res['ignorados_duplicados']}",
+                saida=f"Base CSV persistida atomicamente (.tmp -> .csv). Total na fila: {res['total_atual']} leads.",
+                status="CONCLUIDO",
+            )
+            self._enviar_json({"ok": True, "resultado": res, "leads": carregar_leads_csv()})
+            return
+
+        if self.path == "/api/leads/disparar":
+            qtd = int(payload.get("quantidade", 10) or 10)
+            modo = payload.get("modo")
+            res = disparar_lote_campanha(quantidade=qtd, modo_forcado=modo)
+            registrar_evento_auditoria(
+                agente="ASSISTANT_LEAD_MANAGER",
+                acao=f"DISPARO_CAMPANHA_{res['modo_utilizado']}",
+                entrada=f"Lote solicitado: {qtd} leads",
+                saida=f"Disparados com sucesso: {res['disparados']} | Erros: {res['erros']} (Persistência atômica CSV)",
+                status="CONCLUIDO",
+            )
+            self._enviar_json({"ok": True, "resultado": res, "leads": carregar_leads_csv()})
+            return
+
+        if self.path == "/api/leads/config":
+            cfg = salvar_config_lead_manager(payload)
+            self._enviar_json({"ok": True, "config": cfg})
+            return
+
+        if self.path == "/api/leads/status-manual":
+            atualizado = atualizar_status_lead_manual(
+                lead_id=str(payload.get("id", "")),
+                novo_status=str(payload.get("status", "PENDENTE")),
+            )
+            leads = carregar_leads_csv()
+            self._enviar_json({
+                "ok": True,
+                "lead": atualizado,
+                "leads": leads,
+                "metricas": calcular_metricas_leads(leads),
+            })
+            return
+
+        if self.path == "/api/leads/gerar-script":
+            script_ia = gerar_script_abordagem_ia(
+                segmento_alvo=str(payload.get("segmento", "Corporativo B2B")),
+                objetivo=str(payload.get("objetivo", "")),
+            )
+            self._enviar_json({"ok": True, "script": script_ia})
             return
 
         if self.path == "/webhook/git-commit":

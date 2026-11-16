@@ -205,8 +205,11 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
     <a class="net-btn gh" href="https://github.com/andream001" target="_blank" rel="noopener">
       <span class="net-dot"></span> 🐙 GitHub (andream001)
     </a>
+    <a class="net-btn wa" href="http://localhost:5000" target="_blank" rel="noopener">
+      <span class="net-dot"></span> 💬 Lead Manager Web (:5000)
+    </a>
     <button class="net-btn wa" type="button" onclick="abrirAbaPasta('NET')">
-      <span class="net-dot"></span> 💬 WhatsApp Cloud API
+      ⚙️ Redes & n8n
     </button>
   </nav>
 
@@ -1256,8 +1259,6 @@ function censurarTexto(str){
   s=s.replace(/gh[po]_[0-9A-Za-z]{20,}/g,'[GITHUB_TOKEN_PROTEGIDO]');
   s=s.replace(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,'[CPF_CENSURADO]');
   s=s.replace(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g,'[CNPJ_CENSURADO]');
-  s=s.replace(/\bUnimed\b/gi,'[OPERADORA_SAUDE_CONFIDENCIAL]');
-  s=s.replace(/\bSG Sistemas\b/gi,'[EMPRESA_ERP_CONFIDENCIAL]');
   return s;
 }
 

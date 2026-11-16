@@ -3,10 +3,8 @@ from typing import List
 
 # Lista de nomes corporativos reais ou clientes que devem ser censurados em logs/outputs públicos
 TERMOS_CONFIDENCIAIS: List[str] = [
-    "Unimed",
-    "unimed",
-    "SG Sistemas",
-    "sg sistemas",
+    "OperadoraSaudeX",
+    "EmpresaErpY",
 ]
 
 
@@ -28,9 +26,9 @@ def censurar_dados_sensiveis(texto: str) -> str:
     resultado = re.sub(r"\b\d{3}\.\d{3}\.\d{3}-\d{2}\b", "[CPF_CENSURADO]", resultado)
     resultado = re.sub(r"\b\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b", "[CNPJ_CENSURADO]", resultado)
 
-    # 3. Censura nomes de empresas clientes reais
-    resultado = re.sub(r"\bUnimed\b", "[OPERADORA_SAUDE_CONFIDENCIAL]", resultado, flags=re.IGNORECASE)
-    resultado = re.sub(r"\bSG Sistemas\b", "[EMPRESA_ERP_CONFIDENCIAL]", resultado, flags=re.IGNORECASE)
+    # 3. Censura nomes de empresas clientes reais configuradas via ambiente
+    for termo in TERMOS_CONFIDENCIAIS:
+        resultado = re.sub(rf"\b{re.escape(termo)}\b", "[EMPRESA_CONFIDENCIAL]", resultado, flags=re.IGNORECASE)
 
     return resultado
 

@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistant-to-the-Lead-Manager · Central B2B WhatsApp Cloud API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Courier+Prime:wght@400;700&family=Libre+Franklin:wght@400;600;800&display=swap">
+<style>
+:root{
+  --paper:#fbfaf5; --wall:#e9e4d6; --ink:#24292e; --muted:#5f6670;
+  --brand:#1f4e8c; --wa:#128c7e; --rec:#e23b2e; --ok:#1f6f43; --warn:#b86b11;
+  --f-display:"Archivo Narrow","Arial Narrow",Arial,sans-serif;
+  --f-body:"Libre Franklin","Franklin Gothic Medium",Arial,sans-serif;
+  --f-memo:"Courier Prime","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 20px 42px;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:var(--paper);border:2px solid var(--ink);padding:12px 16px;box-shadow:0 3px 0 #d6d1c2}
+.brand-box{display:flex;align-items:center;gap:12px}
+.mark{width:46px;height:46px;border:3px solid var(--wa);background:#e8f6f3;color:var(--wa);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:19px}
+.brand-box h1{margin:0;font-family:var(--f-display);font-size:clamp(20px,2.6vw,27px);color:var(--ink);text-transform:uppercase;letter-spacing:.6px}
+.brand-box p{margin:3px 0 0;font-family:var(--f-memo);font-size:11.5px;color:var(--muted)}
+.top-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.btn{font-family:var(--f-display);font-size:13px;letter-spacing:.7px;text-transform:uppercase;font-weight:700;border:2px solid var(--ink);background:#fff;color:var(--ink);padding:7px 12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--ink);color:#fff}
+.btn.wa{border-color:var(--wa);color:var(--wa)}
+.btn.wa:hover{background:var(--wa);color:#fff}
+.btn.brand{border-color:var(--brand);color:var(--brand)}
+.btn.brand:hover{background:var(--brand);color:#fff}
+.btn.ok{border-color:var(--ok);background:var(--ok);color:#fff}
+.btn.ok:hover{opacity:.92}
+.btn.danger{border-color:var(--rec);color:var(--rec)}
+.btn.danger:hover{background:var(--rec);color:#fff}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{background:var(--paper);border:2px solid var(--ink);padding:12px 14px;box-shadow:2px 2px 0 #d6d1c2;display:flex;flex-direction:column;gap:4px}
+.kpi span{font-family:var(--f-display);font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700}
+.kpi strong{font-family:var(--f-display);font-size:28px;line-height:1}
+.kpi small{font-family:var(--f-memo);font-size:11px;color:var(--muted)}
+
+.main-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start}
+@media (max-width:960px){.main-grid{grid-template-columns:1fr}}
+.card{background:var(--paper);border:2px solid var(--ink);padding:15px;box-shadow:0 3px 0 #d6d1c2;display:grid;gap:12px}
+.card h2{margin:0;font-family:var(--f-display);font-size:15px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid var(--ink);padding-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.tag{font-family:var(--f-memo);font-size:11px;padding:2px 7px;border:1.5px solid var(--ink);background:#fff;font-weight:700}
+
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:680px){.field-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:4px}
+.field.full{grid-column:1 / -1}
+.field label{font-family:var(--f-display);font-size:12px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:var(--brand)}
+.inp,.ta{width:100%;font-family:var(--f-memo);font-size:12px;padding:8px;border:1.5px solid var(--ink);background:#fff;color:var(--ink)}
+.ta{resize:vertical;line-height:1.45}
+
+.table-wrap{overflow-x:auto;border:1.5px solid var(--ink);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:9px 10px;border-bottom:1px solid #e2ddd0;text-align:left;vertical-align:top}
+th{background:#f1eee3;font-family:var(--f-display);font-size:12px;letter-spacing:.9px;text-transform:uppercase;border-bottom:2px solid var(--ink)}
+tr:hover td{background:#faf8f2}
+.st-badge{font-family:var(--f-display);font-size:11px;font-weight:700;letter-spacing:.8px;padding:2px 7px;border:1.5px solid var(--ink);display:inline-block;text-transform:uppercase}
+.st-INTERESSADO{border-color:var(--ok);color:var(--ok);background:#eaf7ef}
+.st-ENVIADO{border-color:var(--brand);color:var(--brand);background:#eef4fb}
+.st-PENDENTE{border-color:var(--warn);color:var(--warn);background:#fff9eb}
+.st-OPT_OUT{border-color:var(--rec);color:var(--rec);background:#fdf0ef}
+.st-DUVIDA{border-color:#7c3aed;color:#7c3aed;background:#f5f0ff}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand-box">
+      <div class="mark">WA</div>
+      <div>
+        <h1>Assistant-to-the-Lead-Manager · Central B2B WhatsApp Cloud API</h1>
+        <p>Persistência Atômica CSV (.tmp -> .csv) · Normalização DDI +55 & 9º Dígito · Warm-Up Anti-Ban & Triagem Webhook</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <a class="btn" href="/">🏢 Voltar ao Escritório AgentCraft</a>
+      <button class="btn wa" type="button" onclick="exportarCsvLeads()">📥 Baixar Base (.CSV)</button>
+      <a class="btn brand" href="https://github.com/andream001/assistant-to-the-lead-manager" target="_blank" rel="noopener">🐙 Repositório GitHub</a>
+    </div>
+  </header>
+
+  <!-- KPIs EM TEMPO REAL -->
+  <section class="kpi-grid">
+    <div class="kpi">
+      <span>Total na Base CSV</span>
+      <strong id="kTotal">0</strong>
+      <small>Persistência atômica crash-safe ativa</small>
+    </div>
+    <div class="kpi">
+      <span>Fila Pendente (DDI +55)</span>
+      <strong id="kPendentes" style="color:var(--warn)">0</strong>
+      <small>Prontos p/ disparo sem duplicidade</small>
+    </div>
+    <div class="kpi">
+      <span>Enviados na Campanha</span>
+      <strong id="kEnviados" style="color:var(--brand)">0</strong>
+      <small>Aguardando retorno no Webhook</small>
+    </div>
+    <div class="kpi">
+      <span>🔥 Leads Quentes (Interessados)</span>
+      <strong id="kInteressados" style="color:var(--ok)">0</strong>
+      <small>Conversão: <b id="kConversao">0%</b> (Com link wa.me)</small>
+    </div>
+    <div class="kpi">
+      <span>🚫 Opt-Outs Bloqueados (LGPD)</span>
+      <strong id="kOptouts" style="color:var(--rec)">0</strong>
+      <small>Lista de supressão automática</small>
+    </div>
+  </section>
+
+  <!-- PAINEL DUPLO: DISPARADOR DE CAMPANHAS + WEBHOOK / IMPORTADOR CSV -->
+  <section class="main-grid">
+    <!-- COLUNA 1: MOTOR DE CAMPANHAS (send_campaigns.py) -->
+    <div class="card">
+      <h2>
+        <span>🚀 Motor de Disparo & Warm-Up (send_campaigns.py)</span>
+        <span class="tag" style="border-color:var(--ok);color:var(--ok)">Proteção Anti-Reenvio Ativa</span>
+      </h2>
+      <div class="field-grid">
+        <div class="field">
+          <label>Modo de Operação do Disparador</label>
+          <select class="inp" id="cfgModo">
+            <option value="DRY_RUN">🧪 Simulação Crash-Safe (Dry-Run Local)</option>
+            <option value="N8N_WEBHOOK">🔄 Disparar via Webhook n8n (localhost:5678)</option>
+            <option value="CLOUD_API">☁️ Meta WhatsApp Cloud API Oficial</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tamanho do Lote (Warm-Up Anti-Ban)</label>
+          <input type="number" class="inp" id="cfgLote" value="10" min="1" max="500" />
+        </div>
+        <div class="field">
+          <label>Phone Number ID (Meta Cloud API - Opcional)</label>
+          <input class="inp" id="cfgPhoneId" placeholder="Ex: 1092837465..." />
+        </div>
+        <div class="field">
+          <label>Gerar Novo Script B2B com IA (Gemini)</label>
+          <div style="display:flex;gap:6px">
+            <input class="inp" id="inpSegmentoIA" placeholder="Ex: Planos Corporativos / Indústria" />
+            <button class="btn brand" type="button" onclick="gerarScriptIA()" style="white-space:nowrap">✨ Gerar</button>
+          </div>
+        </div>
+        <div class="field full">
+          <label>Template de Abordagem ({contato}, {empresa}, {segmento}, {porte_vidas})</label>
+          <textarea class="ta" id="cfgTemplate" rows="5"></textarea>
+        </div>
+        <div class="field full">
+          <label>Auto-Resposta Automática para Interessados (Webhook)</label>
+          <input class="inp" id="cfgAutoOk" />
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-top:4px;border-top:1px dashed #cfc8b6">
+        <span id="lblStatusCampanha" style="font-family:var(--f-memo);font-size:11.5px;color:var(--muted)">
+          Pronto para disparar lote controlado.
+        </span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" type="button" onclick="salvarConfigUI()">💾 Salvar Config</button>
+          <button class="btn ok" type="button" id="btnDispararLote" onclick="dispararCampanhaUI()">
+            🚀 Disparar Lote para Fila Pendente
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA 2: TRIAGEM WEBHOOK (webhook_receiver.py) + IMPORTADOR CSV -->
+    <div style="display:grid;gap:14px">
+      <div class="card">
+        <h2>
+          <span>📡 Simulador & Triagem Webhook (webhook_receiver.py)</span>
+          <span class="tag" style="border-color:var(--wa);color:var(--wa)">Casamento 9º Dígito</span>
+        </h2>
+        <p style="margin:0;font-size:12px;color:var(--muted)">
+          Simule o recebimento de uma mensagem real no endpoint <code>POST /webhook/whatsapp-lead</code> (ou teste o casamento automático com/sem o 9º dígito e o bloqueio de Opt-Out):
+        </p>
+        <div class="field-grid">
+          <div class="field">
+            <label>Telefone do Lead (Com ou Sem +55 / 9º Dígito)</label>
+            <input class="inp" id="simTel" value="44 98821-4455" placeholder="Ex: (44) 8821-4455" />
+          </div>
+          <div class="field">
+            <label>Nome / Empresa (Opcional)</label>
+            <input class="inp" id="simNome" value="Construtora & Vidraçaria Horizonte" />
+          </div>
+          <div class="field full">
+            <label>Mensagem Recebida do Lead no WhatsApp</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <input class="inp" id="simMsg" value="1 - Olá! Tenho interesse em receber uma cotação para 32 vidas." style="flex:1" />
+              <button class="btn wa" type="button" onclick="simularWebhookUI('INTERESSE')">🔥 Simular Interesse (1)</button>
+              <button class="btn danger" type="button" onclick="simularWebhookUI('OPTOUT')">🚫 Simular Opt-Out (2)</button>
+            </div>
+          </div>
+        </div>
+        <div id="boxResultadoWebhook" style="font-family:var(--f-memo);font-size:11.5px;background:#f3f6fa;border:1px solid var(--brand);padding:8px" hidden></div>
+      </div>
+
+      <!-- IMPORTADOR RÁPIDO DE LEADS / CSV -->
+      <div class="card">
+        <h2>
+          <span>📂 Adicionar Lead ou Importar Lote CSV (+55 Automático)</span>
+          <span class="tag">Deduplicação Ativa</span>
+        </h2>
+        <div class="field-grid">
+          <div class="field">
+            <label>Empresa B2B</label>
+            <input class="inp" id="addEmpresa" placeholder="Ex: Indústria Alfa Ltda" />
+          </div>
+          <div class="field">
+            <label>Contato / Decisor</label>
+            <input class="inp" id="addContato" placeholder="Ex: Carlos Mendes" />
+          </div>
+          <div class="field">
+            <label>Telefone / WhatsApp (Qualquer formato)</label>
+            <input class="inp" id="addTelefone" placeholder="Ex: (44) 99123-4567" />
+          </div>
+          <div class="field">
+            <label>Segmento & Porte (Vidas)</label>
+            <input class="inp" id="addPorte" placeholder="Ex: Metalurgia · 60 vidas" />
+          </div>
+          <div class="field full">
+            <label>Ou Cole Linhas CSV (empresa,contato,telefone,segmento,porte_vidas)</label>
+            <textarea class="ta" id="addCsvTexto" rows="2" placeholder="empresa,contato,telefone,segmento,porte_vidas&#10;Logística Sul,Ana Paula,44998765432,Logística,40 vidas"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <input type="file" id="fileCsvUpload" accept=".csv,.txt" style="display:none" onchange="uploadArquivoCsv(event)" />
+          <button class="btn" type="button" onclick="document.getElementById('fileCsvUpload').click()">📄 Subir Arquivo .CSV</button>
+          <button class="btn brand" type="button" onclick="adicionarLeadsUI()">➕ Normalizar (+55) & Salvar no CSV</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABELA DE LEADS E REPASSE AO CONSULTOR -->
+  <section class="card">
+    <h2>
+      <span>📋 Base Operacional de Leads B2B (<span id="lblCountTabela">0</span> exibidos)</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="inp" id="fBusca" placeholder="Buscar empresa, contato ou telefone..." style="width:240px;padding:5px 8px" oninput="renderTabela()" />
+        <select class="inp" id="fStatusLead" style="width:auto;padding:5px 8px" onchange="renderTabela()">
+          <option value="TODOS">Todos os Status</option>
+          <option value="INTERESSADO">🔥 Interessados (Repasse Consultor)</option>
+          <option value="PENDENTE">⏳ Pendentes na Fila</option>
+          <option value="ENVIADO">📤 Enviados</option>
+          <option value="DUVIDA">💬 Com Dúvida</option>
+          <option value="OPT_OUT">🚫 Opt-Out (Bloqueados LGPD)</option>
+        </select>
+      </div>
+    </h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID / Status</th>
+            <th>Empresa & Segmento</th>
+            <th>Contato & Telefone (+55)</th>
+            <th>Última Interação / Resposta no Webhook</th>
+            <th>Ação Rápida / Repasse Consultor</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyLeads"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+let leadsData=[];
+let configData={};
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+async function carregarDados(){
+  try{
+    const r=await fetch('/api/leads/status');
+    const d=await r.json();
+    if(d.ok){
+      leadsData=d.leads||[];
+      configData=d.config||{};
+      atualizarKPIs(d.metricas||{});
+      preencherConfigUI();
+      renderTabela();
+    }
+  }catch(e){}
+}
+
+function atualizarKPIs(m){
+  document.getElementById('kTotal').textContent=m.total_leads||0;
+  document.getElementById('kPendentes').textContent=m.pendentes||0;
+  document.getElementById('kEnviados').textContent=m.enviados||0;
+  document.getElementById('kInteressados').textContent=m.interessados||0;
+  document.getElementById('kConversao').textContent=(m.taxa_conversao_pct||0)+'%';
+  document.getElementById('kOptouts').textContent=m.opt_outs||0;
+}
+
+function preencherConfigUI(){
+  if(configData.modo_disparo)document.getElementById('cfgModo').value=configData.modo_disparo;
+  if(configData.limite_diario_warmup)document.getElementById('cfgLote').value=configData.limite_diario_warmup;
+  if(configData.whatsapp_phone_number_id!==undefined)document.getElementById('cfgPhoneId').value=configData.whatsapp_phone_number_id;
+  if(configData.template_abordagem)document.getElementById('cfgTemplate').value=configData.template_abordagem;
+  if(configData.auto_resposta_interessado)document.getElementById('cfgAutoOk').value=configData.auto_resposta_interessado;
+}
+
+async function salvarConfigUI(){
+  const payload={
+    modo_disparo:document.getElementById('cfgModo').value,
+    limite_diario_warmup:parseInt(document.getElementById('cfgLote').value||'50',10),
+    whatsapp_phone_number_id:document.getElementById('cfgPhoneId').value.trim(),
+    template_abordagem:document.getElementById('cfgTemplate').value,
+    auto_resposta_interessado:document.getElementById('cfgAutoOk').value
+  };
+  await fetch('/api/leads/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  document.getElementById('lblStatusCampanha').textContent='✅ Configurações de campanha e warm-up salvas!';
+}
+
+async function dispararCampanhaUI(){
+  await salvarConfigUI();
+  const btn=document.getElementById('btnDispararLote');
+  const lbl=document.getElementById('lblStatusCampanha');
+  const qtd=parseInt(document.getElementById('cfgLote').value||'10',10);
+  const modo=document.getElementById('cfgModo').value;
+  btn.disabled=true;
+  btn.textContent='⏳ Disparando e Persistindo (.tmp -> .csv)...';
+  try{
+    const r=await fetch('/api/leads/disparar',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({quantidade:qtd,modo})
+    });
+    const d=await r.json();
+    if(d.ok){
+      leadsData=d.leads||[];
+      atualizarKPIs(d.resultado.metricas||{});
+      renderTabela();
+      lbl.textContent=`✅ Lote concluído (${d.resultado.modo_utilizado}): ${d.resultado.disparados} enviado(s) com salvamento atômico!`;
+    }
+  }catch(e){
+    lbl.textContent='⚠️ Erro no disparo: '+e.message;
+  }finally{
+    btn.disabled=false;
+    btn.textContent='🚀 Disparar Lote para Fila Pendente';
+  }
+}
+
+async function gerarScriptIA(){
+  const seg=document.getElementById('inpSegmentoIA').value.trim()||'Planos Corporativos B2B';
+  const lbl=document.getElementById('lblStatusCampanha');
+  lbl.textContent='⏳ Gerando script anti-spam com Gemini...';
+  try{
+    const r=await fetch('/api/leads/gerar-script',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({segmento:seg})
+    });
+    const d=await r.json();
+    if(d.script){
+      document.getElementById('cfgTemplate').value=d.script;
+      lbl.textContent='✨ Novo script B2B gerado pela IA!';
+    }
+  }catch(e){
+    lbl.textContent='⚠️ Erro ao gerar script: '+e.message;
+  }
+}
+
+async function simularWebhookUI(tipo){
+  const tel=document.getElementById('simTel').value.trim();
+  const nome=document.getElementById('simNome').value.trim();
+  let msg=document.getElementById('simMsg').value.trim();
+  if(tipo==='OPTOUT'){
+    msg='2 - Parar, não quero receber novas mensagens';
+    document.getElementById('simMsg').value=msg;
+  }else if(tipo==='INTERESSE'&&msg.startsWith('2')){
+    msg='1 - Quero receber uma cotação corporativa!';
+    document.getElementById('simMsg').value=msg;
+  }
+  const box=document.getElementById('boxResultadoWebhook');
+  box.hidden=false;
+  box.textContent='⏳ Processando triagem no Webhook...';
+  try{
+    const r=await fetch('/webhook/whatsapp-lead',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({telefone:tel,nome,mensagem:msg})
+    });
+    const d=await r.json();
+    if(d.triagem){
+      const t=d.triagem;
+      box.innerHTML=`<b>Classificação Automática:</b> <code>${esc(t.classificacao)}</code> · <b>Telefone Casado:</b> <code>${esc(t.lead.telefone_normalizado)}</code><br><b>Auto-Resposta Disparada:</b> ${esc(t.auto_resposta)}`;
+      await carregarDados();
+    }
+  }catch(e){
+    box.textContent='⚠️ Erro ao simular webhook: '+e.message;
+  }
+}
+
+async function adicionarLeadsUI(){
+  const emp=document.getElementById('addEmpresa').value.trim();
+  const con=document.getElementById('addContato').value.trim();
+  const tel=document.getElementById('addTelefone').value.trim();
+  const porte=document.getElementById('addPorte').value.trim();
+  const csvTxt=document.getElementById('addCsvTexto').value.trim();
+
+  const lista=[];
+  if(tel){
+    const pts=porte.split('·');
+    lista.push({
+      empresa:emp||'Empresa B2B',
+      contato:con||'Gestor',
+      telefone:tel,
+      segmento:(pts[0]||'Corporativo').trim(),
+      porte_vidas:(pts[1]||porte||'PME').trim()
+    });
+  }
+  if(!lista.length&&!csvTxt){
+    alert('Preencha o telefone do lead ou cole linhas CSV para importar!');
+    return;
+  }
+  const r=await fetch('/api/leads/importar',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({leads:lista,csv_texto:csvTxt})
+  });
+  const d=await r.json();
+  if(d.ok){
+    document.getElementById('addEmpresa').value='';
+    document.getElementById('addContato').value='';
+    document.getElementById('addTelefone').value='';
+    document.getElementById('addPorte').value='';
+    document.getElementById('addCsvTexto').value='';
+    await carregarDados();
+  }
+}
+
+function uploadArquivoCsv(ev){
+  const f=ev.target.files?.[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=async e=>{
+    const txt=String(e.target.result||'');
+    await fetch('/api/leads/importar',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({csv_texto:txt})
+    });
+    await carregarDados();
+  };
+  rd.readAsText(f,'UTF-8');
+}
+
+async function mudarStatusManual(id,st){
+  await fetch('/api/leads/status-manual',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id,status:st})
+  });
+  await carregarDados();
+}
+
+function preencherSimuladorComLead(tel,emp){
+  document.getElementById('simTel').value=tel;
+  document.getElementById('simNome').value=emp;
+  document.getElementById('simMsg').focus();
+}
+
+function renderTabela(){
+  const busca=(document.getElementById('fBusca').value||'').toLowerCase();
+  const fSt=document.getElementById('fStatusLead').value;
+  const tb=document.getElementById('tbodyLeads');
+  const filtrados=leadsData.filter(l=>{
+    const okS=fSt==='TODOS'||l.status===fSt;
+    const txt=`${l.id} ${l.empresa} ${l.contato} ${l.telefone_normalizado} ${l.segmento}`.toLowerCase();
+    return okS&&(!busca||txt.includes(busca));
+  });
+  document.getElementById('lblCountTabela').textContent=filtrados.length;
+  tb.innerHTML='';
+  filtrados.forEach(l=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>
+        <div style="font-family:var(--f-memo);font-size:11px;font-weight:700">${esc(l.id)}</div>
+        <span class="st-badge st-${esc(l.status)}">${esc(l.status)}</span>
+      </td>
+      <td>
+        <strong style="font-size:13.5px">${esc(l.empresa)}</strong>
+        <div style="font-size:11.5px;color:var(--muted)">${esc(l.segmento)} · <b>${esc(l.porte_vidas)}</b></div>
+      </td>
+      <td>
+        <div><b>${esc(l.contato)}</b></div>
+        <div style="font-family:var(--f-memo);font-size:12px;color:var(--wa);font-weight:700">${esc(l.telefone_normalizado)}</div>
+        <div style="font-family:var(--f-memo);font-size:10.5px;color:var(--muted)">Orig: ${esc(l.telefone_original)}</div>
+      </td>
+      <td>
+        <div style="font-family:var(--f-memo);font-size:11px;color:var(--muted)">Última: ${esc(l.ultima_interacao||'-')}</div>
+        ${l.ultima_mensagem_lead?`<div style="margin-top:3px;font-size:12px"><b>Lead:</b> "${esc(l.ultima_mensagem_lead)}"</div>`:''}
+        ${l.auto_resposta_enviada?`<div style="margin-top:3px;font-size:11px;color:var(--ok)"><b>Bot:</b> ${esc(l.auto_resposta_enviada)}</div>`:''}
+      </td>
+      <td>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${l.status!=='OPT_OUT'&&l.consultor_wa_link?`
+            <a class="btn wa" href="${esc(l.consultor_wa_link)}" target="_blank" rel="noopener" style="font-size:11px;padding:4px 8px">
+              📲 Chamar no WhatsApp
+            </a>
+          `:''}
+          <button class="btn" type="button" style="font-size:11px;padding:4px 8px" onclick="preencherSimuladorComLead('${esc(l.telefone_normalizado)}','${esc(l.empresa)}')">
+            💬 Simular Resposta
+          </button>
+          <select class="inp" style="width:auto;font-size:11px;padding:3px 6px" onchange="if(this.value)mudarStatusManual('${esc(l.id)}',this.value)">
+            <option value="">Mudar Status...</option>
+            <option value="PENDENTE">PENDENTE</option>
+            <option value="ENVIADO">ENVIADO</option>
+            <option value="INTERESSADO">INTERESSADO</option>
+            <option value="OPT_OUT">OPT_OUT</option>
+          </select>
+        </div>
+      </td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+function exportarCsvLeads(){
+  const cols=['id','empresa','contato','telefone_original','telefone_normalizado','segmento','porte_vidas','status','ultima_interacao','ultima_mensagem_lead'];
+  const linhas=[cols.join(',')];
+  leadsData.forEach(l=>{
+    linhas.push(cols.map(c=>`"${String(l[c]||'').replace(/"/g,'""')}"`).join(','));
+  });
+  const blob=new Blob([linhas.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='leads_qualificados_b2b.csv';
+  a.click();
+}
+
+carregarDados();
+</script>
+</body>
+</html>
+
