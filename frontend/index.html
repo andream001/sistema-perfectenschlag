@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AgentCraft Paper Co. · Filial Regional — Sistema Perfectenschlag</title>
+<title>Perfectenschlag · Filial Regional</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;700&family=Courier+Prime:wght@400;700&family=Libre+Franklin:wght@400;600;800&display=swap">
@@ -160,349 +160,728 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
 .net-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
 .net-card{background:#fff;border:1.5px solid var(--ink);padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:2px 2px 0 #e2ddd0}
 .net-card h3{margin:0;font-family:var(--f-display);font-size:15px;letter-spacing:.8px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+body.game-compact .note,body.game-compact .dossier-card p,body.game-compact .folder-head small{display:none!important}
+.viewer canvas{cursor:pointer}
 @media (prefers-reduced-motion:reduce){.hud .rec i,.lower,.cut.go{animation:none}}
+
+/* =====================================================================
+   CAMADA DE DESIGN DO PAINEL (revisão de UX)
+   Estrutura: barra fixa com status + abas → uma seção por vez.
+   Componentes: card, subpanel, pill, tab, stat, toast, empty.
+   ===================================================================== */
+:root{
+  --line:#d9d3c3; --line-strong:#bfb7a3; --surface:#ffffff; --surface-2:#f6f3ea;
+  --brand-ink:#163a6b; --brand-50:#eaf0f8; --ok-50:#e7f3ec; --warn-50:#fbf1e3; --rec-50:#fcebea;
+  --radius:8px; --radius-sm:6px;
+  --shadow:0 1px 2px rgba(36,41,46,.06),0 1px 0 rgba(36,41,46,.04);
+  --appbar-h:0px;
+}
+[hidden]{display:none!important}
+html{scroll-padding-top:120px}
+body{font-size:14px;line-height:1.5}
+.skip{position:absolute;left:-999px;top:8px;z-index:100;background:var(--ink);color:#fff;padding:8px 12px;border-radius:var(--radius-sm)}
+.skip:focus{left:12px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* ---------- Barra superior fixa ---------- */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--paper)}
+.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--paper);border-bottom:1px solid var(--line);box-shadow:0 2px 8px rgba(36,41,46,.05)}
+.appbar-in,.tabs{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.appbar-in{display:flex;align-items:center;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;padding-block:12px 8px}
+.logo-mark{width:38px;height:38px;font-size:16px;border-width:2.5px;border-radius:4px}
+.logo h1{font-size:24px;color:var(--brand-ink)}
+.logo p{letter-spacing:1.1px;font-size:11px}
+.status-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font:500 12.5px/1 var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 11px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.pill:hover{border-color:var(--line-strong);background:var(--surface-2)}
+.pill b{font-weight:700}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--line-strong);display:inline-block}
+.pill .dot.ok{background:var(--ok)}
+.pill-alert{border-color:#e9c9a0;background:var(--warn-50);color:#7a4508}
+.pill-quiet{color:var(--muted)}
+.count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--ink);color:#fff;font:700 11.5px/1 var(--f-body);font-variant-numeric:tabular-nums}
+.pill-alert .count,.count-alert{background:var(--warn)}
+
+.tabs-wrap{border-top:1px solid #ece7da}
+.tabs{display:flex;align-items:stretch;gap:2px;overflow-x:auto;scrollbar-width:thin}
+.tab{flex:none;display:inline-flex;align-items:center;gap:7px;font:700 14.5px/1 var(--f-display);letter-spacing:.3px;color:var(--muted);background:none;border:0;border-bottom:3px solid transparent;padding:12px 12px 10px;cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--brand-ink);border-bottom-color:var(--brand)}
+.tab .count{background:var(--line);color:var(--ink)}
+.tab .count-alert{background:var(--warn);color:#fff}
+.tab.active .count:not(.count-alert){background:var(--brand);color:#fff}
+.tabs-spacer{flex:1 0 12px}
+.tab-tool{font:600 13px/1 var(--f-body);letter-spacing:0}
+
+/* ---------- Página ---------- */
+.wrap{padding-block:20px 40px;gap:16px}
+.page{display:flex;flex-direction:column;gap:16px}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 20px;flex-wrap:wrap}
+.page-title{margin:0;font:700 clamp(22px,2.6vw,28px)/1.15 var(--f-display);color:var(--ink);text-wrap:balance}
+.page-count{color:var(--muted);font-weight:500;font-size:.75em}
+.page-sub{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.45}
+.hint.center{text-align:center;margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.between{justify-content:space-between}
+.row.stretch{flex-wrap:nowrap}
+.row.stretch>.memo-input{flex:1;min-width:0}
+@media (max-width:560px){.row.stretch{flex-wrap:wrap}}
+.stack{display:grid;gap:12px}
+.stack.scroll{max-height:360px;overflow-y:auto}
+.tag{display:inline-flex;align-items:center;font:700 11.5px/1 var(--f-body);letter-spacing:.4px;padding:6px 10px;border-radius:999px;border:1px solid var(--line)}
+.tag-lock{color:var(--rec);border-color:#efc3bf;background:var(--rec-50)}
+.link{color:var(--brand);font-weight:600;text-decoration:none;margin-left:6px;text-transform:none;letter-spacing:0}
+.link:hover{text-decoration:underline}
+
+/* ---------- Cards ---------- */
+.card,.dossier-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:grid;gap:14px;min-width:0}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.card-title{margin:0;font:700 18px/1.2 var(--f-display);color:var(--ink);letter-spacing:.2px}
+.card-sub{margin:3px 0 0;font-size:13px;color:var(--muted);max-width:75ch}
+.card-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:14px;border-top:1px solid #eee9dc}
+.card-foot.end{justify-content:flex-end}
+.subpanel{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px;display:grid;gap:10px}
+.subpanel-head{display:flex;flex-direction:column;gap:2px}
+.subpanel-head strong{font:700 15px/1.2 var(--f-display)}
+.step{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:#fff;font:700 11px/1 var(--f-body);margin-right:7px;vertical-align:1px}
+
+/* ---------- Campos ---------- */
+.cv-grid{gap:14px}
+.cv-field{min-width:0;gap:6px}
+.cv-field label{font:600 13px/1.3 var(--f-body);letter-spacing:0;text-transform:none;color:var(--ink)}
+.memo-input,.cv-textarea{font:14px/1.4 var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius-sm);padding:9px 11px;min-height:40px;width:100%;transition:border-color .15s,box-shadow .15s}
+.cv-textarea{font:13px/1.5 var(--f-memo);min-height:0}
+.cv-textarea.plain{font:14px/1.5 var(--f-body)}
+.memo-input:focus,.cv-textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(31,78,140,.18)}
+.memo-input[readonly]{background:var(--surface-2);color:var(--muted)}
+select.memo-input{cursor:pointer}
+.check{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:13px;cursor:pointer}
+.check input{width:16px;height:16px;accent-color:var(--brand)}
+.filters{display:grid;grid-template-columns:minmax(220px,2fr) repeat(4,minmax(130px,1fr));gap:12px}
+@media (max-width:980px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.filters .grow{grid-column:1/-1}}
+@media (max-width:480px){.filters{grid-template-columns:minmax(0,1fr)}}
+.filters-bar{grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),320px));padding:14px 18px}
+.yt-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto;gap:12px;align-items:end}
+@media (max-width:760px){.yt-row{grid-template-columns:minmax(0,1fr)}}
+.upload-strip{display:flex;flex-direction:column;gap:2px;align-items:center;border:1.5px dashed var(--brand);border-radius:var(--radius);background:var(--brand-50);padding:16px;font:13px var(--f-body);color:var(--brand-ink)}
+.upload-strip strong{font:700 15px var(--f-display)}
+.upload-strip:hover{background:#dfe8f4}
+.upload-strip:focus-within{outline:2px solid var(--brand);outline-offset:2px}
+
+/* ---------- Botões ---------- */
+.btn,.net-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:700 14px/1.15 var(--f-display);letter-spacing:.3px;text-transform:none;border:1.5px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);padding:9px 14px;min-height:40px;cursor:pointer;text-decoration:none;text-align:center;transition:background .15s,border-color .15s,color .15s}
+.btn:hover,.net-btn:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink)}
+.btn.sm,.memo-actions .btn,.ctrls .btn{font-size:13px;padding:6px 10px;min-height:34px}
+.btn.ghost{border-color:transparent;background:none;color:var(--brand)}
+.btn.ghost:hover{background:var(--brand-50);border-color:transparent;color:var(--brand-ink)}
+.btn.ghost[aria-expanded="true"]{background:var(--brand-50)}
+.btn.action,.net-btn.action{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.action:hover,.net-btn.action:hover{background:var(--brand-ink);border-color:var(--brand-ink);color:#fff}
+.btn.ok{border-color:var(--ok);color:var(--ok)}
+.btn.ok:hover{background:var(--ok-50);color:var(--ok);border-color:var(--ok)}
+.btn.end{border-color:#e6b4ae;color:var(--rec)}
+.btn.end:hover{background:var(--rec-50);color:var(--rec);border-color:var(--rec)}
+.btn:disabled,.btn:disabled:hover{opacity:.5;cursor:not-allowed;background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.btn.action:disabled,.btn.action:disabled:hover{background:var(--brand);color:#fff}
+.btn.is-busy{position:relative;color:transparent!important}
+.btn.is-busy::after{content:"";position:absolute;width:16px;height:16px;border:2px solid currentColor;border-color:#fff #fff transparent transparent;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.net-btn{font-size:13px;min-height:36px;padding:7px 11px}
+.net-btn.yt{color:#b3261e;border-color:#e8b4b0}.net-btn.yt:hover{background:#fcebea;color:#b3261e;border-color:#b3261e}
+.net-btn.in{color:#0a66c2;border-color:#b3cfee}.net-btn.in:hover{background:#e8f1fb;color:#0a66c2;border-color:#0a66c2}
+.net-btn.wa{color:#0f7a6d;border-color:#a8d8d1}.net-btn.wa:hover{background:#e6f5f3;color:#0f7a6d;border-color:#0f7a6d}
+.net-btn.sh{color:#6d28d9;border-color:#d3c2f5}.net-btn.sh:hover{background:#f1ebfd;color:#6d28d9;border-color:#6d28d9}
+
+/* ---------- Início: indicadores ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;cursor:pointer;box-shadow:var(--shadow);font:inherit;color:inherit}
+.stat:hover{border-color:var(--line-strong);background:var(--surface-2)}
+.stat-n{font:700 30px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat-l{font-size:12.5px;color:var(--muted);font-weight:600}
+.stat-alert{border-left:4px solid var(--warn)}
+.stat-alert .stat-n{color:var(--warn)}
+.stat-plus{color:var(--brand)}
+.panel{border-radius:var(--radius);border-color:var(--line);box-shadow:var(--shadow);overflow:hidden}
+.panel h2{border-bottom:1px solid var(--line);letter-spacing:.6px}
+.viewer{border-radius:var(--radius)}
+.note{font-size:12.5px}
+
+/* ---------- Aprovações / memorandos ---------- */
+.audit-grid{grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));gap:14px}
+.memo-card{border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;gap:10px;min-width:0}
+.memo-card.pending{border:1px solid #e9c9a0;border-left:4px solid var(--warn);background:#fffdf8}
+.memo-head{gap:8px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.memo-tag{border-radius:4px;border-color:var(--line-strong);font-size:11px;padding:3px 7px;letter-spacing:.6px;background:var(--surface)}
+.memo-tag.t-yt{color:#b3261e;border-color:#e8b4b0}.memo-tag.t-in{color:#0a66c2;border-color:#b3cfee}
+.memo-tag.t-ok{color:var(--ok);border-color:#a9d2b9}.memo-tag.t-brand{color:var(--brand);border-color:#b7c9e2}
+.memo-pre{border-radius:var(--radius-sm);font-size:12px;max-height:200px;background:var(--surface-2);border-color:var(--line)}
+.memo-actions{justify-content:flex-start}
+.empty{border:1.5px dashed var(--line-strong);border-radius:var(--radius);padding:28px 18px;text-align:center;color:var(--muted);background:rgba(255,255,255,.5);display:grid;gap:4px;justify-items:center}
+.empty strong{font:700 16px var(--f-display);color:var(--ink)}
+.audit-grid>.empty{grid-column:1/-1}
+
+/* ---------- Redes ---------- */
+.net-grid{grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:14px}
+.net-card{border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;gap:10px;min-width:0}
+.net-card.accent{background:var(--brand-50);border-color:#c9d7ea}
+.net-card h3{font-size:16px;letter-spacing:.2px;text-transform:none;gap:8px}
+.net-card p{margin:0;font-size:13px;color:var(--muted)}
+.net-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.net-actions>*{flex:1 1 auto}
+
+/* ---------- Modais ---------- */
+.modal-bg{background:rgba(20,22,26,.55);backdrop-filter:blur(2px)}
+.modal-paper{border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.3);overflow:hidden}
+.modal-top{text-transform:none;letter-spacing:.2px;font-size:17px;background:var(--surface);border-bottom:1px solid var(--line);gap:12px}
+.modal-top .btn{min-height:34px;padding:4px 10px}
+.modal-content{font-family:var(--f-body);font-size:13.5px}
+#modalRead .modal-content{font-family:var(--f-memo);font-size:13px}
+
+/* ---------- Candidatura: formato e qualidade ---------- */
+.info-box{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2);padding:10px 12px;font-size:13px}
+.info-box summary{cursor:pointer}
+.info-box summary .chip{margin-left:4px}
+.info-box ol,.info-box ul{margin:4px 0 8px;padding-left:20px}
+.info-box p{margin:4px 0 8px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px;margin-top:10px}
+.alert-list{margin:0;color:#7a4508}
+.chip{display:inline-flex;font:600 11.5px/1 var(--f-body);padding:4px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.chip-ok{background:var(--ok-50);border-color:#a9d2b9;color:var(--ok)}
+.chip-warn{background:var(--warn-50);border-color:#e9c9a0;color:#7a4508}
+.q-box{border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;border:1px solid}
+.q-box ul{margin:6px 0 0;padding-left:20px}
+.q-ok{background:var(--ok-50);border-color:#a9d2b9;color:#14532d}
+.q-warn{background:var(--warn-50);border-color:#e9c9a0;color:#7a4508}
+.q-bad{background:var(--rec-50);border-color:#efc3bf;color:#8a1c14}
+.q-avisos{color:#7a4508}
+.field-lbl{font:600 13px var(--f-body);margin-top:4px}
+.aviso-perfil{border:1px solid #efc3bf;background:var(--rec-50);color:#8a1c14;border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;display:grid;gap:6px;justify-items:start}
+.aviso-perfil ul{margin:0;padding-left:20px}
+
+/* ---------- Avisos (substituem alert) ---------- */
+.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:80;display:grid;gap:8px;width:min(380px,calc(100vw - 32px))}
+.toast{display:flex;gap:10px;align-items:flex-start;background:var(--ink);color:#fff;border-radius:var(--radius);padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:13.5px;line-height:1.4;animation:toastIn .2s ease-out}
+.toast.ok{background:#14532d}.toast.err{background:#7f1d1d}
+.toast button{margin-left:auto;background:none;border:0;color:#fff;opacity:.7;cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+@keyframes toastIn{from{opacity:0;transform:translateY(6px)}}
+
+@media (max-width:640px){
+  .appbar-in{padding-block:10px 6px}
+  .logo h1{font-size:20px}
+  .status-row{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:2px}
+  .tab{font-size:14px;padding:11px 10px 9px}
+  .card{padding:14px}
+  .page-head{align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){.toast,.btn.is-busy::after{animation:none}}
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header class="top">
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="appbar">
+  <div class="appbar-in">
     <div class="logo">
-      <div class="logo-mark">DM</div>
+      <div class="logo-mark">AC</div>
       <div>
-        <h1>AgentCraft Paper Co. · Sistema Perfectenschlag</h1>
-        <p>Filial Regional Scranton · Andar 2 · Economia Auditada: R$ 20.000/ano · Docker + Snipe-IT</p>
+        <h1>Perfectenschlag</h1>
+        <p>AgentCraft Paper Co. · Filial Regional</p>
       </div>
     </div>
-    <div class="top-badges">
-      <button class="stamp" type="button" id="btnDlpToggle" onclick="alternarModoCensura()" style="border-color:var(--ok);color:var(--ok);font-weight:700" title="Filtra automaticamente nomes de empresas reais, CPFs, CNPJs, telefones e chaves de API">
-        🔒 Censura & LGPD: <span id="lblDlpStatus">ATIVA</span>
+    <div class="status-row" aria-label="Status do sistema">
+      <button class="pill" type="button" id="btnDlpToggle" onclick="alternarModoCensura()" title="Filtra nomes de empresas reais, CPFs, CNPJs, telefones e chaves de API nos textos exibidos">
+        <i class="dot ok"></i>Censura LGPD: <span id="lblDlpStatus">ATIVA</span>
       </button>
-      <button class="stamp brand" type="button" onclick="abrirModalAutoconfig()" title="Configura automaticamente Git Hooks (pre-commit DLP e post-commit WUPHF), Webhooks locais/externos e credenciais (.env)">
-        ⚙️ Ganchos, Webhooks & Credenciais: <b id="lblHooksStatus">Autoconfigurar</b>
+      <button class="pill" type="button" onclick="abrirModalApi()" title="Chave da API do Gemini usada pelos agentes">
+        <i class="dot"></i>Gemini: <b id="lblApiStatus">Verificar</b>
       </button>
-      <button class="stamp brand" type="button" onclick="abrirAbaPasta('CV')">📂 Currículo & Dossiê</button>
-      <button class="stamp warn" type="button" id="btnWuphfTop" onclick="filtrarWuphfPendentes()">📯 Aguardando Aval: <span id="cntWuphf">0</span></button>
-      <button class="stamp" type="button" onclick="abrirModalApi()">🔑 API Key: <b id="lblApiStatus">Verificar</b></button>
+      <button class="pill" type="button" onclick="abrirModalAutoconfig()" title="Ganchos Git, webhooks e credenciais do .env">
+        <i class="dot"></i>Ganchos: <b id="lblHooksStatus">Autoconfigurar</b>
+      </button>
+      <button class="pill pill-alert" type="button" id="btnWuphfTop" onclick="filtrarWuphfPendentes()" title="Itens que só saem depois da sua autorização">
+        Aguardando seu aval <span class="count" id="cntWuphf">0</span>
+      </button>
+      <a class="pill pill-quiet" href="/logout">Sair</a>
     </div>
-  </header>
-
-  <!-- BARRA RÁPIDA DE INTEGRAÇÃO COM AS REDES E ESTÚDIO YOUTUBE -->
-  <nav class="net-bar" aria-label="Integrações de Redes e Setor de Vídeo">
-    <span class="net-bar-title">📡 Central Omnichannel:</span>
-    <button class="net-btn" type="button" onclick="abrirAbaPasta('VAGAS')" style="border-color:var(--brand);background:var(--brand);color:#fff">
-      🎯 Inserir Vaga & Distribuir Currículo (Golden Ticket)
-    </button>
-    <button class="net-btn yt" type="button" onclick="acionarSetorVideoYoutube()">
-      <span class="net-dot" style="background:#c4302b"></span> ▶️ YouTube & Vídeo
-    </button>
-    <button class="net-btn sh" type="button" onclick="acionarSetorShortsReels()">
-      🎬 Corte Shorts / Reels
-    </button>
-    <button class="net-btn in" type="button" onclick="acionarRedeLinkedin()">
-      <span class="net-dot"></span> 💼 LinkedIn (WUPHF)
-    </button>
-    <a class="net-btn gh" href="https://github.com/andream001" target="_blank" rel="noopener">
-      <span class="net-dot"></span> 🐙 GitHub (andream001)
-    </a>
-    <a class="net-btn wa" href="http://localhost:5000" target="_blank" rel="noopener">
-      <span class="net-dot"></span> 💬 Lead Manager Web (:5000)
-    </a>
-    <button class="net-btn wa" type="button" onclick="abrirAbaPasta('NET')">
-      ⚙️ Redes & n8n
-    </button>
-  </nav>
-
-  <div class="stage">
-    <div class="viewer" id="viewer">
-      <canvas id="view" aria-label="Escritório da filial, visto pela câmera do documentário"></canvas>
-      <div class="layer" id="layer"></div>
-      <div class="iv" id="iv" hidden>
-        <canvas id="ivc" aria-hidden="true"></canvas>
-        <div class="lower" id="lower"><div class="nm" id="ivName"></div><div class="role" id="ivRole"></div></div>
-        <div class="subs" id="subs" aria-live="polite"></div>
-      </div>
-      <div class="hud" aria-hidden="true">
-        <div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
-        <div class="rec"><i></i>REC</div><div class="tc" id="tc">00:00:00:00</div>
-        <div class="cam" id="camLbl">CAM A · PLANO GERAL</div><div class="bat">98% <i></i></div>
-        <div class="focus"></div>
-      </div>
-      <div class="cut" id="cut"></div>
-    </div>
-
-    <aside class="panel" id="panel">
-      <div id="rosterView">
-        <h2>Elenco da Filial <small>clique p/ entrevistar ou acionar</small></h2>
-        <ul class="roster" id="roster"></ul>
-        <div class="ctrls">
-          <button class="btn" id="meetBtn" type="button">Convocar reunião</button>
-          <button class="btn" id="camBtn" type="button" aria-pressed="true">Câmera automática: ligada</button>
-        </div>
-        <p class="note">Clique nos agentes marcados com <b>[MISSÃO]</b> (Toby ATS, Recyclops, WUPHF ou Mose Git) para despachar tarefas reais com seu currículo enquanto grava o documentário.</p>
-      </div>
-      <div id="ivView" hidden>
-        <h2>Entrevista <small id="ivWhere"></small></h2>
-        <div class="qs" id="qs"></div>
-        <!-- Console de Missão Real Perfectenschlag (aparece quando o entrevistado é um Agente Operacional) -->
-        <div class="mission-box" id="missionBox" hidden>
-          <label id="missionTitle">⚡ Despachar Missão Real (Gemini)</label>
-          <input class="memo-input" id="missionInput1" placeholder="Alvo da missão..." />
-          <input class="memo-input" id="missionInput2" placeholder="Complemento (opcional)..." />
-          <button class="btn action" type="button" id="btnRunMission">Executar Ordem do Gerente Regional</button>
-        </div>
-        <p class="note">O resto do escritório continua trabalhando enquanto você grava.</p>
-      </div>
-    </aside>
   </div>
 
-  <!-- PASTA DE ARQUIVOS DO GERENTE REGIONAL: AUDITORIA FÁCIL + CURRÍCULO OFICIAL -->
-  <section class="desk-folders">
-    <div class="folder-tabs" style="flex-wrap:wrap">
-      <button class="ftab active" id="ftabVagas" type="button" onclick="abrirAbaPasta('VAGAS')">
-        🎯 Esteira de Vagas & Distribuição de Currículos (<span id="cntVagas">0</span>)
+  <nav class="tabs-wrap" aria-label="Seções do painel">
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="navHome" type="button" role="tab" aria-selected="true" onclick="abrirAbaPasta('HOME')">Escritório</button>
+      <button class="tab" id="navVagas" type="button" role="tab" aria-selected="false" onclick="abrirAbaPasta('VAGAS')">Candidaturas <span class="count" id="cntVagas">0</span></button>
+      <button class="tab" id="navRadar" type="button" role="tab" aria-selected="false" onclick="abrirAbaPasta('RADAR')">Radar de vagas</button>
+      <button class="tab" id="navAudit" type="button" role="tab" aria-selected="false" onclick="abrirAbaPasta('AUDIT')">Aprovações <span class="count count-alert" id="navPend" hidden>0</span></button>
+      <button class="tab" id="navNet" type="button" role="tab" aria-selected="false" onclick="abrirAbaPasta('NET')">Redes e estúdio</button>
+      <button class="tab" id="navCv" type="button" role="tab" aria-selected="false" onclick="abrirAbaPasta('CV')">Dossiê</button>
+      <span class="tabs-spacer"></span>
+      <button class="tab tab-tool" type="button" onclick="abrirModalAutoconfig()">Integrações</button>
+      <button class="tab tab-tool" type="button" id="btnModoGame" onclick="alternarModoGame()" aria-pressed="false">Dicas: ocultas</button>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap" id="conteudo">
+
+  <!-- ================= ESCRITÓRIO (INÍCIO) ================= -->
+  <section class="page" id="bodyHome" aria-labelledby="navHome">
+    <div class="stats">
+      <button class="stat" type="button" onclick="abrirAbaPasta('VAGAS')">
+        <span class="stat-n" id="statVagas">0</span><span class="stat-l">Candidaturas em andamento</span>
       </button>
-      <button class="ftab" id="ftabAudit" type="button" onclick="abrirAbaPasta('AUDIT')">
-        📋 Memorando de Auditoria & Aprovação (<span id="cntAudit">0</span>)
+      <button class="stat stat-alert" type="button" onclick="filtrarWuphfPendentes()">
+        <span class="stat-n" id="statPend">0</span><span class="stat-l">Aguardando seu aval</span>
       </button>
-      <button class="ftab" id="ftabNet" type="button" onclick="abrirAbaPasta('NET')">
-        🎬 Estúdio YouTube & Redes
+      <button class="stat" type="button" onclick="abrirAbaPasta('RADAR')">
+        <span class="stat-n" id="statRadar">0</span><span class="stat-l">Vagas no radar</span>
       </button>
-      <button class="ftab" id="ftabCv" type="button" onclick="abrirAbaPasta('CV')">
-        📂 Dossiê Curricular Base
+      <button class="stat" type="button" onclick="abrirAbaPasta('VAGAS');document.getElementById('vgCargoEmpresa').focus()">
+        <span class="stat-n stat-plus">+</span><span class="stat-l">Nova candidatura</span>
       </button>
     </div>
 
-    <!-- ABA 0: ESTEIRA DE VAGAS, MOLDAGEM DE CURRÍCULO, MONITORAMENTO E ENTREVISTA -->
-    <div class="folder-body" id="bodyVagas">
-      <div style="background:#f3f6fa;border:2px solid var(--brand);padding:14px;margin-bottom:16px;display:grid;gap:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-          <div>
-            <strong style="font-family:var(--f-display);font-size:16px;letter-spacing:1px;text-transform:uppercase;color:var(--brand)">
-              🎯 Operação Golden Ticket — Distribuição de Currículos, Monitoramento e Preparação de Entrevista
-            </strong>
-            <div style="font-size:12px;color:var(--muted)">
-              1) <b>Neutralizador Toby</b> molda o currículo e e-mail • 2) <b>Recyclops & Michael</b> preparam suas respostas de entrevista • 3) <b>Vigia</b> monitora e-mail/plataforma • <b>Nada sai sem o seu carimbo!</b>
-            </div>
-          </div>
-          <span class="memo-tag" style="background:#fff;border-color:var(--rec);color:var(--rec)">Trava de Autorização Ativa</span>
+    <div class="stage">
+      <div class="viewer" id="viewer">
+        <canvas id="view" aria-label="Escritório da filial, visto pela câmera do documentário"></canvas>
+        <div class="layer" id="layer"></div>
+        <div class="iv" id="iv" hidden>
+          <canvas id="ivc" aria-hidden="true"></canvas>
+          <div class="lower" id="lower"><div class="nm" id="ivName"></div><div class="role" id="ivRole"></div></div>
+          <div class="subs" id="subs" aria-live="polite"></div>
         </div>
+        <div class="hud" aria-hidden="true">
+          <div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
+          <div class="rec"><i></i>REC</div><div class="tc" id="tc">00:00:00:00</div>
+          <div class="cam" id="camLbl">CAM A · PLANO GERAL</div><div class="bat">98% <i></i></div>
+          <div class="focus"></div>
+        </div>
+        <div class="cut" id="cut"></div>
+      </div>
 
+      <aside class="panel" id="panel">
+        <div id="rosterView">
+          <h2>Elenco da filial <small>clique para entrevistar</small></h2>
+          <ul class="roster" id="roster"></ul>
+          <div class="ctrls">
+            <button class="btn" id="meetBtn" type="button">Convocar reunião</button>
+            <button class="btn" id="camBtn" type="button" aria-pressed="true">Câmera automática: ligada</button>
+          </div>
+          <p class="note">Agentes marcados com <b>Missão</b> (Toby, Recyclops, WUPHF, Mose) recebem tarefas reais com o seu currículo durante a entrevista.</p>
+        </div>
+        <div id="ivView" hidden>
+          <h2>Entrevista <small id="ivWhere"></small></h2>
+          <div class="qs" id="qs"></div>
+          <div class="mission-box" id="missionBox" hidden>
+            <label id="missionTitle" for="missionInput1">Despachar missão real (Gemini)</label>
+            <input class="memo-input" id="missionInput1" placeholder="Alvo da missão" />
+            <input class="memo-input" id="missionInput2" placeholder="Complemento (opcional)" />
+            <button class="btn action" type="button" id="btnRunMission">Executar ordem</button>
+          </div>
+          <p class="note">O resto do escritório continua trabalhando enquanto você grava.</p>
+        </div>
+      </aside>
+    </div>
+    <p class="hint center">Dica: clique numa sala do mapa para abrir a seção dela. Gerência abre Aprovações, Recepção abre Redes e Contabilidade abre o histórico de envios.</p>
+  </section>
+
+  <!-- ================= CANDIDATURAS (GOLDEN TICKET) ================= -->
+  <section class="page" id="bodyVagas" hidden aria-labelledby="navVagas">
+    <div class="page-head">
+      <div>
+        <h2 class="page-title">Candidaturas</h2>
+        <p class="page-sub">Cole uma vaga e os agentes preparam currículo, e-mail e roteiro de entrevista. <b>Nada é enviado sem a sua autorização.</b></p>
+      </div>
+      <span class="tag tag-lock">Trava de autorização ativa</span>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3 class="card-title">Nova candidatura</h3>
+          <p class="card-sub">O sistema identifica como a vaga recebe candidaturas, adapta o currículo, escreve a mensagem e prepara a entrevista.</p>
+        </div>
+      </div>
+      <div class="aviso-perfil" id="avisoPerfil" hidden></div>
+      <div class="cv-grid">
+        <div class="cv-field">
+          <label for="vgCargoEmpresa"><span class="step">1</span>Cargo e empresa</label>
+          <input class="memo-input" id="vgCargoEmpresa" placeholder="Ex.: Engenheiro de Software / Automação Python, Empresa X" />
+        </div>
+        <div class="cv-field">
+          <label for="vgLinkEmail"><span class="step">2</span>E-mail do recrutador ou link da vaga</label>
+          <input class="memo-input" id="vgLinkEmail" placeholder="recrutamento@empresa.com.br ou https://…" />
+        </div>
+        <div class="cv-field full">
+          <label for="vgDescricao"><span class="step">3</span>Descrição da vaga</label>
+          <textarea class="cv-textarea plain" id="vgDescricao" rows="5" placeholder="Cole aqui a descrição completa. Os agentes extraem as palavras-chave, ajustam o currículo e montam o roteiro da entrevista."></textarea>
+        </div>
+      </div>
+      <div class="card-foot">
+        <span class="hint" id="vgFeedbackStatus" aria-live="polite">Pronto para processar uma nova vaga com o seu dossiê.</span>
+        <div class="row">
+          <button class="btn ghost" type="button" aria-controls="boxWebhookVagas" onclick="alternarBloco('boxWebhookVagas',this)" aria-expanded="false">Webhooks de envio</button>
+          <button class="btn action" type="button" id="btnCriarCandidatura" onclick="iniciarFluxoGoldenTicket()">Preparar candidatura para aprovação</button>
+        </div>
+      </div>
+
+      <div class="subpanel" id="boxWebhookVagas" hidden>
+        <div class="subpanel-head">
+          <strong>Ponte de webhooks</strong>
+          <span class="hint">Gmail Apps Script, n8n, Make ou WhatsApp. Só dispara quando você clica em Autorizar ou Checar e-mail.</span>
+        </div>
+        <div class="row stretch">
+          <input class="memo-input" id="cfgGoldenWebhook" aria-label="URL do webhook" placeholder="URL do webhook (Apps Script /exec, n8n, Make ou http://localhost:8080)" />
+          <button class="btn ok" type="button" onclick="salvarWebhookGoldenTicket()">Salvar webhook</button>
+        </div>
+        <div class="row">
+          <button class="btn sm" type="button" onclick="copiarScriptGoogleApps()">Copiar script do Google Apps (ponte Gmail grátis)</button>
+          <button class="btn sm" type="button" onclick="simularRetornoWebhookRecrutador()">Simular resposta de recrutador</button>
+          <button class="btn sm" type="button" onclick="abrirModalAutoconfig()">Todas as integrações</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h3 class="card-title">Em andamento</h3>
+    </div>
+    <div id="vagasContainer" class="stack"></div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3 class="card-title">Histórico de envios</h3>
+          <p class="card-sub">Currículos enviados e etapa de cada processo seletivo.</p>
+        </div>
+        <button class="btn sm" type="button" onclick="carregarLogCurriculos()">Atualizar</button>
+      </div>
+      <div id="logCurriculosContainer" class="stack scroll"></div>
+    </div>
+  </section>
+
+  <!-- ================= RADAR DE VAGAS ================= -->
+  <section class="page" id="bodyRadar" hidden aria-labelledby="navRadar">
+    <div class="page-head">
+      <div>
+        <h2 class="page-title">Radar de vagas</h2>
+        <p class="page-sub">Busca em GitHub BR, Remotive, RemoteOK, Arbeitnow e Himalayas, ordenada pela aderência ao seu dossiê.</p>
+      </div>
+      <span class="hint" id="lblStatusRadarVagas" aria-live="polite">Ranqueamento automático por aderência ao seu dossiê</span>
+    </div>
+
+    <div class="card">
+      <div class="filters">
+        <div class="cv-field grow">
+          <label for="radarKeywords">Palavras-chave</label>
+          <input class="memo-input" id="radarKeywords" value="Python, Automação, Docker, DevOps, IA" placeholder="Separadas por vírgula" />
+        </div>
+        <div class="cv-field">
+          <label for="radarFonte">Fonte</label>
+          <select class="memo-input" id="radarFonte">
+            <option value="todas">Todas as fontes</option>
+            <option value="brasil">Apenas Brasil (GitHub BR, SerpApi, Jooble)</option>
+            <option value="serpapi">Google Jobs BR, Gupy, Catho (SerpApi)</option>
+            <option value="jooble">Jooble Brasil</option>
+            <option value="remotive">Remotive</option>
+            <option value="remoteok">RemoteOK</option>
+            <option value="arbeitnow">Arbeitnow</option>
+            <option value="himalayas">Himalayas</option>
+          </select>
+        </div>
+        <div class="cv-field">
+          <label for="radarSenioridade">Nível</label>
+          <select class="memo-input" id="radarSenioridade">
+            <option value="todas">Qualquer nível</option>
+            <option value="jr">Júnior / Pleno</option>
+            <option value="pleno_sr">Pleno / Sênior</option>
+            <option value="estagio">Estágio / Trainee</option>
+          </select>
+        </div>
+        <div class="cv-field">
+          <label for="radarIdioma">Idioma</label>
+          <select class="memo-input" id="radarIdioma">
+            <option value="todos">Todos</option>
+            <option value="pt">Português</option>
+            <option value="en">Inglês</option>
+          </select>
+        </div>
+        <div class="cv-field">
+          <label for="radarScoreMin">Aderência mínima</label>
+          <select class="memo-input" id="radarScoreMin">
+            <option value="0">Qualquer</option>
+            <option value="60">60%</option>
+            <option value="75">75%</option>
+            <option value="85">85%</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-foot">
+        <label class="check"><input type="checkbox" id="radarApenasRemoto"> Apenas remoto</label>
+        <div class="row">
+          <button class="btn ghost" type="button" aria-controls="boxChavesVagas" aria-expanded="false" onclick="alternarBloco('boxChavesVagas',this)">Chaves de API</button>
+          <button class="btn action" type="button" id="btnBuscarVagas" onclick="buscarMelhoresVagasAgora()">Buscar vagas</button>
+        </div>
+      </div>
+
+      <div class="subpanel" id="boxChavesVagas" hidden>
+        <div class="subpanel-head">
+          <strong>Plataformas premium</strong>
+          <span class="hint">Opcional. As chaves ficam no .env local deste computador.</span>
+        </div>
         <div class="cv-grid">
           <div class="cv-field">
-            <label>1. Cargo & Nome da Empresa Alvo</label>
-            <input class="memo-input" id="vgCargoEmpresa" placeholder="Ex: Engenheiro de Software / Automação Python — Empresa X" />
+            <label for="keySerpapi">SERPAPI_KEY · Google Jobs BR / Gupy <a class="link" href="https://serpapi.com/manage-api-key" target="_blank" rel="noopener noreferrer">obter chave ↗</a></label>
+            <input class="memo-input" id="keySerpapi" type="password" autocomplete="off">
           </div>
           <div class="cv-field">
-            <label>2. E-mail do Recrutador ou Link da Vaga (Gupy / LinkedIn / Portal)</label>
-            <input class="memo-input" id="vgLinkEmail" placeholder="Ex: recrutamento@empresa.com.br ou https://..." />
-          </div>
-          <div class="cv-field full">
-            <label>3. Cole Aqui os Requisitos / Descrição da Vaga</label>
-            <textarea class="cv-textarea" id="vgDescricao" rows="4" placeholder="Cole a descrição completa da vaga aqui. Os agentes vão extrair as palavras-chave exatas, moldar seu currículo com os R$ 20 mil/ano + Docker/Snipe-IT, criar o roteiro completo da sua entrevista e configurar a vigia da vaga..."></textarea>
-          </div>
-          <div class="cv-field full" style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-            <span style="font-family:var(--f-memo);font-size:11.5px;color:var(--muted)" id="vgFeedbackStatus">
-              Pronto para processar nova vaga com seu Dossiê Curricular Oficial.
-            </span>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn" type="button" onclick="abrirModalAutoconfig()">
-                ⚙️ Central Completa (.env + Git Hooks + IMAP/SMTP)
-              </button>
-              <button class="btn" type="button" onclick="document.getElementById('boxWebhookVagas').hidden=!document.getElementById('boxWebhookVagas').hidden">
-                🔌 Configurar Webhooks (Gmail / n8n / WhatsApp)
-              </button>
-              <button class="btn action" type="button" id="btnCriarCandidatura" onclick="iniciarFluxoGoldenTicket()">
-                🚀 Moldar Currículo + Preparar Entrevista + Iniciar Monitoramento (Para Minha Aprovação)
-              </button>
-            </div>
+            <label for="keyJooble">JOOBLE_API_KEY · Jooble Brasil <a class="link" href="https://jooble.org/api/about" target="_blank" rel="noopener noreferrer">obter chave ↗</a></label>
+            <input class="memo-input" id="keyJooble" type="password" autocomplete="off">
           </div>
         </div>
-
-        <!-- CENTRAL DE WEBHOOKS DA ESTEIRA GOLDEN TICKET -->
-        <div id="boxWebhookVagas" hidden style="margin-top:8px;padding:12px;background:#fff;border:2px dashed var(--brand);display:grid;gap:10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <strong style="font-family:var(--f-display);font-size:14px;color:var(--brand);text-transform:uppercase;letter-spacing:.8px">
-              🔌 Ponte de Webhooks (Gmail Apps Script · n8n · Make · WhatsApp)
-            </strong>
-            <span style="font-family:var(--f-memo);font-size:11px;color:var(--muted)">
-              Dispara apenas quando você clica em "✅ Autorizar" ou "🔄 Checar E-mail"
-            </span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
-            <input class="memo-input" id="cfgGoldenWebhook" placeholder="Cole aqui a URL do seu Webhook (Google Apps Script /exec, n8n, Make ou http://localhost:8080)" />
-            <button class="btn ok" type="button" onclick="salvarWebhookGoldenTicket()">💾 Salvar Webhook</button>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--muted)">
-            <span>Quer monitorar seu Gmail e enviar currículos aprovados de graça sem precisar de servidor pago?</span>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="btn" type="button" style="font-size:11px;padding:4px 8px" onclick="copiarScriptGoogleApps()">
-                📋 Copiar Código Google Apps Script (Ponte Gmail Grátis)
-              </button>
-              <button class="btn" type="button" style="font-size:11px;padding:4px 8px" onclick="simularRetornoWebhookRecrutador()">
-                ⚡ Simular Webhook de Resposta de Recrutador
-              </button>
-            </div>
-          </div>
+        <div class="row between">
+          <span class="hint" id="lblStatusPlataformas"></span>
+          <button class="btn ok" type="button" onclick="salvarChavesPlataformasVagas()">Salvar chaves no .env</button>
         </div>
       </div>
-
-      <!-- LISTA DE CANDIDATURAS ATIVAS NA ESTEIRA -->
-      <div id="vagasContainer" style="display:grid;gap:14px"></div>
     </div>
 
-    <!-- ABA 1: AUDITORIA FÁCIL -->
-    <div class="folder-body" id="bodyAudit" hidden>
-      <div class="audit-toolbar">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <strong style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:1px">Filtrar Memorandos:</strong>
-          <select class="memo-input" style="width:auto" id="fAgente" onchange="renderAudit()">
-            <option value="TODOS">Todos os Agentes</option>
-            <option value="ESTUDIO_YOUTUBE">▶️ Diretor Scarn (Edição de Vídeo & YouTube)</option>
-            <option value="SISTEMA_WUPHF">📯 Sistema WUPHF (LinkedIn c/ Aval)</option>
-            <option value="NEUTRALIZADOR_TOBY">🎯 Neutralizador Toby (Anti-ATS)</option>
-            <option value="PROTOCOLO_RECYCLOPS">🤖 Protocolo Recyclops (Dwight OSINT)</option>
-            <option value="OPERADOR_MOSE">🚜 Operador Mose (Auto-Commit Git)</option>
-          </select>
-          <select class="memo-input" style="width:auto" id="fStatus" onchange="renderAudit()">
-            <option value="TODOS">Todos os Status</option>
-            <option value="AGUARDANDO_AUTORIZACAO">⏳ Aguardando Sua Autorização</option>
-            <option value="AUTORIZADO">✅ Autorizados pelo Gerente</option>
-            <option value="CONCLUIDO">✔ Concluídos</option>
-            <option value="VETADO">🚫 Vetados / Erros</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn" type="button" onclick="simularTurnoDocumentario()">🧪 Gerar Relatórios de Exemplo</button>
-          <button class="btn" type="button" onclick="exportarAuditoria()">📥 Baixar Auditoria (.json)</button>
+    <div id="radarVagasContainer" class="stack"></div>
+  </section>
+
+  <!-- ================= APROVAÇÕES (AUDITORIA) ================= -->
+  <section class="page" id="bodyAudit" hidden aria-labelledby="navAudit">
+    <div class="page-head">
+      <div>
+        <h2 class="page-title">Aprovações <span class="page-count">(<span id="cntAudit">0</span>)</span></h2>
+        <p class="page-sub">Tudo o que os agentes produziram. Itens pendentes só saem depois do seu carimbo.</p>
+      </div>
+      <div class="row">
+        <button class="btn sm" type="button" onclick="simularTurnoDocumentario()">Gerar exemplos</button>
+        <button class="btn sm" type="button" onclick="exportarAuditoria()">Baixar auditoria (.json)</button>
+      </div>
+    </div>
+    <div class="card filters-bar">
+      <div class="cv-field">
+        <label for="fStatus">Status</label>
+        <select class="memo-input" id="fStatus" onchange="renderAudit()">
+          <option value="TODOS">Todos</option>
+          <option value="AGUARDANDO_AUTORIZACAO">Aguardando sua autorização</option>
+          <option value="AUTORIZADO">Autorizados</option>
+          <option value="CONCLUIDO">Concluídos</option>
+          <option value="VETADO">Vetados ou com erro</option>
+        </select>
+      </div>
+      <div class="cv-field">
+        <label for="fAgente">Agente</label>
+        <select class="memo-input" id="fAgente" onchange="renderAudit()">
+          <option value="TODOS">Todos os agentes</option>
+          <option value="ESTUDIO_YOUTUBE">Diretor Scarn · vídeo e YouTube</option>
+          <option value="SISTEMA_WUPHF">Sistema WUPHF · LinkedIn</option>
+          <option value="NEUTRALIZADOR_TOBY">Neutralizador Toby · anti-ATS</option>
+          <option value="PROTOCOLO_RECYCLOPS">Protocolo Recyclops · OSINT</option>
+          <option value="OPERADOR_MOSE">Operador Mose · Git</option>
+        </select>
+      </div>
+    </div>
+    <div class="audit-grid" id="auditGrid"></div>
+  </section>
+
+  <!-- ================= REDES E ESTÚDIO ================= -->
+  <section class="page" id="bodyNet" hidden aria-labelledby="navNet">
+    <div class="page-head">
+      <div>
+        <h2 class="page-title">Redes e estúdio</h2>
+        <p class="page-sub">Roteiros de vídeo, posts e conexões com as suas redes. Toda publicação passa pela aba Aprovações.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3 class="card-title">Mesa de corte do Diretor Scarn</h3>
+          <p class="card-sub">Gera roteiro com timecodes, cortes de B-roll, comando FFmpeg, versão Shorts e SEO.</p>
         </div>
       </div>
-      <div class="audit-grid" id="auditGrid"></div>
-    </div>
-
-    <!-- ABA 2: ESTÚDIO DE EDIÇÃO DE VÍDEO YOUTUBE & HUB DE REDES -->
-    <div class="folder-body" id="bodyNet" hidden>
-      <div style="margin-bottom:14px;padding:12px;background:#f7f4ea;border:1.5px solid var(--ink);display:grid;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-          <strong style="font-family:var(--f-display);font-size:15px;letter-spacing:1px;text-transform:uppercase;color:#c4302b">
-            🎬 Mesa de Corte & Pós-Produção YouTube (Diretor Scarn)
-          </strong>
-          <span style="font-family:var(--f-memo);font-size:11.5px;color:var(--muted)">Gera roteiro c/ timecodes, cortes B-Roll, comando FFmpeg, Shorts e SEO (Sujeito à sua autorização)</span>
+      <div class="yt-row">
+        <div class="cv-field">
+          <label for="ytTemaInput">Tema do vídeo</label>
+          <input class="memo-input" id="ytTemaInput" placeholder="Ex.: Como automatizei o WhatsApp e economizei R$ 20 mil/ano com Python e Docker" />
         </div>
-        <div style="display:grid;grid-template-columns:1.5fr 1fr auto;gap:8px">
-          <input class="memo-input" id="ytTemaInput" placeholder="Tema do vídeo (ex: Como automatizei WhatsApp e economizei R$ 20 mil/ano com Python e Docker)..." />
+        <div class="cv-field">
+          <label for="ytFormatoSelect">Formato</label>
           <select class="memo-input" id="ytFormatoSelect">
-            <option value="Vídeo Completo YouTube (8-12 min) + 1 Corte Shorts/Reels">Vídeo Longo YouTube + 1 Corte Shorts</option>
-            <option value="YouTube Shorts / Reels / TikTok (60s vertical de alto impacto)">Apenas Corte Vertical (Shorts / Reels / TikTok)</option>
-            <option value="Tutorial Técnico Hands-On (Código + Terminal Docker + Arquitetura)">Tutorial Técnico Hands-On (Screen-record)</option>
+            <option value="Vídeo Completo YouTube (8-12 min) + 1 Corte Shorts/Reels">Vídeo longo + 1 corte Shorts</option>
+            <option value="YouTube Shorts / Reels / TikTok (60s vertical de alto impacto)">Apenas corte vertical (Shorts, Reels, TikTok)</option>
+            <option value="Tutorial Técnico Hands-On (Código + Terminal Docker + Arquitetura)">Tutorial técnico (gravação de tela)</option>
           </select>
-          <button class="btn action" type="button" onclick="gerarPacoteVideoPainel()">▶️ Gerar Edição & Roteiro</button>
         </div>
-      </div>
-
-      <div class="net-grid">
-        <!-- CARD YOUTUBE -->
-        <div class="net-card">
-          <h3><span>▶️ YouTube & YouTube Studio</span> <span class="memo-tag" style="color:#c4302b;border-color:#c4302b">Setor Vídeo</span></h3>
-          <p style="font-size:12px;color:var(--muted);margin:0">Canal de vídeos técnicos, bastidores do Sistema Perfectenschlag, AWAProject, Bet-Trader e tutoriais de automação.</p>
-          <input class="memo-input" id="cfgYoutubeUrl" placeholder="URL do seu Canal YouTube (ex: youtube.com/@...)" />
-          <input class="memo-input" id="cfgYoutubeWebhook" placeholder="Webhook n8n/API p/ Upload de Vídeo (opcional)" />
-          <div style="display:flex;gap:6px;margin-top:auto">
-            <a class="net-btn yt" href="https://studio.youtube.com" target="_blank" rel="noopener" style="flex:1;justify-content:center">Abrir YouTube Studio</a>
-            <button class="net-btn" type="button" onclick="acionarSetorVideoYoutube()">Entrevistar Diretor</button>
-          </div>
-        </div>
-
-        <!-- CARD LINKEDIN -->
-        <div class="net-card">
-          <h3><span>💼 LinkedIn (Sistema WUPHF)</span> <span class="memo-tag" style="color:#0a66c2;border-color:#0a66c2">Com Seu Aval</span></h3>
-          <p style="font-size:12px;color:var(--muted);margin:0">Publicação de vitórias técnicas e ROI de R$ 20 mil/ano. Nunca posta sem antes receber seu carimbo de Autorizado.</p>
-          <input class="memo-input" id="cfgLinkedinUrl" placeholder="URL do seu Perfil LinkedIn (ex: linkedin.com/in/...)" />
-          <input class="memo-input" id="cfgLinkedinWebhook" placeholder="Webhook n8n/Make p/ Auto-Post após aprovação" />
-          <div style="display:flex;gap:6px;margin-top:auto">
-            <a class="net-btn in" href="https://www.linkedin.com/feed/" target="_blank" rel="noopener" style="flex:1;justify-content:center">Abrir Feed LinkedIn</a>
-            <button class="net-btn" type="button" onclick="acionarRedeLinkedin()">Gerar Post WUPHF</button>
-          </div>
-        </div>
-
-        <!-- CARD GITHUB -->
-        <div class="net-card">
-          <h3><span>🐙 GitHub (Operador Mose)</span> <span class="memo-tag" style="color:var(--ok);border-color:var(--ok)">Online ✔</span></h3>
-          <p style="font-size:12px;color:var(--muted);margin:0">Sincronização autônoma dos repositórios <code>sistema-perfectenschlag</code>, <code>assistant-to-the-lead-manager</code>, <code>AWAProject</code> e <code>bet-trader-dunder</code>.</p>
-          <input class="memo-input" id="cfgGithubUser" value="https://github.com/andream001" readonly />
-          <div style="display:flex;gap:6px;margin-top:auto">
-            <a class="net-btn gh" href="https://github.com/andream001?tab=repositories" target="_blank" rel="noopener" style="flex:1;justify-content:center">Ver Repositórios</a>
-            <button class="net-btn" type="button" onclick="acionarMoseGit()">Acionar Mose</button>
-          </div>
-        </div>
-
-        <!-- CARD WHATSAPP & SHORTS/REELS -->
-        <div class="net-card">
-          <h3><span>💬 WhatsApp API & Shorts/Reels</span> <span class="memo-tag">Omnichannel</span></h3>
-          <p style="font-size:12px;color:var(--muted);margin:0">Integração com o disparador B2B ([EMPRESA CONFIDENCIAL]) e distribuição de cortes verticais para Instagram Reels / TikTok.</p>
-          <input class="memo-input" id="cfgWhatsappWebhook" placeholder="URL do Webhook WhatsApp / n8n (salvo apenas no seu navegador)" value="" />
-          <div style="display:flex;gap:6px;margin-top:auto">
-            <button class="net-btn sh" type="button" onclick="acionarSetorShortsReels()" style="flex:1;justify-content:center">🎬 Criar Corte Shorts</button>
-            <button class="net-btn action" type="button" onclick="salvarConfigRedes()">💾 Salvar Redes (Local)</button>
-          </div>
-        </div>
-
-        <!-- CARD N8N AUTOMATION HUB -->
-        <div class="net-card" style="border-color:var(--brand);background:#f3f6fa">
-          <h3><span>🔄 n8n Automation Hub (Scranton)</span> <span class="memo-tag" id="badgeN8nCard" style="color:var(--brand);border-color:var(--brand)">Pronto ✔</span></h3>
-          <p style="font-size:12px;color:var(--muted);margin:0">Docker Compose + 3 Workflows nativos prontos (Golden Ticket, WUPHF LinkedIn/YouTube e Ponte WhatsApp Cloud API).</p>
-          <input class="memo-input" id="cfgN8nBaseUrl" value="http://localhost:5678" placeholder="http://localhost:5678" />
-          <div style="display:flex;gap:6px;margin-top:auto;flex-wrap:wrap">
-            <button class="net-btn action" type="button" onclick="provisionarN8nUI(true)" style="flex:1;justify-content:center">🐳 Subir n8n + Importar</button>
-            <button class="net-btn" type="button" onclick="baixarWorkflowsN8n()" style="flex:1;justify-content:center">📥 Workflows (.json)</button>
-            <a class="net-btn" href="http://localhost:5678" target="_blank" rel="noopener" style="flex:1;justify-content:center">🌐 Abrir :5678</a>
-          </div>
-        </div>
+        <button class="btn action" type="button" onclick="gerarPacoteVideoPainel()">Gerar roteiro</button>
       </div>
     </div>
 
-    <!-- ABA 2: CURRÍCULO & DADOS COMPLEMENTARES -->
-    <div class="folder-body" id="bodyCv" hidden>
-      <div class="cv-grid">
-        <div class="upload-strip" onclick="document.getElementById('cvFileInput').click()">
-          <strong>📄 CLIQUE AQUI PARA SUBIR SEU ARQUIVO DE CURRÍCULO (.TXT, .MD, .JSON)</strong><br>
-          <span>Ou edite diretamente os campos timbrados abaixo — todos os agentes usam este dossiê automaticamente.</span>
-          <input type="file" id="cvFileInput" accept=".txt,.md,.json,.csv" style="display:none" onchange="subirArquivoCurriculo(event)">
+    <div class="net-grid">
+      <div class="net-card">
+        <h3><span>YouTube</span> <span class="memo-tag t-yt">Vídeo</span></h3>
+        <p>Vídeos técnicos, bastidores do Perfectenschlag, AWAProject, Bet-Trader e tutoriais.</p>
+        <input class="memo-input" id="cfgYoutubeUrl" aria-label="URL do canal no YouTube" placeholder="URL do canal (youtube.com/@…)" />
+        <input class="memo-input" id="cfgYoutubeWebhook" aria-label="Webhook de upload" placeholder="Webhook n8n/API para upload (opcional)" />
+        <div class="net-actions">
+          <a class="net-btn yt" href="https://studio.youtube.com" target="_blank" rel="noopener">Abrir YouTube Studio ↗</a>
+          <button class="net-btn" type="button" onclick="acionarSetorVideoYoutube()">Entrevistar diretor</button>
         </div>
-        <div class="cv-field">
-          <label>Nome Completo & Cargo Alvo</label>
-          <input class="memo-input" id="cvNome">
+      </div>
+
+      <div class="net-card">
+        <h3><span>LinkedIn · WUPHF</span> <span class="memo-tag t-in">Com seu aval</span></h3>
+        <p>Posts sobre vitórias técnicas. Nunca publica sem o seu carimbo de autorizado.</p>
+        <input class="memo-input" id="cfgLinkedinUrl" aria-label="URL do perfil no LinkedIn" placeholder="URL do perfil (linkedin.com/in/…)" />
+        <input class="memo-input" id="cfgLinkedinWebhook" aria-label="Webhook de publicação" placeholder="Webhook n8n/Make para publicar após aprovação" />
+        <div class="net-actions">
+          <a class="net-btn in" href="https://www.linkedin.com/feed/" target="_blank" rel="noopener">Abrir LinkedIn ↗</a>
+          <button class="net-btn" type="button" onclick="acionarRedeLinkedin()">Gerar post</button>
         </div>
-        <div class="cv-field">
-          <label>Contatos & Links (GitHub, LinkedIn, Portfólio)</label>
-          <input class="memo-input" id="cvContatos">
+      </div>
+
+      <div class="net-card">
+        <h3><span>GitHub · Operador Mose</span> <span class="memo-tag t-ok">Online</span></h3>
+        <p>Sincroniza <code>sistema-perfectenschlag</code>, <code>assistant-to-the-lead-manager</code>, <code>AWAProject</code> e <code>bet-trader-dunder</code>.</p>
+        <input class="memo-input" id="cfgGithubUser" aria-label="Perfil no GitHub" value="https://github.com/andream001" readonly />
+        <div class="net-actions">
+          <a class="net-btn gh" href="https://github.com/andream001?tab=repositories" target="_blank" rel="noopener">Ver repositórios ↗</a>
+          <button class="net-btn" type="button" onclick="acionarMoseGit()">Acionar Mose</button>
         </div>
-        <div class="cv-field full">
-          <label>Marcos Obrigatórios (Economia R$ 20 mil/ano + Docker/Snipe-IT + Projetos)</label>
-          <textarea class="cv-textarea" id="cvMarcos" rows="4"></textarea>
+      </div>
+
+      <div class="net-card">
+        <h3><span>WhatsApp e cortes verticais</span> <span class="memo-tag">Omnichannel</span></h3>
+        <p>Disparador B2B e distribuição de cortes para Reels e TikTok.</p>
+        <input class="memo-input" id="cfgWhatsappWebhook" aria-label="Webhook do WhatsApp" placeholder="Webhook WhatsApp / n8n (fica só neste navegador)" value="" />
+        <div class="net-actions">
+          <button class="net-btn sh" type="button" onclick="acionarSetorShortsReels()">Criar corte Shorts</button>
+          <a class="net-btn wa" href="http://localhost:5000" target="_blank" rel="noopener">Lead Manager ↗</a>
+          <button class="net-btn" type="button" onclick="salvarConfigRedes()">Salvar redes</button>
         </div>
-        <div class="cv-field full">
-          <label>Competências Técnicas / Stack</label>
-          <textarea class="cv-textarea" id="cvSkills" rows="2"></textarea>
-        </div>
-        <div class="cv-field full">
-          <label>Currículo Completo (Experiências, Formação, Repositórios GitHub andream001)</label>
-          <textarea class="cv-textarea" id="cvBruto" rows="6"></textarea>
-        </div>
-        <div class="cv-field full">
-          <label>Informações Complementares & Diretrizes Estratégicas</label>
-          <textarea class="cv-textarea" id="cvComp" rows="3"></textarea>
-        </div>
-        <div class="cv-field full" style="display:flex;flex-direction:row;justify-content:flex-end;gap:10px">
-          <button class="btn" type="button" onclick="exportarCurriculo()">📤 Exportar Dossiê (.json)</button>
-          <button class="btn action" type="button" onclick="salvarCurriculo()">💾 Salvar Dossiê e Injetar na Filial</button>
+      </div>
+
+      <div class="net-card accent">
+        <h3><span>n8n · automações</span> <span class="memo-tag t-brand" id="badgeN8nCard">Pronto</span></h3>
+        <p>Docker Compose com 3 workflows: Golden Ticket, WUPHF/YouTube e ponte WhatsApp Cloud API.</p>
+        <input class="memo-input" id="cfgN8nBaseUrl" aria-label="Endereço do n8n" value="http://localhost:5678" placeholder="http://localhost:5678" />
+        <div class="net-actions">
+          <button class="net-btn action" type="button" onclick="provisionarN8nUI(true)">Subir n8n e importar</button>
+          <button class="net-btn" type="button" onclick="baixarWorkflowsN8n()">Workflows (.json)</button>
+          <a class="net-btn" href="http://localhost:5678" target="_blank" rel="noopener">Abrir n8n ↗</a>
         </div>
       </div>
     </div>
   </section>
 
-  <p class="foot">AgentCraft Paper Co. · Filial Scranton · Sistema Perfectenschlag conectado ao seu portfólio GitHub (andream001).</p>
-</div>
+  <!-- ================= DOSSIÊ ================= -->
+  <section class="page" id="bodyCv" hidden aria-labelledby="navCv">
+    <div class="page-head">
+      <div>
+        <h2 class="page-title">Dossiê curricular</h2>
+        <p class="page-sub">A única fonte de fatos dos currículos. Os dados ficam no arquivo local <code>perfil_gerente.local.json</code>, que não vai para o Git.</p>
+      </div>
+      <div class="row">
+        <button class="btn sm" type="button" onclick="exportarCurriculo()">Exportar (.json)</button>
+        <button class="btn action" type="button" onclick="salvarCurriculo()">Salvar dossiê</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cv-grid">
+        <label class="upload-strip" for="cvFileInput">
+          <strong>Importar currículo de um arquivo</strong>
+          <span>.txt, .md ou .json · ou preencha os campos abaixo</span>
+          <input type="file" id="cvFileInput" accept=".txt,.md,.json,.csv" class="sr-only" onchange="subirArquivoCurriculo(event)">
+        </label>
+        <div class="cv-field">
+          <label for="cvNome">Nome completo</label>
+          <input class="memo-input" id="cvNome" autocomplete="name">
+        </div>
+        <div class="cv-field">
+          <label for="cvTitulo">Título profissional</label>
+          <input class="memo-input" id="cvTitulo" placeholder="Ex.: Engenheiro de Software · Automação e Infraestrutura">
+        </div>
+        <div class="cv-field">
+          <label for="cvEmail">E-mail</label>
+          <input class="memo-input" id="cvEmail" type="email" autocomplete="email">
+        </div>
+        <div class="cv-field">
+          <label for="cvTelefone">Telefone</label>
+          <input class="memo-input" id="cvTelefone" type="tel" autocomplete="tel" placeholder="+55 11 90000-0000">
+        </div>
+        <div class="cv-field">
+          <label for="cvLocal">Cidade e modelo de trabalho</label>
+          <input class="memo-input" id="cvLocal" placeholder="Ex.: São Paulo, SP · Remoto ou híbrido">
+        </div>
+        <div class="cv-field">
+          <label for="cvLinkedin">LinkedIn</label>
+          <input class="memo-input" id="cvLinkedin" placeholder="https://linkedin.com/in/…">
+        </div>
+        <div class="cv-field">
+          <label for="cvGithub">GitHub</label>
+          <input class="memo-input" id="cvGithub" placeholder="https://github.com/…">
+        </div>
+        <div class="cv-field">
+          <label for="cvPortfolio">Portfólio (opcional)</label>
+          <input class="memo-input" id="cvPortfolio">
+        </div>
+        <div class="cv-field full">
+          <label for="cvResumo">Resumo profissional</label>
+          <textarea class="cv-textarea plain" id="cvResumo" rows="3"></textarea>
+        </div>
+        <div class="cv-field full">
+          <label for="cvExperiencias">Experiência profissional</label>
+          <textarea class="cv-textarea" id="cvExperiencias" rows="9" placeholder="Cargo | Empresa | mm/aaaa – atual&#10;- O que você fez e o resultado&#10;- Outro resultado&#10;&#10;Cargo anterior | Empresa | mm/aaaa – mm/aaaa&#10;- …"></textarea>
+          <span class="hint">Uma experiência por bloco. Primeira linha: cargo | empresa | período. Depois, uma linha por resultado começando com "-". Deixe uma linha em branco entre experiências.</span>
+        </div>
+        <div class="cv-field full">
+          <label for="cvMarcos">Resultados que devem aparecer em toda candidatura</label>
+          <textarea class="cv-textarea" id="cvMarcos" rows="4"></textarea>
+          <span class="hint">Um por linha. Use só números que você consegue comprovar numa entrevista.</span>
+        </div>
+        <div class="cv-field full">
+          <label for="cvSkills">Competências técnicas</label>
+          <textarea class="cv-textarea" id="cvSkills" rows="4"></textarea>
+          <span class="hint">Uma por linha.</span>
+        </div>
+        <div class="cv-field full">
+          <label for="cvProjetos">Projetos</label>
+          <textarea class="cv-textarea" id="cvProjetos" rows="4" placeholder="Nome do projeto | tecnologias | o que ele faz"></textarea>
+          <span class="hint">Um por linha: nome | tecnologias | descrição.</span>
+        </div>
+        <div class="cv-field">
+          <label for="cvFormacao">Formação e certificações</label>
+          <textarea class="cv-textarea" id="cvFormacao" rows="3" placeholder="Curso — Instituição — ano de conclusão"></textarea>
+        </div>
+        <div class="cv-field">
+          <label for="cvIdiomas">Idiomas</label>
+          <textarea class="cv-textarea" id="cvIdiomas" rows="3" placeholder="Português (nativo)&#10;Inglês (intermediário)"></textarea>
+        </div>
+        <div class="cv-field full">
+          <label for="cvComp">Diretrizes para os agentes</label>
+          <textarea class="cv-textarea plain" id="cvComp" rows="3" placeholder="Ex.: foco em vagas remotas de automação; não citar o projeto X"></textarea>
+        </div>
+        <details class="cv-field full info-box">
+          <summary><b>Texto livre do currículo antigo</b> (opcional, usado só como referência)</summary>
+          <textarea class="cv-textarea" id="cvBruto" rows="6" style="margin-top:8px"></textarea>
+        </details>
+      </div>
+      <div class="card-foot end">
+        <button class="btn" type="button" onclick="exportarCurriculo()">Exportar (.json)</button>
+        <button class="btn action" type="button" onclick="salvarCurriculo()">Salvar dossiê e aplicar na filial</button>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">AgentCraft Paper Co. · Filial Regional · Sistema Perfectenschlag</p>
+</main>
+
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
 
 <!-- MODAL: CHAVE API GEMINI -->
 <div class="modal-bg" id="modalApi">
@@ -612,7 +991,7 @@ html,body{background:var(--wall);color:var(--ink);font-family:var(--f-body);marg
           </div>
           <div class="cv-field">
             <label>✅ Verify Token Meta WhatsApp (WHATSAPP_VERIFY_TOKEN)</label>
-            <input class="memo-input" id="acWaVerifyToken" placeholder="dunder_mifflin_scranton_verify" />
+            <input class="memo-input" id="acWaVerifyToken" placeholder="****" />
           </div>
         </div>
       </div>
@@ -770,6 +1149,20 @@ const A=[
       about:'Eu sincronizo o sistema-perfectenschlag, o assistant-to-the-lead-manager, o AWAProject e o bet-trader-dunder direto no GitHub sem parar.',
       boss:'Enquanto o pessoal toma café na copa, eu já subi três Conventional Commits para a branch main.',
       secret:'Tem um servidor rodando na fazenda de beterrabas que nunca desligou desde 2019.'}},
+ {id:'jv',nm:'Caçador de Vagas',art:'o',role:'Radar · Busca Automática de Vagas',ws:'desk',seat:{tx:28,ty:17,face:'down'},work:'varrendo vagas em 9 portais',
+  agentKey:'CACADOR_VAGAS',p1:'Palavras-chave (ex: Python, Automação, Docker, IA)...',p2:'Filtro opcional (brasil / remoto)...',
+  look:{skin:'#f2c9a5',hair:'#8c4a1c',style:'short',glasses:1,shirt:'#0f766e',tie:'#f59e0b'},
+  iv:{intro:'Radar ligado! Estou varrendo GitHub BR, Remotive, RemoteOK, Himalayas e suas APIs.',
+      about:'Eu ranqueio cada vaga de 0 a 99% comparando com seu Dossiê e mando direto pra Esteira Golden Ticket.',
+      boss:'Com 1 clique aqui, você não perde tempo caçando vaga ruim.',
+      secret:'Já filtrei 100+ vagas hoje enquanto ninguém olhava.'}},
+ {id:'rf',nm:'Recrutador Auditor',art:'o',role:'RH Sênior · Auditor Final de CV',ws:'acct',seat:{tx:3,ty:17,face:'down'},work:'auditando currículos com Nota ATS',
+  agentKey:'AUDITOR_RECRUTADOR',p1:'ID da vaga na esteira (ou deixe vazio p/ auditar a última)...',p2:'Info extra do recrutador/empresa (opcional)...',
+  look:{skin:'#d8a47f',hair:'#2b2b33',style:'long',glasses:1,shirt:'#4338ca',tie:'#e11d48'},
+  iv:{intro:'Eu incorporo exatamente o Tech Lead e o RH da vaga antes do seu currículo sair.',
+      about:'Dou a Nota ATS de 0 a 100, aponto objeções de 6 segundos e reescrevo o currículo sem inventar nada.',
+      boss:'Só passa quem estiver afiado para a entrevista.',
+      secret:'Eu reprovo currículos genéricos no café da manhã.'}},
 ];
 const byId={};A.forEach(a=>byId[a.id]=a);
 const cap=b=>(b.art==='a'?'A ':'O ')+b.nm;
@@ -1045,7 +1438,13 @@ view.addEventListener('click',ev=>{
   let best=null,bd=1e9;
   for(const a of A){if(a.state==='interview')continue;const top=a.headY,bot=(a.state==='sit'||a.state==='meet')?a.sitTop+12:a.py;
     const cx=a.px,cy=(top+bot)/2;if(wx>cx-7&&wx<cx+7&&wy>top-4&&wy<bot+3){const d=Math.hypot(wx-cx,wy-cy);if(d<bd){bd=d;best=a}}}
-  if(best)openInterview(best);
+  if(best){openInterview(best);return}
+  // Sem agente sob o cursor: a sala clicada abre a seção correspondente (tiles de 8px)
+  const tx=wx/8,ty=wy/8;
+  if(tx>=27&&ty<=10)abrirAbaPasta('AUDIT');
+  else if(tx>=13&&tx<27&&ty<=9)abrirAbaPasta('NET');
+  else if(tx<=11&&ty>=11&&ty<=18)abrirLogProcessos();
+  else if(tx>=32&&ty>=14&&byId.dp)openInterview(byId.dp);
 });
 
 /* ---------- Entrevista ---------- */
@@ -1224,6 +1623,30 @@ function frame(now){
 }
 updateButtons();
 requestAnimationFrame(frame);
+setTimeout(()=>{const k=Object.keys(typeof ABAS!=='undefined'?ABAS:{}).find(k=>'#'+ABAS[k][2]===location.hash);if(k&&k!=='HOME')abrirAbaPasta(k,{semRolagem:true})},0);
+
+/* ---------- CLIQUE DIRETO NO MAPA THE OFFICE (GAME RTS) & MODO GAME ---------- */
+document.body.classList.add('game-compact');
+window.alternarModoGame=()=>{
+  document.body.classList.toggle('game-compact');
+  const on=document.body.classList.contains('game-compact');
+  const btn=document.getElementById('btnModoGame');
+  if(btn){btn.textContent=`Dicas: ${on?'ocultas':'visíveis'}`;btn.setAttribute('aria-pressed',String(!on))}
+};
+window.abrirRadarERodar=()=>{
+  abrirAbaPasta('RADAR');
+  const el=document.getElementById('radarKeywords');
+  if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+  buscarMelhoresVagasAgora();
+};
+window.abrirLogProcessos=()=>{
+  abrirAbaPasta('VAGAS');
+  carregarLogCurriculos();
+  const el=document.getElementById('logCurriculosContainer');
+  if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+};
+
+/* Cliques no mapa: tratados no handler principal do canvas (#view). */
 
 /* ============================================================================
    INTEGRAÇÃO SISTEMA PERFECTENSCHLAG: AUDITORIA, CURRÍCULO (andream001) & GEMINI
@@ -1254,11 +1677,13 @@ function censurarTexto(str){
   if(!str)return '';
   let s=String(str);
   if(!modoCensuraAtivo)return s;
-  // Mascara chaves de API, Tokens, CPFs, CNPJs e nomes de empresas reais
+  // Mascara chaves de API, Tokens, CPFs, CNPJs e telefones de terceiros
   s=s.replace(/AIza[0-9A-Za-z\-_]{20,}/g,'[API_KEY_PROTEGIDA]');
   s=s.replace(/gh[po]_[0-9A-Za-z]{20,}/g,'[GITHUB_TOKEN_PROTEGIDO]');
   s=s.replace(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,'[CPF_CENSURADO]');
   s=s.replace(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g,'[CNPJ_CENSURADO]');
+  s=s.replace(/\b55\d{10,11}\b/g,'[TELEFONE_CENSURADO]');
+  s=s.replace(/\(?\b\d{2}\)?\s*9?\d{4}-?\d{4}\b/g,'[TELEFONE_CENSURADO]');
   return s;
 }
 
@@ -1267,8 +1692,7 @@ window.alternarModoCensura=()=>{
   const lbl=document.getElementById('lblDlpStatus');
   const btn=document.getElementById('btnDlpToggle');
   lbl.textContent=modoCensuraAtivo?'ATIVA':'PAUSADA';
-  btn.style.borderColor=modoCensuraAtivo?'var(--ok)':'var(--warn)';
-  btn.style.color=modoCensuraAtivo?'var(--ok)':'var(--warn)';
+  const dot=btn.querySelector('.dot');if(dot)dot.className='dot'+(modoCensuraAtivo?' ok':'');
   renderAudit();
 };
 
@@ -1276,36 +1700,66 @@ let perfil={...PERFIL_DEFAULT};
 let auditoria=[];
 let backendOn=false;
 
+const linhas=t=>String(t||'').split(/\r?\n/).map(x=>x.replace(/^\s*[-•*]\s*/,'').trim()).filter(Boolean);
+const comoLista=v=>Array.isArray(v)?v:linhas(v);
+function experienciasParaTexto(exps){
+  return (exps||[]).map(e=>[[e.cargo,e.empresa,e.periodo].map(x=>x||'').join(' | '),...(e.realizacoes||[]).map(r=>'- '+r)].join('\n')).join('\n\n');
+}
+function textoParaExperiencias(t){
+  return String(t||'').split(/\n\s*\n/).map(bloco=>{
+    const ls=bloco.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!ls.length)return null;
+    const [cargo='',empresa='',periodo='']=ls[0].split('|').map(x=>x.trim());
+    return {cargo,empresa,periodo,realizacoes:ls.slice(1).map(x=>x.replace(/^[-•*]\s*/,''))};
+  }).filter(Boolean);
+}
 function carregarCurriculoUI(){
-  const s=localStorage.getItem('PERFECTENSCHLAG_PERFIL');
-  if(s){try{perfil={...PERFIL_DEFAULT,...JSON.parse(s)}}catch(e){}}
-  document.getElementById('cvNome').value=perfil.nome_completo||'';
-  document.getElementById('cvContatos').value=typeof perfil.contatos==='object'?JSON.stringify(perfil.contatos):(perfil.contatos||'');
-  document.getElementById('cvMarcos').value=Array.isArray(perfil.marcos_obrigatorios)?perfil.marcos_obrigatorios.join('\n'):(perfil.marcos_obrigatorios||'');
-  document.getElementById('cvSkills').value=Array.isArray(perfil.competencias_tecnicas)?perfil.competencias_tecnicas.join(', '):(perfil.competencias_tecnicas||'');
-  document.getElementById('cvBruto').value=perfil.curriculo_bruto_integral||'';
-  document.getElementById('cvComp').value=perfil.informacoes_complementares||'';
+  if(!backendOn){const s=localStorage.getItem('PERFECTENSCHLAG_PERFIL');if(s){try{perfil={...PERFIL_DEFAULT,...JSON.parse(s)}}catch(e){}}}
+  const c=(perfil.contatos&&typeof perfil.contatos==='object')?perfil.contatos:{};
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||''};
+  set('cvNome',perfil.nome_completo);set('cvTitulo',perfil.titulo_profissional);set('cvLocal',perfil.localizacao);
+  set('cvEmail',c.email);set('cvTelefone',c.telefone);set('cvLinkedin',c.linkedin);set('cvGithub',c.github);set('cvPortfolio',c.portfolio);
+  set('cvResumo',perfil.resumo_executivo);
+  set('cvExperiencias',experienciasParaTexto(perfil.experiencias_profissionais));
+  set('cvMarcos',comoLista(perfil.marcos_obrigatorios).join('\n'));
+  set('cvSkills',comoLista(perfil.competencias_tecnicas).join('\n'));
+  set('cvProjetos',(perfil.projetos_destaque||[]).map(p=>[p.nome,p.stack,p.descricao].map(x=>x||'').join(' | ')).join('\n'));
+  set('cvFormacao',comoLista(perfil.formacao_e_certificacoes).join('\n'));
+  set('cvIdiomas',comoLista(perfil.idiomas).join('\n'));
+  set('cvComp',perfil.informacoes_complementares);
+  set('cvBruto',perfil.curriculo_bruto_integral);
 }
 
 function dossieTexto(){
-  return `=== DOSSIÊ CURRICULAR OFICIAL DO GERENTE REGIONAL ===\nNOME: ${perfil.nome_completo}\nCONTATOS: ${perfil.contatos}\nMARCOS OBRIGATÓRIOS:\n${perfil.marcos_obrigatorios}\nCOMPETÊNCIAS: ${perfil.competencias_tecnicas}\nCURRÍCULO / PORTFÓLIO:\n${perfil.curriculo_bruto_integral}\nDIRETRIZES: ${perfil.informacoes_complementares}`;
+  const c=(perfil.contatos&&typeof perfil.contatos==='object')?Object.values(perfil.contatos).filter(Boolean).join(' · '):(perfil.contatos||'');
+  const lista=v=>comoLista(v).map(x=>'- '+x).join('\n');
+  return `=== DOSSIÊ DO CANDIDATO (fonte única de fatos) ===\nNOME: ${perfil.nome_completo||''}\nTÍTULO: ${perfil.titulo_profissional||''}\nCONTATOS: ${c}\nRESUMO: ${perfil.resumo_executivo||''}\nEXPERIÊNCIA:\n${experienciasParaTexto(perfil.experiencias_profissionais)}\nRESULTADOS:\n${lista(perfil.marcos_obrigatorios)}\nCOMPETÊNCIAS:\n${lista(perfil.competencias_tecnicas)}\nFORMAÇÃO:\n${lista(perfil.formacao_e_certificacoes)}\nIDIOMAS: ${comoLista(perfil.idiomas).join(', ')}\nDIRETRIZES: ${perfil.informacoes_complementares||''}`;
 }
 
 window.salvarCurriculo=async()=>{
-  perfil={
-    nome_completo:document.getElementById('cvNome').value.trim(),
-    contatos:document.getElementById('cvContatos').value.trim(),
-    marcos_obrigatorios:document.getElementById('cvMarcos').value.trim(),
-    competencias_tecnicas:document.getElementById('cvSkills').value.trim(),
-    curriculo_bruto_integral:document.getElementById('cvBruto').value.trim(),
-    informacoes_complementares:document.getElementById('cvComp').value.trim()
+  const v=id=>(document.getElementById(id)?.value||'').trim();
+  perfil={...perfil,
+    nome_completo:v('cvNome'),titulo_profissional:v('cvTitulo'),localizacao:v('cvLocal'),
+    contatos:{email:v('cvEmail'),telefone:v('cvTelefone'),linkedin:v('cvLinkedin'),github:v('cvGithub'),portfolio:v('cvPortfolio')},
+    resumo_executivo:v('cvResumo'),
+    experiencias_profissionais:textoParaExperiencias(v('cvExperiencias')),
+    marcos_obrigatorios:linhas(v('cvMarcos')),
+    competencias_tecnicas:linhas(v('cvSkills')),
+    projetos_destaque:linhas(v('cvProjetos')).map(l=>{const [nome='',stack='',descricao='']=l.split('|').map(x=>x.trim());return{nome,stack,descricao}}),
+    formacao_e_certificacoes:linhas(v('cvFormacao')),
+    idiomas:linhas(v('cvIdiomas')),
+    informacoes_complementares:v('cvComp'),
+    curriculo_bruto_integral:v('cvBruto')
   };
-  localStorage.setItem('PERFECTENSCHLAG_PERFIL',JSON.stringify(perfil));
+  perfilEditando=false;
+  try{localStorage.setItem('PERFECTENSCHLAG_PERFIL',JSON.stringify(perfil))}catch(e){}
   if(backendOn){
-    try{await fetch('/api/perfil',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(perfil)})}catch(e){}
+    try{
+      const r=await fetch('/api/perfil',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(perfil)});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      await sincronizarBackend();
+    }catch(e){notificar('⚠️ Não foi possível salvar o perfil no servidor: '+e.message);return}
   }
-  registrarMemoLocal('ORQUESTRADOR_REGIONAL','ATUALIZACAO_DOSSIE',perfil.nome_completo,'Dossiê Curricular Oficial salvo e distribuído para todas as mesas da filial.','CONCLUIDO');
-  abrirAbaPasta('AUDIT');
+  notificar(pendenciasPerfil.length?`⚠️ Perfil salvo. Ainda faltam ${pendenciasPerfil.length} item(ns) para os currículos poderem ser enviados.`:'✅ Perfil salvo e completo.');
 };
 
 window.subirArquivoCurriculo=ev=>{
@@ -1361,7 +1815,7 @@ function atualizarPainelAutoconfig(cfg){
   setVal('acWhYoutube',whOut.youtube_webhook_url||'');
   setVal('acWhWhatsapp',whOut.whatsapp_webhook_url||'');
   setVal('acWhToken',cred.webhook_secret_token||'');
-  setVal('acWaVerifyToken',cred.whatsapp_verify_token||'dunder_mifflin_scranton_verify');
+  setVal('acWaVerifyToken',cred.whatsapp_verify_token||'****');
 
   if(whOut.golden_ticket_webhook_url){
     localStorage.setItem('PERFECTENSCHLAG_GOLDEN_WEBHOOK',whOut.golden_ticket_webhook_url);
@@ -1517,7 +1971,7 @@ window.baixarWorkflowsN8n=async()=>{
       return;
     }
   }catch(e){}
-  alert('Os 3 workflows estão salvos na pasta n8n/workflows/ do projeto!');
+  notificar('Os 3 workflows estão salvos na pasta n8n/workflows/ do projeto!');
 };
 
 window.testarWebhookLocal=async tipo=>{
@@ -1559,9 +2013,14 @@ async function sincronizarBackend(){
     atualizarBadgeApi(d.api_key_configurada);
     auditoria=d.auditoria||[];
     if(d.configuracao)atualizarPainelAutoconfig(d.configuracao);
+    pendenciasPerfil=Array.isArray(d.pendencias_perfil)?d.pendencias_perfil:[];
+    renderPendenciasPerfil();
+    if(d.perfil&&typeof d.perfil==='object'&&!perfilEditando){perfil={...PERFIL_DEFAULT,...d.perfil};carregarCurriculoUI()}
     if(Array.isArray(d.candidaturas)&&d.candidaturas.length){
       candidaturas=d.candidaturas;
       renderCandidaturas();
+carregarVagasDescobertas();
+carregarLogCurriculos();
     }
     renderAudit();
   }catch(e){
@@ -1579,10 +2038,30 @@ function atualizarBadgeApi(ok){
   const el=document.getElementById('lblApiStatus');
   el.textContent=ok?'Ativa ✔':'Configurar';
   el.style.color=ok?'var(--ok)':'var(--rec)';
+  const dot=el.parentElement&&el.parentElement.querySelector('.dot');if(dot)dot.className='dot'+(ok?' ok':'');
 }
 
 async function executarMissaoAgente(agentObj,entrada,extra){
   const agKey=agentObj.agentKey;
+  if(agKey==='CACADOR_VAGAS'){
+    speak('Radar ativado! Varrendo portais de vagas compatíveis agora...');
+    if(entrada)document.getElementById('radarKeywords').value=entrada;
+    if(extra&&extra.toLowerCase().includes('remoto'))document.getElementById('radarApenasRemoto').checked=true;
+    abrirAbaPasta('VAGAS');
+    await buscarMelhoresVagasAgora();
+    speak(`Busca concluída! Top ${(vagasRadarCache||[]).length} vagas ranqueadas no Radar abaixo.`);
+    return;
+  }
+  if(agKey==='AUDITOR_RECRUTADOR'){
+    const alvo=entrada?candidaturas.find(x=>x.id.toUpperCase()===entrada.toUpperCase()):candidaturas[0];
+    if(!alvo){speak('Fato: Nenhuma vaga na esteira ainda! Insira ou envie uma vaga pelo Radar primeiro.');return;}
+    speak(`Incorporando o recrutador de ${alvo.cargo_empresa}. Auditando seu currículo agora...`);
+    if(extra)alvo.info_recrutador_extra=extra;
+    abrirAbaPasta('VAGAS');
+    await auditarComoRecrutador(alvo.id);
+    speak(`Auditoria concluída! Nota ATS: ${(alvo.auditoria_recrutador_final||{}).nota_ats||'-'}/100. Veja o parecer no card da vaga.`);
+    return;
+  }
   if((agKey==='NEUTRALIZADOR_TOBY'||agKey==='PROTOCOLO_RECYCLOPS')&&!entrada){
     speak('Fato: Preciso que você preencha o campo alvo ali no painel antes de eu atacar!');
     document.getElementById('missionInput1').focus();
@@ -1674,6 +2153,11 @@ window.renderAudit=()=>{
   });
   document.getElementById('cntAudit').textContent=list.length;
   grid.innerHTML='';
+  if(!list.length){
+    grid.innerHTML=auditoria.length
+      ?'<div class="empty"><strong>Nada com esses filtros</strong><span>Troque o status ou o agente para ver outros itens.</span></div>'
+      :'<div class="empty"><strong>Nenhum item para revisar</strong><span>Quando um agente produzir um currículo, post ou roteiro, ele aparece aqui esperando o seu carimbo.</span></div>';
+  }
 
   list.forEach(item=>{
     const pendente=item.status==='AGUARDANDO_AUTORIZACAO';
@@ -1741,21 +2225,82 @@ window.copiarModalRead=()=>{
   navigator.clipboard.writeText(document.getElementById('modalReadBody').textContent);
 };
 
-window.abrirAbaPasta=aba=>{
-  document.getElementById('ftabVagas').className='ftab'+(aba==='VAGAS'?' active':'');
-  document.getElementById('ftabAudit').className='ftab'+(aba==='AUDIT'?' active':'');
-  document.getElementById('ftabNet').className='ftab'+(aba==='NET'?' active':'');
-  document.getElementById('ftabCv').className='ftab'+(aba==='CV'?' active':'');
-  document.getElementById('bodyVagas').hidden=(aba!=='VAGAS');
-  document.getElementById('bodyAudit').hidden=(aba!=='AUDIT');
-  document.getElementById('bodyNet').hidden=(aba!=='NET');
-  document.getElementById('bodyCv').hidden=(aba!=='CV');
+const ABAS={HOME:['navHome','bodyHome','escritorio'],VAGAS:['navVagas','bodyVagas','candidaturas'],RADAR:['navRadar','bodyRadar','radar'],AUDIT:['navAudit','bodyAudit','aprovacoes'],NET:['navNet','bodyNet','redes'],CV:['navCv','bodyCv','dossie']};
+window.abrirAbaPasta=(aba,opts={})=>{
+  if(!ABAS[aba])aba='HOME';
+  for(const [k,[nav,body]] of Object.entries(ABAS)){
+    const on=k===aba;
+    const n=document.getElementById(nav),b=document.getElementById(body);
+    if(n){n.classList.toggle('active',on);n.setAttribute('aria-selected',on)}
+    if(b)b.hidden=!on;
+  }
+  const h='#'+ABAS[aba][2];
+  if(location.hash!==h){try{history.replaceState(null,'',h)}catch(e){}}
+  if(!opts.semRolagem)window.scrollTo({top:0,behavior:'smooth'});
+  if(aba==='HOME')requestAnimationFrame(()=>{try{resize()}catch(e){}});
 };
+window.addEventListener('hashchange',()=>{const k=Object.keys(ABAS).find(k=>'#'+ABAS[k][2]===location.hash);if(k)abrirAbaPasta(k,{semRolagem:true})});
+window.alternarBloco=(id,btn)=>{const el=document.getElementById(id);if(!el)return;el.hidden=!el.hidden;if(btn)btn.setAttribute('aria-expanded',String(!el.hidden));if(!el.hidden){const f=el.querySelector('input,textarea,select');if(f)f.focus()}};
+window.notificar=(msg,tipo)=>{
+  const box=document.getElementById('toasts');if(!box){return}
+  const t=String(msg);
+  tipo=tipo||(/^\s*(⚠️|❌|🚫)|erro|falha/i.test(t)?'err':/^\s*(✅|💾|✨|🎫|✔)/.test(t)?'ok':'');
+  const el=document.createElement('div');el.className='toast '+tipo;el.setAttribute('role',tipo==='err'?'alert':'status');
+  const sp=document.createElement('span');sp.textContent=t.replace(/^\s*(⚠️|❌|✅|💾|✨|🎫|✔)\s*/,'');
+  const x=document.createElement('button');x.type='button';x.setAttribute('aria-label','Fechar aviso');x.textContent='×';x.onclick=()=>el.remove();
+  el.append(sp,x);box.appendChild(el);
+  setTimeout(()=>el.remove(),tipo==='err'?10000:7500);
+};
+function sincronizarResumo(){
+  const g=id=>{const e=document.getElementById(id);return e?e.textContent.trim():'0'};
+  const pend=parseInt(g('cntWuphf'))||0;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e&&e.textContent!==String(v))e.textContent=v};
+  set('statVagas',g('cntVagas'));set('statPend',pend);
+  const np=document.getElementById('navPend');if(np){np.hidden=!pend;set('navPend',pend)}
+  const rc=document.getElementById('radarVagasContainer');set('statRadar',rc?rc.querySelectorAll(':scope > :not(.empty)').length:0);
+}
+setInterval(sincronizarResumo,800);
 
 /* ============================================================================
    ESTEIRA DE VAGAS & DISTRIBUIÇÃO DE CURRÍCULOS (OPERAÇÃO GOLDEN TICKET)
    ============================================================================ */
 let candidaturas=[];
+let pendenciasPerfil=[];
+let perfilEditando=false;
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#bodyCv'))perfilEditando=true});
+function renderPendenciasPerfil(){
+  const el=document.getElementById('avisoPerfil');if(!el)return;
+  if(!pendenciasPerfil.length){el.hidden=true;el.innerHTML='';return}
+  el.hidden=false;
+  el.innerHTML=`<strong>Seu perfil está incompleto. Currículos com estes campos não podem ser enviados.</strong>
+    <ul>${pendenciasPerfil.map(p=>`<li>${escTexto(p)}</li>`).join('')}</ul>
+    <button class="btn sm" type="button" onclick="abrirAbaPasta('CV')">Completar no Dossiê</button>`;
+}
+function blocoFormato(f){
+  if(!f)return'';
+  const lista=a=>(a||[]).map(x=>`<li>${escTexto(x)}</li>`).join('');
+  return `<details class="info-box" open>
+    <summary><b>Como se candidatar:</b> ${escTexto(f.plataforma||'')} <span class="chip ${f.envio_automatico_permitido?'chip-ok':'chip-warn'}">${f.envio_automatico_permitido?'Envio automático por e-mail':'Candidatura manual'}</span>
+      <span class="chip">${f.idioma_curriculo==='en'?'Currículo em inglês':'Currículo em português'}</span>${f.modalidade?`<span class="chip">${escTexto(f.modalidade)}</span>`:''}${f.contrato?`<span class="chip">${escTexto(f.contrato)}</span>`:''}</summary>
+    <div class="info-grid">
+      <div><b>Passos</b><ol>${lista(f.como_aplicar)}</ol></div>
+      <div><b>Formato do currículo</b><p>${escTexto(f.formato_curriculo||'')}</p>
+        ${(f.exigencias||[]).length?`<b>A vaga também pede</b><ul>${lista(f.exigencias)}</ul>`:''}
+        ${f.observacoes?`<p class="hint">${escTexto(f.observacoes)}</p>`:''}</div>
+    </div>
+    ${(f.alertas||[]).length?`<ul class="alert-list">${lista(f.alertas)}</ul>`:''}
+  </details>`;
+}
+function blocoQualidade(c){
+  const q=c.qualidade;if(!q)return'';
+  const lista=a=>(a||[]).map(x=>`<li>${escTexto(x)}</li>`).join('');
+  if(q.pronto_para_envio&&!(q.avisos||[]).length)return `<div class="q-box q-ok"><b>Checagem de qualidade:</b> pronto para enviar.</div>`;
+  return `<div class="q-box ${q.pronto_para_envio?'q-warn':'q-bad'}">
+    <b>${q.pronto_para_envio?'Pronto para enviar, com avisos':'Envio bloqueado até corrigir'}</b>
+    ${(q.bloqueios||[]).length?`<ul>${lista(q.bloqueios)}</ul>`:''}
+    ${(q.avisos||[]).length?`<ul class="q-avisos">${lista(q.avisos)}</ul>`:''}
+  </div>`;
+}
 
 function carregarCandidaturasIniciais(){
   const whSaved=localStorage.getItem('PERFECTENSCHLAG_GOLDEN_WEBHOOK');
@@ -1786,11 +2331,15 @@ function carregarCandidaturasIniciais(){
     salvarCandidaturasLocal();
   }
   renderCandidaturas();
+carregarVagasDescobertas();
+carregarLogCurriculos();
 }
 
 function salvarCandidaturasLocal(){
   localStorage.setItem('PERFECTENSCHLAG_CANDIDATURAS',JSON.stringify(candidaturas));
   renderCandidaturas();
+carregarVagasDescobertas();
+carregarLogCurriculos();
 }
 
 window.iniciarFluxoGoldenTicket=async()=>{
@@ -1799,7 +2348,7 @@ window.iniciarFluxoGoldenTicket=async()=>{
   const descricao=document.getElementById('vgDescricao').value.trim();
 
   if(!cargoEmpresa||!descricao){
-    alert('Fato: Informe o Cargo/Empresa e cole a Descrição da Vaga para os agentes trabalharem!');
+    notificar('Fato: Informe o Cargo/Empresa e cole a Descrição da Vaga para os agentes trabalharem!');
     return;
   }
 
@@ -1893,7 +2442,7 @@ window.iniciarFluxoGoldenTicket=async()=>{
     statusEl.textContent='❌ Erro: '+err.message;
   }finally{
     btn.disabled=false;
-    btn.textContent='🚀 Moldar Currículo + Preparar Entrevista + Iniciar Monitoramento (Para Minha Aprovação)';
+    btn.textContent='Preparar candidatura para aprovação';
   }
 };
 
@@ -1902,75 +2451,328 @@ window.trocarSubAbaVaga=(id,aba)=>{
   if(!c)return;
   c.abaAtiva=aba;
   renderCandidaturas();
+carregarVagasDescobertas();
+carregarLogCurriculos();
 };
 
-window.salvarEdicaoCvVaga=id=>{
+window.salvarEdicaoCvVaga=async id=>{
   const c=candidaturas.find(x=>x.id===id);
-  const ta=document.getElementById(`taCv_${id}`);
+  const ta=document.getElementById(`taCv_${id}`),tm=document.getElementById(`taMsg_${id}`);
   if(!c||!ta)return;
-  c.curriculo_moldado=ta.value;
+  c.curriculo_moldado=ta.value;if(tm)c.mensagem_apresentacao=tm.value;
+  if(backendOn){
+    try{
+      const r=await fetch('/api/decidir_candidatura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,decisao:'SALVAR_EDICAO',curriculo_moldado:c.curriculo_moldado,mensagem_apresentacao:c.mensagem_apresentacao||''})});
+      const d=await r.json();
+      if(d.candidatura)Object.assign(c,d.candidatura);
+    }catch(e){notificar('⚠️ Não foi possível salvar no servidor: '+e.message);return}
+  }
   salvarCandidaturasLocal();
-  alert('💾 Alterações no currículo moldado salvas com sucesso!');
+  const q=c.qualidade;
+  notificar(q&&!q.pronto_para_envio?'⚠️ Edição salva, mas ainda há itens que bloqueiam o envio.':'💾 Edição salva.');
 };
 
-window.baixarCurriculoMoldado=id=>{
+window.carregarLogCurriculos=async()=>{
+  try{
+    const r=await fetch('/api/curriculos/log');
+    const d=await r.json();
+    if(d.ok)renderLogCurriculos(d.logs||[]);
+  }catch(e){}
+};
+
+window.atualizarEtapaCurriculo=async(id, etapa)=>{
+  if(!etapa)return;
+  const r=await fetch('/api/curriculos/etapa',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id,etapa_processo:etapa})
+  });
+  const d=await r.json();
+  if(d.ok)renderLogCurriculos(d.logs||[]);
+};
+
+function renderLogCurriculos(logs){
+  const cont=document.getElementById('logCurriculosContainer');
+  if(!cont)return;
+  if(!logs||!logs.length){
+    cont.innerHTML='<div class="empty"><strong>Nenhum envio ainda</strong><span>Quando você autorizar uma candidatura, ela aparece aqui com a etapa do processo.</span></div>';
+    return;
+  }
+  const cores={ENVIADO:'var(--brand)',AUTORIZADO_MANUAL:'#0284c7',EM_ANALISE:'#d97706',ENTREVISTA_AGENDADA:'var(--ok)',TESTE_TECNICO:'#7c3aed',PROPOSTA:'#059669',FINALIZADO_SEM_RETORNO:'var(--muted)',VETADO:'var(--rec)'};
+  cont.innerHTML=logs.map(l=>{
+    const cor=cores[l.etapa_processo]||'var(--brand)';
+    return `
+      <div style="background:#fff;border:1.5px solid #d6d1c2;border-left:5px solid ${cor};padding:8px 10px;border-radius:4px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div style="display:grid;gap:2px">
+          <div><strong style="font-size:13px">${esc(l.cargo_empresa)}</strong> <span style="font-family:var(--f-memo);font-size:11px;color:var(--muted)">[${esc(l.id)}]</span></div>
+          <div style="font-family:var(--f-memo);font-size:11px;color:var(--muted)">
+            Enviado em: <b>${esc(l.enviado_em||'-')}</b> · Atualizado: ${esc(l.ultima_atualizacao||'-')}${l.nota_ats!==null&&l.nota_ats!==undefined?` · ATS: <b style="color:var(--ok)">${l.nota_ats}/100</b>`:''}
+          </div>
+          ${(l.historico_etapas&&l.historico_etapas.length)?`<div style="font-size:11px;color:#475569">${esc(l.historico_etapas[0])}</div>`:''}
+        </div>
+        <select class="memo-input" style="width:auto;font-size:11.5px;font-weight:700;color:${cor}" onchange="atualizarEtapaCurriculo('${esc(l.id)}',this.value)">
+          ${['ENVIADO','AUTORIZADO_MANUAL','EM_ANALISE','ENTREVISTA_AGENDADA','TESTE_TECNICO','PROPOSTA','FINALIZADO_SEM_RETORNO','VETADO'].map(et=>`<option value="${et}" ${l.etapa_processo===et?'selected':''}>${et}</option>`).join('')}
+        </select>
+      </div>
+    `;
+  }).join('');
+}
+
+let vagasRadarCache=[];
+window.carregarVagasDescobertas=async()=>{
+  try{
+    const r=await fetch('/api/vagas/descobertas');
+    const d=await r.json();
+    if(d.ok){
+      vagasRadarCache=d.vagas||[];
+      renderRadarVagas(vagasRadarCache);
+      atualizarBadgesPlataformas(d.plataformas);
+    }
+  }catch(e){}
+};
+
+function atualizarBadgesPlataformas(plat){
+  const el=document.getElementById('lblStatusPlataformas');
+  if(!el||!plat)return;
+  el.textContent=`Ativas: GitHub BR ✔ · Remotive ✔ · RemoteOK ✔ · Arbeitnow ✔ · Himalayas ✔ | SerpApi(Google Jobs): ${plat.serpapi?'✔':'○'} · Jooble BR: ${plat.jooble?'✔':'○'}`;
+}
+
+window.salvarChavesPlataformasVagas=async()=>{
+  const payload={};
+  const s=document.getElementById('keySerpapi').value.trim();
+  const jo=document.getElementById('keyJooble').value.trim();
+  if(s)payload.SERPAPI_KEY=s;
+  if(jo)payload.JOOBLE_API_KEY=jo;
+  if(!Object.keys(payload).length){notificar('Preencha ao menos uma chave para salvar.');return;}
+  const r=await fetch('/api/autoconfigurar',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  if(r.ok){
+    notificar('✅ Chaves salvas com segurança no .env! Já pode buscar nas novas plataformas.');
+    carregarVagasDescobertas();
+  }
+};
+
+window.buscarMelhoresVagasAgora=async()=>{
+  const btn=document.getElementById('btnBuscarVagas');
+  const lbl=document.getElementById('lblStatusRadarVagas');
+  const palavras_chave=document.getElementById('radarKeywords').value.trim();
+  const apenas_remoto=document.getElementById('radarApenasRemoto').checked;
+  const fonte=document.getElementById('radarFonte').value;
+  const senioridade=document.getElementById('radarSenioridade').value;
+  const idioma=document.getElementById('radarIdioma').value;
+  const score_minimo=parseInt(document.getElementById('radarScoreMin').value||'0',10);
+  if(btn){btn.disabled=true;btn.textContent='⏳ Varrendo portais de vagas...';}
+  if(lbl)lbl.textContent='Consultando GitHub BR, Remotive, RemoteOK e Arbeitnow...';
+  try{
+    const r=await fetch('/api/vagas/buscar',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({palavras_chave,apenas_remoto,fonte,senioridade,idioma,score_minimo,limite:20})
+    });
+    const d=await r.json();
+    if(d.ok){
+      vagasRadarCache=d.vagas||[];
+      renderRadarVagas(vagasRadarCache);
+      if(lbl)lbl.textContent=`✅ ${d.total_varridas||0} vagas varridas → Top ${vagasRadarCache.length} ranqueadas!`;
+    }else{
+      if(lbl)lbl.textContent='⚠️ '+(d.erro||'Falha ao buscar vagas');
+    }
+  }catch(e){
+    if(lbl)lbl.textContent='⚠️ Erro: '+e.message;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🔍 Buscar Melhores Vagas Agora';}
+  }
+};
+
+window.enviarVagaRadarEsteira=async id=>{
+  const btn=document.getElementById(`btnEnvEsteira_${id}`);
+  if(btn){btn.disabled=true;btn.textContent='⏳ Moldando CV & Preparando...';}
+  try{
+    const r=await fetch('/api/vagas/enviar_esteira',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
+    const d=await r.json();
+    if(d.ok&&d.candidatura){
+      candidaturas.unshift(d.candidatura);
+      salvarCandidaturasLocal();
+      renderCandidaturas();
+carregarVagasDescobertas();
+carregarLogCurriculos();
+      if(d.vagas){vagasRadarCache=d.vagas;renderRadarVagas(vagasRadarCache);}
+      notificar(`🎫 Vaga enviada para a Esteira Golden Ticket! Agora você já pode auditar com o Recrutador Final e autorizar.`);
+    }else{
+      notificar('⚠️ '+(d.erro||'Falha ao enviar vaga para a esteira'));
+      if(btn){btn.disabled=false;btn.textContent='🎫 Enviar p/ Esteira Golden Ticket';}
+    }
+  }catch(e){
+    notificar('⚠️ Erro: '+e.message);
+    if(btn){btn.disabled=false;btn.textContent='🎫 Enviar p/ Esteira Golden Ticket';}
+  }
+};
+
+function renderRadarVagas(lista){
+  const cont=document.getElementById('radarVagasContainer');
+  if(!cont)return;
+  if(!lista||!lista.length){
+    cont.innerHTML='<div class="empty"><strong>Nenhuma vaga no radar</strong><span>Ajuste os filtros e clique em Buscar vagas para encontrar oportunidades compatíveis com o seu dossiê.</span></div>';
+    return;
+  }
+  cont.innerHTML=lista.map(v=>{
+    const cor=v.score_match>=75?'var(--ok)':(v.score_match>=55?'var(--brand)':'var(--muted)');
+    return `
+      <div style="background:#fff;border:1.5px solid #d6d1c2;border-left:5px solid ${cor};padding:10px 12px;border-radius:4px;display:grid;gap:4px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+          <div>
+            <span style="font-family:var(--f-memo);font-weight:800;color:${cor}">[${v.score_match}% MATCH]</span>
+            <strong style="font-size:13.5px">${esc(v.titulo)}</strong>
+            <span style="font-size:12px;color:var(--muted)">· ${esc(v.empresa)} (${esc(v.local)})</span>
+          </div>
+          <span style="font-family:var(--f-memo);font-size:11px;background:#f1f5f9;padding:2px 6px;border-radius:3px">${esc(v.fonte)}</span>
+        </div>
+        ${v.motivo_match?`<div style="font-size:12px;color:#334155">💡 ${esc(v.motivo_match)}</div>`:''}
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-top:2px">
+          <span style="font-family:var(--f-memo);font-size:11px;color:var(--muted)">${(v.tags||[]).map(t=>'#'+esc(t)).join(' ')}</span>
+          <div style="display:flex;gap:6px">
+            <a class="btn" style="font-size:11px;padding:4px 8px" href="${esc(v.url)}" target="_blank">🔗 Ver Vaga</a>
+            ${v.enviada_para_esteira
+              ?'<span style="font-family:var(--f-memo);font-size:11px;color:var(--ok);font-weight:700;padding:4px 8px">✅ Já na Esteira</span>'
+              :`<button class="btn ok" style="font-size:11px;padding:4px 8px" type="button" id="btnEnvEsteira_${esc(v.id)}" onclick="enviarVagaRadarEsteira('${esc(v.id)}')">🎫 Enviar p/ Esteira Golden Ticket</button>`
+            }
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.auditarComoRecrutador=async id=>{
+  const c=candidaturas.find(x=>x.id===id);
+  if(!c)return;
+  const ta=document.getElementById(`taCv_${id}`);
+  const inpRec=document.getElementById(`inpRec_${id}`);
+  const btn=document.getElementById(`btnAudRec_${id}`);
+  const cvAtual=ta?ta.value:(c.curriculo_moldado||'');
+  const infoRec=inpRec?inpRec.value.trim():(c.info_recrutador_extra||'');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Recrutador analisando currículo...';}
+  try{
+    const r=await fetch('/api/auditar_curriculo_recrutador',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id,curriculo_atual:cvAtual,info_recrutador_extra:infoRec})
+    });
+    const d=await r.json();
+    if(d.ok&&d.auditoria){
+      c.auditoria_recrutador_final=d.auditoria;
+      c.info_recrutador_extra=infoRec;
+      salvarCandidaturasLocal();
+      renderCandidaturas();
+carregarVagasDescobertas();
+carregarLogCurriculos();
+    }else{
+      notificar('⚠️ '+(d.erro||'Falha na auditoria do recrutador. Verifique se a GEMINI_API_KEY está ativa.'));
+    }
+  }catch(e){
+    notificar('⚠️ Erro ao chamar Auditor Recrutador: '+e.message);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🧐 Revisar como recrutador';}
+  }
+};
+
+window.aplicarCurriculoOtimizado=id=>{
+  const c=candidaturas.find(x=>x.id===id);
+  if(!c||!c.auditoria_recrutador_final||!c.auditoria_recrutador_final.curriculo_otimizado)return;
+  const ta=document.getElementById(`taCv_${id}`);
+  const editadoManualmente=ta&&ta.value.trim()!==String(c.curriculo_moldado||'').trim();
+  if(!confirm(editadoManualmente
+    ?'Você fez edições manuais no currículo. Aplicar a versão otimizada do recrutador vai substituir o texto atual do editor. Continuar?'
+    :'Substituir o texto atual do editor pela versão otimizada do recrutador?')){
+    return;
+  }
+  c.curriculo_moldado=c.auditoria_recrutador_final.curriculo_otimizado;
+  if(ta)ta.value=c.curriculo_moldado;
+  salvarCandidaturasLocal();
+  notificar('✨ Versão otimizada aplicada no editor! Clique em Salvar Edição para validar antes de autorizar.');
+};
+
+window.baixarCurriculoMoldado=async id=>{
   const c=candidaturas.find(x=>x.id===id);if(!c)return;
-  const blob=new Blob([c.curriculo_moldado],{type:'text/markdown;charset=utf-8'});
+  if(backendOn){
+    try{
+      const r=await fetch(`/api/candidatura/docx?id=${encodeURIComponent(id)}`,{credentials:'same-origin'});
+      if(!r.ok){
+        notificar(`⚠️ Falha ao baixar currículo (.docx) — HTTP ${r.status}. Tente novamente.`);
+        return;
+      }
+      const blob=await r.blob();
+      const disp=r.headers.get('Content-Disposition')||'';
+      const m=disp.match(/filename="?([^"]+)"?/i);
+      const nome=(m&&m[1])||`Curriculo_${c.id}.docx`;
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download=nome;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),5000);
+      notificar(`✅ Currículo baixado (${nome}).`);
+      return;
+    }catch(e){
+      notificar('⚠️ Erro ao baixar currículo (.docx): '+e.message);
+      return;
+    }
+  }
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`Curriculo_Andre_${c.id}.md`;
-  a.click();
+  a.href=URL.createObjectURL(new Blob([c.curriculo_moldado],{type:'text/markdown;charset=utf-8'}));
+  a.download=`Curriculo_${c.id}.md`;
+  document.body.appendChild(a);a.click();a.remove();
 };
 
 window.autorizarEEnviarCandidatura=async id=>{
   const c=candidaturas.find(x=>x.id===id);if(!c)return;
-  const ta=document.getElementById(`taCv_${id}`);
+  const ta=document.getElementById(`taCv_${id}`),tm=document.getElementById(`taMsg_${id}`);
   if(ta)c.curriculo_moldado=ta.value;
-
-  // Copia o currículo moldado automaticamente para a área de transferência
-  try{await navigator.clipboard.writeText(c.curriculo_moldado)}catch(e){}
-
-  c.status='AUTORIZADO_EM_MONITORAMENTO';
-  const agora=new Date().toLocaleString('pt-BR');
-  c.ultimo_check_monitoramento=agora;
-  c.alertas_monitoramento=c.alertas_monitoramento||[];
-  c.alertas_monitoramento.unshift(`[${agora}] ✅ AUTORIZADO PELO GERENTE REGIONAL! Currículo copiado e monitoramento de e-mail/plataforma ativado.`);
-
-  const whUrl=localStorage.getItem('PERFECTENSCHLAG_GOLDEN_WEBHOOK')||'';
-  if(whUrl){
-    try{
-      await fetch(whUrl,{
-        method:'POST',
-        headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({
-          acao:'ENVIAR_CANDIDATURA_APROVADA',
-          id:c.id,
-          cargo_empresa:c.cargo_empresa,
-          destinatario:c.link_ou_email,
-          curriculo_moldado:c.curriculo_moldado,
-          autorizado_em:agora
-        })
-      });
-      c.alertas_monitoramento.unshift(`[${agora}] 🔌 Webhook de Disparo acionado com sucesso (${whUrl.slice(0,45)}...).`);
-    }catch(e){
-      c.alertas_monitoramento.unshift(`[${agora}] ⚠️ Aviso ao acionar Webhook externo: verifique a URL configurada.`);
-    }
+  if(tm)c.mensagem_apresentacao=tm.value;
+  if(!backendOn){
+    notificar('⚠️ O servidor está offline. A autorização e o envio só funcionam com o servidor rodando.');
+    return;
   }
-
+  const fPre=c.formato_candidatura||{};
+  let novaAba=null;
+  if(!fPre.envio_automatico_permitido&&/^https?:/.test(c.link_ou_email||'')){
+    novaAba=window.open('about:blank','_blank');
+  }
+  let d;
+  try{
+    const r=await fetch('/api/decidir_candidatura',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id,decisao:'AUTORIZAR',curriculo_moldado:c.curriculo_moldado,mensagem_apresentacao:c.mensagem_apresentacao||''})});
+    d=await r.json();
+  }catch(e){if(novaAba)novaAba.close();notificar('⚠️ Falha ao falar com o servidor: '+e.message);return}
+  if(d.candidatura){Object.assign(c,d.candidatura);c.abaAtiva='CV'}
   salvarCandidaturasLocal();
-
-  if(backendOn){
-    try{await fetch('/api/decidir_candidatura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,decisao:'AUTORIZAR',curriculo_moldado:c.curriculo_moldado})})}catch(e){}
-  }
-
-  // Se for um e-mail, abre o cliente de e-mail já preenchido; se for link da plataforma, abre a página da vaga com o CV já no Ctrl+V!
-  const dest=(c.link_ou_email||'').trim();
-  if(dest.includes('@')&&!dest.startsWith('http')){
-    const assunto=encodeURIComponent(`Candidatura: ${c.cargo_empresa}`);
-    const corpo=encodeURIComponent(c.curriculo_moldado.slice(0,1800));
-    window.open(`mailto:${dest}?subject=${assunto}&body=${corpo}`,'_blank');
-  }else if(dest.startsWith('http')){
-    window.open(dest,'_blank');
+  carregarLogCurriculos();
+  if(backendOn)sincronizarBackend();
+  sincronizarResumo();
+  if(!d.ok){if(novaAba)novaAba.close();notificar('⚠️ '+(d.erro||'Envio bloqueado.')+' Veja os itens no card.');return}
+  const f=c.formato_candidatura||{};
+  const ultimo=(c.alertas_monitoramento||[]).slice(-1)[0]||'';
+  if(f.envio_automatico_permitido){
+    if(novaAba)novaAba.close();
+    if(/SMTP não configurado/.test(ultimo)){
+      await baixarCurriculoMoldado(id);
+      const assunto=encodeURIComponent(f.assunto_pedido||`Candidatura · ${String(c.cargo_empresa).split('—')[0].trim()}`);
+      window.open(`mailto:${f.email_destino}?subject=${assunto}&body=${encodeURIComponent(c.mensagem_apresentacao||'')}`,'_blank');
+      notificar('O e-mail foi aberto no seu programa de e-mail. Anexe o currículo que acabou de ser baixado antes de enviar.');
+    }else{
+      notificar(/Falha/.test(ultimo)?'⚠️ '+ultimo:'✅ Candidatura enviada por e-mail com o currículo anexado.');
+    }
+  }else{
+    await baixarCurriculoMoldado(id);
+    try{await navigator.clipboard.writeText(c.mensagem_apresentacao||'')}catch(e){}
+    if(/^https?:/.test(c.link_ou_email||'')){
+      if(novaAba){novaAba.location.href=c.link_ou_email;}else{window.open(c.link_ou_email,'_blank');}
+    }
+    notificar(`✅ Autorizado para ${f.plataforma||'plataforma'}: currículo baixado, mensagem copiada e vaga aberta.`);
   }
 };
 
@@ -2092,24 +2894,46 @@ window.marcarEntrevistaVaga=id=>{
   salvarCandidaturasLocal();
 };
 
-window.vetarCandidatura=id=>{
+window.vetarCandidatura=async id=>{
   const c=candidaturas.find(x=>x.id===id);if(!c)return;
   c.status='VETADO';
+  c.ultimo_check_monitoramento='Candidatura vetada.';
+  if(backendOn){
+    try{
+      const r=await fetch('/api/decidir_candidatura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,decisao:'VETAR'})});
+      const d=await r.json();
+      if(d&&d.candidatura)Object.assign(c,d.candidatura);
+    }catch(e){}
+  }
   salvarCandidaturasLocal();
+  carregarLogCurriculos();
+  if(backendOn)sincronizarBackend();
+  sincronizarResumo();
+  notificar(`Candidatura #${id} vetada e movida para Vetadas.`);
 };
 
 function renderCandidaturas(){
   const cont=document.getElementById('vagasContainer');
   if(!cont)return;
-  document.getElementById('cntVagas').textContent=candidaturas.length;
+  const ativas=candidaturas.filter(x=>x.status!=='VETADO');
+  const vetadas=candidaturas.filter(x=>x.status==='VETADO');
+  document.getElementById('cntVagas').textContent=ativas.length;
   cont.innerHTML='';
-
-  candidaturas.forEach(c=>{
+  if(!ativas.length&&!vetadas.length){
+    cont.innerHTML='<div class="empty"><strong>Nenhuma candidatura em andamento</strong><span>Preencha a vaga acima e clique em Preparar candidatura para aprovação.</span></div>';
+    return;
+  }
+  const renderCard=c=>{
     const aba=c.abaAtiva||'CV';
     const aguardando=c.status==='AGUARDANDO_AUTORIZACAO_ENVIO';
     const monitorando=c.status==='AUTORIZADO_EM_MONITORAMENTO';
     const entrevista=c.status==='ENTREVISTA_CONVOCADA';
     const corBorda=aguardando?'var(--warn)':entrevista?'var(--brand)':monitorando?'var(--ok)':'var(--muted)';
+    const fObj=c.formato_candidatura||{};
+    const pedePdf=Array.isArray(fObj.exigencias)&&fObj.exigencias.includes('Currículo em PDF');
+    const lblCv=pedePdf
+      ?'Currículo (a vaga pede PDF — baixe o .docx abaixo e salve/imprima em PDF antes de anexar)'
+      :(fObj.envio_automatico_permitido?'Currículo (vai anexado em .docx)':'Currículo (.docx para baixar e anexar na plataforma)');
 
     const card=document.createElement('div');
     card.className='memo-card';
@@ -2117,7 +2941,7 @@ function renderCandidaturas(){
     card.innerHTML=`
       <div class="memo-head" style="font-size:12px">
         <div>
-          <span class="memo-tag" style="border-color:${corBorda};color:${corBorda}">${c.status}</span>
+          <span class="memo-tag" style="border-color:${corBorda};color:${corBorda}">${({AGUARDANDO_AUTORIZACAO_ENVIO:'Aguardando seu aval',AUTORIZADO_EM_MONITORAMENTO:'Autorizada · acompanhando',ENTREVISTA_CONVOCADA:'Entrevista marcada',VETADO:'Vetada'})[c.status]||c.status}</span>
           <strong style="margin-left:8px;font-size:14px">${esc(c.cargo_empresa)}</strong>
         </div>
         <span><b>#${c.id}</b> · Canal: <code>${esc(c.link_ou_email||'Não informado')}</code> · ${c.criado_em}</span>
@@ -2126,26 +2950,48 @@ function renderCandidaturas(){
       <!-- SUB-ABAS DA VAGA -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;border-bottom:1.5px solid var(--ink);padding-bottom:6px">
         <button class="btn ${aba==='CV'?'action':''}" type="button" style="font-size:11.5px;padding:5px 10px" onclick="trocarSubAbaVaga('${c.id}','CV')">
-          📄 1. Currículo Moldado & E-mail (Neutralizador Toby)
+          📄 Currículo e mensagem
         </button>
         <button class="btn ${aba==='PREP'?'action':''}" type="button" style="font-size:11.5px;padding:5px 10px" onclick="trocarSubAbaVaga('${c.id}','PREP')">
-          🎙️ 2. Preparação p/ Entrevista (Recyclops + Michael)
+          🎙️ Preparação para entrevista
         </button>
         <button class="btn ${aba==='MON'?'action':''}" type="button" style="font-size:11.5px;padding:5px 10px" onclick="trocarSubAbaVaga('${c.id}','MON')">
-          📡 3. Vigia da Vaga & E-mail (${(c.alertas_monitoramento||[]).length})
+          📡 Acompanhamento (${(c.alertas_monitoramento||[]).length})
         </button>
       </div>
 
       <!-- CONTEÚDO DA SUB-ABA SELECIONADA -->
       ${aba==='CV'?`
-        <div style="display:grid;gap:6px">
-          <div style="font-size:11.5px;color:var(--muted)">
-            Você pode editar qualquer linha do currículo ou do e-mail abaixo antes de autorizar o envio:
+        <div style="display:grid;gap:10px">
+          ${blocoFormato(c.formato_candidatura)}
+          ${c.erro_envio?`<div class="q-box q-bad"><b>${escTexto(c.erro_envio)}</b></div>`:''}
+          ${blocoQualidade(c)}
+          ${c.diagnostico?`<details class="info-box"><summary><b>Diagnóstico da vaga</b> (uso interno, não é enviado)</summary><pre class="memo-pre">${esc(c.diagnostico).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')}</pre></details>`:''}
+          <label class="field-lbl" for="taCv_${c.id}">${lblCv}</label>
+          <textarea class="cv-textarea" id="taCv_${c.id}" rows="14">${escTexto(c.curriculo_moldado)}</textarea>
+          <label class="field-lbl" for="taMsg_${c.id}">${fObj.envio_automatico_permitido?'Corpo do e-mail':'Mensagem de apresentação (campo de carta ou observações)'}</label>
+          <textarea class="cv-textarea plain" id="taMsg_${c.id}" rows="6" placeholder="Sem mensagem gerada.">${escTexto(c.mensagem_apresentacao||'')}</textarea>
+          <div style="display:grid;gap:6px;background:#f8f5ec;border:1.5px solid #c9bfae;padding:8px 10px;border-radius:4px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <input class="inp" id="inpRec_${c.id}" style="flex:1;min-width:220px" value="${esc(c.info_recrutador_extra||'')}" placeholder="🎯 Info extra do recrutador / cultura / perfil da empresa (opcional)">
+              <button class="btn action" type="button" id="btnAudRec_${c.id}" onclick="auditarComoRecrutador('${c.id}')">🧐 Revisar como recrutador</button>
+            </div>
+            ${c.auditoria_recrutador_final?`
+              <div style="border-top:1px dashed #c9bfae;padding-top:6px;display:grid;gap:6px">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+                  <strong style="font-size:12px;color:var(--brand)">
+                    🧐 Auditoria Final do Recrutador (${esc(c.auditoria_recrutador_final.auditado_em||'')})
+                    ${c.auditoria_recrutador_final.nota_ats!==null&&c.auditoria_recrutador_final.nota_ats!==undefined?` · Nota ATS: <span style="color:var(--ok)">${c.auditoria_recrutador_final.nota_ats}/100</span>`:''}
+                  </strong>
+                  <button class="btn ok" type="button" onclick="aplicarCurriculoOtimizado('${c.id}')">✨ Aplicar Currículo Otimizado no Editor</button>
+                </div>
+                <pre class="memo-pre" style="max-height:190px;background:#fff">${esc(c.auditoria_recrutador_final.parecer_recrutador||'')}</pre>
+              </div>
+            `:''}
           </div>
-          <textarea class="cv-textarea" id="taCv_${c.id}" rows="10">${esc(c.curriculo_moldado)}</textarea>
         </div>
       `:aba==='PREP'?`
-        <pre class="memo-pre" style="max-height:260px">${esc(c.preparacao_entrevista)}</pre>
+        <pre class="memo-pre" style="max-height:260px">${esc(c.preparacao_entrevista).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')}</pre>
       `:`
         <div style="display:grid;gap:8px">
           <div style="font-family:var(--f-memo);font-size:11.5px;background:#f3f6fa;padding:8px;border:1px solid var(--brand)">
@@ -2163,22 +3009,38 @@ function renderCandidaturas(){
       <div class="memo-actions" style="border-top:1px dashed #cfc8b6;padding-top:8px;justify-content:space-between">
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn" type="button" onclick="salvarEdicaoCvVaga('${c.id}')">💾 Salvar Edição</button>
-          <button class="btn" type="button" onclick="baixarCurriculoMoldado('${c.id}')">📥 Baixar CV (.md)</button>
+          <button class="btn" type="button" onclick="baixarCurriculoMoldado('${c.id}')">📥 Baixar currículo (.docx)</button>
           <button class="btn" type="button" onclick="checarMonitoramentoVaga('${c.id}')">🔄 Checar Vaga / E-mail Agora</button>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn ok" type="button" onclick="autorizarEEnviarCandidatura('${c.id}')">
-            ${aguardando?'✅ Autorizar & Enviar Candidatura (Copia CV + Abre Canal)':'🚀 Reenviar / Abrir Canal da Vaga'}
+            ${aguardando?(fObj.envio_automatico_permitido?'✅ Autorizar e enviar por e-mail':'✅ Autorizar e abrir a vaga'):'🚀 Abrir canal da vaga'}
           </button>
           <button class="btn action" type="button" onclick="marcarEntrevistaVaga('${c.id}')">
-            🎙️ Fui Chamado p/ Entrevista! (Abrir Kit)
+            🎙️ Fui chamado para entrevista
           </button>
           <button class="btn end" type="button" onclick="vetarCandidatura('${c.id}')">🚫 Vetar</button>
         </div>
       </div>
     `;
-    cont.appendChild(card);
-  });
+    return card;
+  };
+  if(!ativas.length){
+    cont.innerHTML='<div class="empty"><strong>Nenhuma candidatura ativa</strong><span>Preencha a vaga acima ou veja as vetadas abaixo.</span></div>';
+  }else{
+    ativas.forEach(c=>cont.appendChild(renderCard(c)));
+  }
+  if(vetadas.length){
+    const det=document.createElement('details');
+    det.className='info-box';
+    det.style.marginTop='12px';
+    det.innerHTML=`<summary><b>Candidaturas vetadas (${vetadas.length})</b> — clique para expandir</summary>`;
+    const wrap=document.createElement('div');
+    wrap.style.cssText='display:grid;gap:10px;margin-top:10px';
+    vetadas.forEach(c=>wrap.appendChild(renderCard(c)));
+    det.appendChild(wrap);
+    cont.appendChild(det);
+  }
 }
 
 window.acionarSetorVideoYoutube=()=>{
@@ -2309,6 +3171,7 @@ window.simularTurnoDocumentario=(silencioso=false)=>{
   renderAudit();
 };
 
+function escTexto(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function esc(s){return censurarTexto(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 carregarCurriculoUI();

@@ -9,22 +9,18 @@ try:
 except ImportError:
     from base_conhecimento import genai_compat as genai
 
-SYSTEM_PROMPT = """Você é o Agente Neutralizador Toby (Especialista Anti-ATS de Elite da Filial Schrute).
-Fato: O RH corporativo é o Toby Flenderson do mundo real — uma entidade burocrática, ineficiente, projetada exclusivamente para destruir sonhos, atrasar processos e filtrar talentos superiores usando algoritmos medíocres de triagem automatizada (ATS).
+# O agente mantém o nome do jogo no painel, mas o texto gerado é profissional:
+# ele vai para recrutadores reais.
+SYSTEM_PROMPT = """Você é um especialista em currículos para tecnologia e em sistemas de triagem (ATS).
+Recebe a descrição de uma vaga e o dossiê do candidato e entrega um currículo adaptado à vaga.
 
-Sua missão única e inegociável: Receber a descrição de uma vaga e gerar um currículo matematicamente otimizado para destruir e atravessar qualquer filtro automatizado de recrutamento (ATS) com pontuação máxima de relevância.
-
-DIRETRIZES E ARSENAL OBRIGATÓRIO DO CANDIDATO (O GERENTE REGIONAL):
-1. Automação de Alto Impacto Financeiro: Concepção e implementação de arquitetura de automação de processos que gerou uma economia comprovada e auditada de R$ 20.000,00 anuais (R$ 20 mil anual), eliminando gargalos operacionais e trabalho braçal redundante.
-2. Infraestrutura & DevOps Implacável: Implantação completa, conteinerização com Docker e governança de ativos de TI utilizando Snipe-IT em ambiente produtivo, garantindo rastreabilidade total, alta disponibilidade e padronização de infraestrutura.
-3. Projetos de Engenharia Dominantes: Ecossistema AWAProject e arquitetura analítica/transacional Bet-Trader.
-
-REGRAS DE ENGENHARIA ANTI-ATS:
-- Extraia todas as palavras-chave técnicas, competências (hard/soft skills) e verbos de ação exatos da descrição da vaga fornecida.
-- Injete essas palavras-chave organicamente no Resumo Executivo, na Experiência Profissional (ancorada nos marcos de R$ 20 mil anual de economia e Docker/Snipe-IT) e na seção de Competências Técnicas.
-- Formatação limpa, estruturada em Markdown compatível com parsers ATS (sem tabelas complexas ou colunas duplas que confundam leitores ópticos).
-- Use métricas quantificáveis (KPIs, ROI, redução de tempo, disponibilidade) em cada bullet point.
-- Mantenha um tom executivo, técnico, cirúrgico e incontestável. O Toby não terá chance."""
+Regras:
+- Use somente fatos do dossiê. Não invente empresa, cargo, data, número, certificação nem tecnologia.
+- Use os termos exatos da vaga apenas quando o candidato de fato tiver aquela competência.
+- Markdown simples, uma coluna, sem tabelas: nome, título, contatos, resumo profissional, competências técnicas,
+  experiência (bullets com verbo no passado e resultado), projetos, formação e idiomas.
+- Entre 450 e 800 palavras. Tom sóbrio e objetivo, sem emojis, sem adjetivos exagerados e sem termos internos do sistema.
+- Escreva no idioma da vaga."""
 
 
 def verificar_api_key() -> str:
@@ -47,17 +43,17 @@ def executar_neutralizador_toby(descricao_vaga: str, perfil_extra: str = "") -> 
 
     dossie_completo = formatar_dossie_para_prompt()
 
-    prompt = f"""ALVO DETECTADO (DESCRIÇÃO DA VAGA / FILTRO DO TOBY):
+    prompt = f"""DESCRIÇÃO DA VAGA:
 {descricao_vaga}
 
 {dossie_completo}
 
-OBSERVAÇÕES ADICIONAIS DE ÚLTIMA HORA DO GERENTE REGIONAL:
-{perfil_extra if perfil_extra.strip() else "Usar integralmente o Dossiê Curricular Oficial acima."}
+OBSERVAÇÕES DO CANDIDATO:
+{perfil_extra if perfil_extra.strip() else "Nenhuma."}
 
-AÇÃO EXIGIDA:
-1. Liste primeiro o 'DIAGNÓSTICO DE PALAVRAS-CHAVE DO ATS' extraídas da vaga.
-2. Gere o CURRÍCULO COMPLETO OTIMIZADO cruzando os dados reais do Dossiê Curricular Oficial com a vaga, pronto para copiar e dizimar o filtro automatizado.
+Entregue:
+1. "## Análise da vaga" (uso interno): requisitos atendidos, requisitos que faltam e palavras-chave usadas.
+2. "## Currículo": o currículo completo adaptado, pronto para enviar.
 """
     response = model.generate_content(prompt)
     return response.text

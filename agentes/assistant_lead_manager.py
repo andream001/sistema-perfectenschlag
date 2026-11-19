@@ -1,4 +1,5 @@
 import csv
+import http.cookiejar
 import io
 import json
 import os
@@ -26,6 +27,74 @@ except ImportError:
 DIRETORIO_BASE = Path(__file__).resolve().parent.parent
 ARQUIVO_LEADS_CSV = DIRETORIO_BASE / "leads_b2b_scranton.csv"
 ARQUIVO_CONFIG_LEADS = DIRETORIO_BASE / "config_lead_manager.json"
+_EVO_COOKIE_JAR = http.cookiejar.CookieJar()
+_EVO_OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_EVO_COOKIE_JAR))
+
+
+def _evo_panel_base() -> str:
+    return os.environ.get("EVOLUTION_PANEL_URL", "http://127.0.0.1:5000").rstrip("/")
+
+
+def _evo_panel_login() -> bool:
+    """Autentica no painel Assistant to the Lead Manager (porta 5000) mantendo cookie de sessão."""
+    base = _evo_panel_base()
+    user = os.environ.get("PANEL_USER", "")
+    pwd = os.environ.get("LEAD_MANAGER_PANEL_PASSWORD") or os.environ.get("PANEL_PASSWORD", "")
+    data = urllib.parse.urlencode({"username": user, "password": pwd}).encode("utf-8")
+    req = urllib.request.Request(f"{base}/login", data=data, method="POST")
+    try:
+        with _EVO_OPENER.open(req, timeout=4) as resp:
+            return resp.getcode() in (200, 302)
+    except Exception:
+        return False
+
+
+def _evo_panel_request(path: str, method: str = "GET", payload: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    """Faz requisição autenticada para o motor Evolution API 50-Chips na porta 5000."""
+    base = _evo_panel_base()
+    url = f"{base}{path}"
+    body = json.dumps(payload).encode("utf-8") if payload is not None else None
+    headers = {"Content-Type": "application/json"} if payload is not None else {}
+
+    for tentativa in range(2):
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
+        try:
+            with _EVO_OPENER.open(req, timeout=8) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+                return json.loads(raw) if raw else {"ok": True}
+        except urllib.error.HTTPError as he:
+            if he.code == 401 and tentativa == 0:
+                _evo_panel_login()
+                continue
+            try:
+                raw_err = he.read().decode("utf-8", errors="replace")
+                return json.loads(raw_err)
+            except Exception:
+                return {"ok": False, "error": f"HTTP {he.code}"}
+        except Exception:
+            if tentativa == 0 and _evo_panel_login():
+                continue
+            return None
+    return None
+
+
+def obter_status_motor_5000() -> Dict[str, Any]:
+    """Consulta em tempo real o painel Evolution API (porta 5000): 50 chips, Conta Admin e campanha paralela."""
+    dash = _evo_panel_request("/api/dashboard?page=1&per_page=20&status=todos&account=todas&q=")
+    if not dash or not dash.get("ok"):
+        return {"online": False, "url": _evo_panel_base()}
+    cfg = dash.get("config") or {}
+    return {
+        "online": True,
+        "url": _evo_panel_base(),
+        "stats": dash.get("stats") or {},
+        "admin_account": dash.get("admin_account") or {},
+        "active_chips": cfg.get("active_accounts_count", 0),
+        "connected_chips": cfg.get("connected_accounts_count", 0),
+        "restricted_chips": cfg.get("restricted_accounts_count", 0),
+        "total_daily_capacity": cfg.get("total_daily_capacity", 0),
+        "campaign": dash.get("campaign") or {},
+    }
 
 COLUNAS_CSV = [
     "id",
@@ -116,7 +185,8 @@ def carregar_config_lead_manager() -> Dict[str, Any]:
     padrao = {
         "limite_diario_warmup": 50,
         "delay_segundos": 3,
-        "modo_disparo": "DRY_RUN",  # DRY_RUN | CLOUD_API | N8N_WEBHOOK
+        "modo_disparo": "EVOLUTION_5000",  # EVOLUTION_5000 | DRY_RUN | N8N_WEBHOOK
+        "evolution_panel_url": _evo_panel_base(),
         "whatsapp_phone_number_id": os.environ.get("WHATSAPP_PHONE_NUMBER_ID", ""),
         "whatsapp_access_token_configurado": bool(os.environ.get("WHATSAPP_ACCESS_TOKEN")),
         "consultor_responsavel": "Gerente Regional / Consultor B2B",
@@ -380,23 +450,69 @@ def adicionar_ou_importar_leads(
         adicionados += 1
 
     salvar_leads_atomico(atuais)
+
+    # Sincroniza também com o motor Evolution API 50-Chips (porta 5000) se estiver online
+    motor_sync = None
+    if adicionados > 0:
+        pares_sync = "\n".join(f"{x['empresa'] or x['contato']},{x['telefone_normalizado']}" for x in atuais[:adicionados])
+        motor_sync = _evo_panel_request(
+            "/api/leads/importar",
+            method="POST",
+            payload={"modo": "lote", "lote": pares_sync, "tag": "Perfectenschlag"},
+        )
+
     return {
         "adicionados": adicionados,
         "ignorados_duplicados": ignorados_duplicados,
         "total_atual": len(atuais),
         "metricas": calcular_metricas_leads(atuais),
+        "motor_5000_sync": motor_sync,
     }
 
 
 def disparar_lote_campanha(quantidade: int = 10, modo_forcado: Optional[str] = None) -> Dict[str, Any]:
     """
-    Executa o disparo controlado (respeitando Warm-Up, filtro anti-reenvio e Opt-Out)
-    e persiste atomicamente (.tmp -> .csv) a cada lead processado.
+    Executa o disparo controlado:
+    - No modo EVOLUTION_5000, aciona diretamente o pool paralelo (50 chips / 7 celulares) na porta 5000.
+    - Caso contrário (ou fallback), executa localmente no CSV com persistência atômica.
     """
     cfg = carregar_config_lead_manager()
-    modo = (modo_forcado or cfg.get("modo_disparo") or "DRY_RUN").upper()
+    modo = (modo_forcado or cfg.get("modo_disparo") or "EVOLUTION_5000").upper()
     limite = max(1, min(int(quantidade or 10), int(cfg.get("limite_diario_warmup", 50))))
     template = str(cfg.get("template_abordagem", ""))
+
+    if modo in ("EVOLUTION_5000", "EVOLUTION_LIVE"):
+        res_5000 = _evo_panel_request(
+            "/api/campanha/disparar",
+            method="POST",
+            payload={
+                "dry_run": False,
+                "limit": limite,
+                "account_mode": "todas_ativas",
+                "force_hours": True,
+                "message": template,
+            },
+        )
+        if res_5000 and res_5000.get("ok"):
+            return {
+                "modo_utilizado": "EVOLUTION_5000",
+                "disparados": res_5000.get("target", limite),
+                "erros": 0,
+                "started": True,
+                "workers": res_5000.get("workers", 1),
+                "devices": res_5000.get("devices", []),
+                "detalhes": [{"observacao": f"Lote paralelo iniciado na porta 5000 ({res_5000.get('workers', 1)} celulares)"}],
+                "metricas": calcular_metricas_leads(),
+            }
+        if res_5000 and res_5000.get("error"):
+            return {
+                "modo_utilizado": "EVOLUTION_5000",
+                "disparados": 0,
+                "erros": 1,
+                "erro_motor_5000": res_5000.get("error"),
+                "detalhes": [{"observacao": res_5000.get("error")}],
+                "metricas": calcular_metricas_leads(),
+            }
 
     leads = carregar_leads_csv()
     pendentes = [l for l in leads if l.get("status") == "PENDENTE"]

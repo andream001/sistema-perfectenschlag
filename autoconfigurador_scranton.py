@@ -22,13 +22,19 @@ CHAVES_CREDENCIAIS_PADRAO: Dict[str, str] = {
     "SMTP_USER": "",
     "SMTP_APP_PASSWORD": "",
     "WEBHOOK_SECRET_TOKEN": "",
-    "WHATSAPP_VERIFY_TOKEN": "dunder_mifflin_scranton_verify",
+    "WHATSAPP_VERIFY_TOKEN": "",
+    "PERFECTENSCHLAG_SECRET_KEY": "",
+    "PANEL_USER": "",
+    "PANEL_PASSWORD": "",
+    "LEAD_MANAGER_PANEL_PASSWORD": "",
     "N8N_BASE_URL": "http://localhost:5678",
-    "GOLDEN_TICKET_WEBHOOK_URL": "http://localhost:5678/webhook/perfectenschlag-golden-ticket",
-    "LINKEDIN_WEBHOOK_URL": "http://localhost:5678/webhook/perfectenschlag-redes",
-    "YOUTUBE_WEBHOOK_URL": "http://localhost:5678/webhook/perfectenschlag-redes",
-    "WHATSAPP_WEBHOOK_URL": "http://localhost:5678/webhook/perfectenschlag-whatsapp",
+    "GOLDEN_TICKET_WEBHOOK_URL": "",
+    "LINKEDIN_WEBHOOK_URL": "",
+    "YOUTUBE_WEBHOOK_URL": "",
+    "WHATSAPP_WEBHOOK_URL": "",
     "PERFECTENSCHLAG_PROJECTS_DIR": str(DIRETORIO_BASE.parent),
+    "SERPAPI_KEY": "",
+    "JOOBLE_API_KEY": "",
 }
 
 
@@ -75,9 +81,13 @@ SMTP_PORT=587
 SMTP_USER=
 SMTP_APP_PASSWORD=
 
-# 3. SEGURANÇA & TOKENS DOS WEBHOOKS RECEPTORES (Gerados automaticamente)
+# 3. SEGURANÇA & TOKENS DOS WEBHOOKS RECEPTORES (Gerados automaticamente no .env)
 WEBHOOK_SECRET_TOKEN=
-WHATSAPP_VERIFY_TOKEN=dunder_mifflin_scranton_verify
+WHATSAPP_VERIFY_TOKEN=
+PERFECTENSCHLAG_SECRET_KEY=
+PANEL_USER=
+PANEL_PASSWORD=
+LEAD_MANAGER_PANEL_PASSWORD=
 
 # 4. WEBHOOKS EXTERNOS DE DISPARO (Google Apps Script, n8n, Make, Evolution API)
 GOLDEN_TICKET_WEBHOOK_URL=
@@ -115,6 +125,10 @@ def salvar_credenciais_env(novos_valores: Dict[str, Any]) -> Dict[str, str]:
 
     if not atuais.get("WEBHOOK_SECRET_TOKEN"):
         atuais["WEBHOOK_SECRET_TOKEN"] = f"dm_scranton_{secrets.token_hex(12)}"
+    if not atuais.get("WHATSAPP_VERIFY_TOKEN"):
+        atuais["WHATSAPP_VERIFY_TOKEN"] = f"dm_verify_{secrets.token_hex(12)}"
+    if not atuais.get("PERFECTENSCHLAG_SECRET_KEY"):
+        atuais["PERFECTENSCHLAG_SECRET_KEY"] = secrets.token_hex(24)
 
     for chave, valor in novos_valores.items():
         if chave not in atuais:
@@ -136,8 +150,8 @@ def salvar_credenciais_env(novos_valores: Dict[str, Any]) -> Dict[str, str]:
             os.environ.pop(chave, None)
 
     os.environ["WEBHOOK_SECRET_TOKEN"] = atuais["WEBHOOK_SECRET_TOKEN"]
-    if atuais.get("WHATSAPP_VERIFY_TOKEN"):
-        os.environ["WHATSAPP_VERIFY_TOKEN"] = atuais["WHATSAPP_VERIFY_TOKEN"]
+    os.environ["WHATSAPP_VERIFY_TOKEN"] = atuais["WHATSAPP_VERIFY_TOKEN"]
+    os.environ["PERFECTENSCHLAG_SECRET_KEY"] = atuais["PERFECTENSCHLAG_SECRET_KEY"]
 
     linhas = [
         "# ============================================================================",
@@ -156,9 +170,7 @@ def salvar_credenciais_env(novos_valores: Dict[str, Any]) -> Dict[str, str]:
 def _mascarar_segredo(valor: str) -> str:
     if not valor:
         return ""
-    if len(valor) <= 8:
-        return "****"
-    return f"****{valor[-4:]}"
+    return "****"
 
 
 def instalar_git_hooks_em_repo(caminho_repo: Path, porta_servidor: int = 8080) -> Dict[str, Any]:
@@ -298,24 +310,26 @@ def obter_diagnostico_configuracao(repositorios_detectados: Optional[Dict[str, P
             "gemini_api_key_ativa": bool(os.environ.get("GEMINI_API_KEY")),
             "gemini_api_key_mascarada": _mascarar_segredo(os.environ.get("GEMINI_API_KEY", "")),
             "imap_host": os.environ.get("IMAP_HOST", "imap.gmail.com"),
-            "imap_user": os.environ.get("IMAP_USER", ""),
+            "imap_user": _mascarar_segredo(os.environ.get("IMAP_USER", "")),
             "imap_senha_configurada": bool(os.environ.get("IMAP_APP_PASSWORD")),
             "imap_senha_mascarada": _mascarar_segredo(os.environ.get("IMAP_APP_PASSWORD", "")),
             "smtp_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
             "smtp_port": os.environ.get("SMTP_PORT", "587"),
-            "smtp_user": os.environ.get("SMTP_USER", ""),
+            "smtp_user": _mascarar_segredo(os.environ.get("SMTP_USER", "")),
             "smtp_senha_configurada": bool(os.environ.get("SMTP_APP_PASSWORD")),
             "smtp_senha_mascarada": _mascarar_segredo(os.environ.get("SMTP_APP_PASSWORD", "")),
-            "webhook_secret_token": token_wh,
-            "whatsapp_verify_token": os.environ.get("WHATSAPP_VERIFY_TOKEN", "dunder_mifflin_scranton_verify"),
+            "webhook_secret_token": _mascarar_segredo(token_wh),
+            "whatsapp_verify_token": _mascarar_segredo(os.environ.get("WHATSAPP_VERIFY_TOKEN", "")),
             "perfectenschlag_projects_dir": os.environ.get("PERFECTENSCHLAG_PROJECTS_DIR", str(DIRETORIO_BASE.parent)),
+            "serpapi_ativa": bool(os.environ.get("SERPAPI_KEY")),
+            "jooble_ativa": bool(os.environ.get("JOOBLE_API_KEY")),
         },
         "webhooks_saida": {
             "n8n_base_url": os.environ.get("N8N_BASE_URL", "http://localhost:5678"),
-            "golden_ticket_webhook_url": os.environ.get("GOLDEN_TICKET_WEBHOOK_URL", "http://localhost:5678/webhook/perfectenschlag-golden-ticket"),
-            "linkedin_webhook_url": os.environ.get("LINKEDIN_WEBHOOK_URL", "http://localhost:5678/webhook/perfectenschlag-redes"),
-            "youtube_webhook_url": os.environ.get("YOUTUBE_WEBHOOK_URL", "http://localhost:5678/webhook/perfectenschlag-redes"),
-            "whatsapp_webhook_url": os.environ.get("WHATSAPP_WEBHOOK_URL", "http://localhost:5678/webhook/perfectenschlag-whatsapp"),
+            "golden_ticket_webhook_url": _mascarar_segredo(os.environ.get("GOLDEN_TICKET_WEBHOOK_URL", "")),
+            "linkedin_webhook_url": _mascarar_segredo(os.environ.get("LINKEDIN_WEBHOOK_URL", "")),
+            "youtube_webhook_url": _mascarar_segredo(os.environ.get("YOUTUBE_WEBHOOK_URL", "")),
+            "whatsapp_webhook_url": _mascarar_segredo(os.environ.get("WHATSAPP_WEBHOOK_URL", "")),
         },
         "webhooks_entrada_locais": {
             "nova_vaga": f"{base_url}/webhook/vaga",

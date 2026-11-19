@@ -22,9 +22,11 @@ def censurar_dados_sensiveis(texto: str) -> str:
     resultado = re.sub(r"AIza[0-9A-Za-z\-_]{20,}", "[CHAVE_API_CENSURADA]", resultado)
     resultado = re.sub(r"gh[po]_[0-9A-Za-z]{20,}", "[GITHUB_TOKEN_CENSURADO]", resultado)
 
-    # 2. Mascara CPFs e CNPJs
+    # 2. Mascara CPFs, CNPJs e telefones de terceiros (10-13 dígitos ou formato (DD) 9XXXX-XXXX)
     resultado = re.sub(r"\b\d{3}\.\d{3}\.\d{3}-\d{2}\b", "[CPF_CENSURADO]", resultado)
     resultado = re.sub(r"\b\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b", "[CNPJ_CENSURADO]", resultado)
+    resultado = re.sub(r"\(?\b\d{2}\)?\s*9?\d{4}-?\d{4}\b", "[TELEFONE_CENSURADO]", resultado)
+    resultado = re.sub(r"\b55\d{10,11}\b", "[TELEFONE_CENSURADO]", resultado)
 
     # 3. Censura nomes de empresas clientes reais configuradas via ambiente
     for termo in TERMOS_CONFIDENCIAIS:
